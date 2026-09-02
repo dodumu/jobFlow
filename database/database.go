@@ -9,8 +9,8 @@ import (
 
 var DB *sql.DB
 
-func InitDB() error {
-	db, err := sql.Open("sqlite", "database.db")
+func InitDB(path string) error {
+	db, err := sql.Open("sqlite", path)
 	if err != nil {
 		return fmt.Errorf("opening database: %w", err)
 	}
