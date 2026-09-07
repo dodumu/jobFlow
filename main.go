@@ -10,8 +10,18 @@ import (
 )
 
 func DashboardHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(middleware.UserIDKey)
-	fmt.Fprintf(w, "Welcome %v", userID)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	userDetails, err := database.GetUserByID(int(userID))
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "Welcome %v", userDetails.Username)
 }
 func main() {
 	err := database.InitDB("database.db")

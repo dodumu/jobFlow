@@ -5,8 +5,8 @@ import (
 )
 
 func CreateUser(user models.User) (int, error) {
-	query := `INSERT INTO users (username, password_hash, name, email, date_of_birth, role)  VALUES(?, ?, ?, ?, ?, ?)`
-	res, err := DB.Exec(query, user.Username, user.PasswordHash, user.Name, user.Email, user.DOB, user.Role)
+	query := `INSERT INTO users (username, password_hash, first_name, last_name, email, date_of_birth, role)  VALUES(?, ?, ?, ?, ?, ?, ?)`
+	res, err := DB.Exec(query, user.Username, user.PasswordHash, user.FirstName, user.LastName, user.Email, user.DOB, user.Role)
 	if err != nil {
 		return 0, err
 	}
@@ -18,12 +18,15 @@ func CreateUser(user models.User) (int, error) {
 }
 
 func GetUserByID(id int) (models.User, error) {
-	query := `SELECT id, username, password_hash, name, email, date_of_birth, role, created_at  FROM users  WHERE id = ?`
+	query := `SELECT id, first_name, last_name, username, password_hash, email, date_of_birth, role, created_at
+	FROM users
+	WHERE id = ?`
 	var user models.User
 	err := DB.QueryRow(query, id).Scan(&user.ID,
+		&user.FirstName,
+		&user.LastName,
 		&user.Username,
 		&user.PasswordHash,
-		&user.Name,
 		&user.Email,
 		&user.DOB,
 		&user.Role,
@@ -35,12 +38,13 @@ func GetUserByID(id int) (models.User, error) {
 }
 
 func GetUserByEmail(email string) (models.User, error) {
-	query := `SELECT id, username, password_hash, name, email, date_of_birth, role, created_at  FROM users  WHERE email = ?`
+	query := `SELECT id, username, password_hash, first_name, last_name, email, date_of_birth, role, created_at  FROM users  WHERE email = ?`
 	var user models.User
 	err := DB.QueryRow(query, email).Scan(&user.ID,
 		&user.Username,
 		&user.PasswordHash,
-		&user.Name,
+		&user.FirstName,
+		&user.LastName,
 		&user.Email,
 		&user.DOB,
 		&user.Role,
@@ -52,12 +56,13 @@ func GetUserByEmail(email string) (models.User, error) {
 }
 
 func GetUserByUsername(username string) (models.User, error) {
-	query := `SELECT id, username, password_hash, name, email, date_of_birth, role, created_at  FROM users  WHERE username = ?`
+	query := `SELECT id, username, password_hash, first_name, last_name email, date_of_birth, role, created_at  FROM users  WHERE username = ?`
 	var user models.User
 	err := DB.QueryRow(query, username).Scan(&user.ID,
 		&user.Username,
 		&user.PasswordHash,
-		&user.Name,
+		&user.FirstName,
+		&user.LastName,
 		&user.Email,
 		&user.DOB,
 		&user.Role,

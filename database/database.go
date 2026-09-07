@@ -29,28 +29,33 @@ func InitDB(path string) error {
 func CreateTables() error {
 	query := `
 	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		username TEXT NOT NULL UNIQUE,
-		password_hash TEXT NOT NULL,
-		name TEXT NOT NULL,
-		email TEXT NOT NULL UNIQUE,
-		date_of_birth TEXT NOT NULL,
-		role TEXT NOT NULL,
-		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-	);
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    date_of_birth TEXT NOT NULL,
+    role TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 	CREATE TABLE IF NOT EXISTS companies (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT NULL,
-		company_name TEXT NOT NULL,
-		description TEXT NOT NULL,
-		website TEXT NOT NULL,
-		location TEXT NOT NULL,
-		logo TEXT,
-		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    company_name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    website TEXT NOT NULL,
+    location TEXT NOT NULL,
+    logo TEXT,
+    industry TEXT NOT NULL,
+    company_size TEXT NOT NULL,
+    founded_year INTEGER,
+    verification_status TEXT NOT NULL DEFAULT 'unverified',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-		FOREIGN KEY (user_id) REFERENCES users(id)
-	);
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
 
 	CREATE TABLE IF NOT EXISTS jobs (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -93,6 +98,19 @@ func CreateTables() error {
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id) REFERENCES users(id)
+	);
+	
+	CREATE TABLE IF NOT EXISTS user_profiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    profile_picture TEXT,
+    headline TEXT,
+    bio TEXT,
+    location TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);
 	`
 
