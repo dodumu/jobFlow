@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"jobFlow/database"
+	"jobFlow/handlers"
 	"jobFlow/middleware"
 	"log"
 	"net/http"
@@ -19,6 +20,8 @@ func main() {
 	}
 
 	http.Handle("/dashboard", middleware.AuthMiddleware(http.HandlerFunc(DashboardHandler)))
+	http.HandleFunc("/register", handlers.RegisterHandler)
+	http.HandleFunc("/login", handlers.LoginHandler)
 	log.Println("server is running on :8081")
 	http.ListenAndServe(":8081", nil)
 }

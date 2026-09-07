@@ -117,4 +117,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    token,
+		Expires:  expires,
+		HttpOnly: true,
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
+	})
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
