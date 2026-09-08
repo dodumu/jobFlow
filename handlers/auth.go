@@ -20,12 +20,13 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	username := r.FormValue("username")
 	password := r.FormValue("password")
-	name := r.FormValue("name")
+	firstName := r.FormValue("first_name")
+	lastName := r.FormValue("last_name")
 	email := r.FormValue("email")
 	dob := r.FormValue("date_of_birth")
 	role := r.FormValue("role")
 
-	if role == "" || username == "" || password == "" || name == "" || email == "" || dob == "" {
+	if role == "" || username == "" || password == "" || firstName == "" || lastName == "" || email == "" || dob == "" {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
@@ -41,7 +42,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	user := models.User{
 		Username:     username,
 		PasswordHash: hashPassword,
-		Name:         name,
+		FirstName:    firstName,
+		LastName:     lastName,
 		Email:        email,
 		DOB:          dob,
 		Role:         role,
