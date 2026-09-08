@@ -145,11 +145,96 @@ func CreateTables() error {
 
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);
-	`
+	CREATE TABLE IF NOT EXISTS skills (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+	);
 
+	CREATE TABLE IF NOT EXISTS user_skills (
+    user_id INTEGER NOT NULL,
+    skill_id INTEGER NOT NULL,
+
+    PRIMARY KEY (user_id, skill_id),
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
+	);
+	CREATE TABLE IF NOT EXISTS user_preferences (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    salary_min INTEGER,
+    salary_max INTEGER,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+	CREATE TABLE IF NOT EXISTS employment_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+	);
+	CREATE TABLE IF NOT EXISTS user_employment_types (
+    user_id INTEGER NOT NULL,
+    employment_type_id INTEGER NOT NULL,
+
+    PRIMARY KEY (user_id, employment_type_id),
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (employment_type_id) REFERENCES employment_types(id) ON DELETE CASCADE
+	);
+	CREATE TABLE IF NOT EXISTS work_arrangements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+	);
+	CREATE TABLE IF NOT EXISTS user_work_arrangements (
+    user_id INTEGER NOT NULL,
+    work_arrangement_id INTEGER NOT NULL,
+
+    PRIMARY KEY (user_id, work_arrangement_id),
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (work_arrangement_id) REFERENCES work_arrangements(id) ON DELETE CASCADE
+	);
+	CREATE TABLE IF NOT EXISTS user_preferences (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    salary_min INTEGER,
+    salary_max INTEGER,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
+
+	`
 	_, err := DB.Exec(query)
 	if err != nil {
 		return fmt.Errorf("creating tables: %w", err)
+	}
+
+	_, err = DB.Exec(`
+		INSERT OR IGNORE INTO employment_types (name)
+		VALUES
+			('Full-time'),
+			('Part-time'),
+			('Contract'),
+			('Internship'),
+			('Freelance')
+	`)
+	if err != nil {
+		return fmt.Errorf("seeding employment types: %w", err)
+	}
+
+	_, err = DB.Exec(`
+		INSERT OR IGNORE INTO work_arrangements (name)
+		VALUES
+			('Remote'),
+			('Hybrid'),
+			('On-site')
+	`)
+	if err != nil {
+		return fmt.Errorf("seeding work arrangements: %w", err)
 	}
 
 	return nil
