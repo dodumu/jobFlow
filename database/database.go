@@ -20,6 +20,11 @@ func InitDB(path string) error {
 		db.Close()
 		return fmt.Errorf("pinging database: %w", err)
 	}
+	_, err = db.Exec("PRAGMA foreign_keys = ON")
+	if err != nil {
+		db.Close()
+		return fmt.Errorf("enabling foreign keys: %w", err)
+	}
 
 	DB = db
 
@@ -107,6 +112,34 @@ func CreateTables() error {
     headline TEXT,
     bio TEXT,
     location TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+	CREATE TABLE IF NOT EXISTS experiences (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    company TEXT NOT NULL,
+    position TEXT NOT NULL,
+    start_date DATETIME NOT NULL,
+    end_date DATETIME,
+    description TEXT,
+    currently_working INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+	CREATE TABLE IF NOT EXISTS education (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    institution TEXT NOT NULL,
+    degree TEXT NOT NULL,
+    field_of_study TEXT NOT NULL,
+    start_date DATETIME NOT NULL,
+    end_date DATETIME,
+    description TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME,
 
