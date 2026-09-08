@@ -1,0 +1,335 @@
+{{define "content"}}
+
+<div class="auth-page">
+  <div class="auth-card register-card">
+    <div class="auth-header">
+      <h1>Create your account</h1>
+      <p>Join the JobFlow professional community.</p>
+    </div>
+
+    <form action="/register" method="POST">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="first_name">First name</label>
+
+          <input
+            type="text"
+            id="first_name"
+            name="first_name"
+            placeholder="First name"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="last_name">Last name</label>
+
+          <input
+            type="text"
+            id="last_name"
+            name="last_name"
+            placeholder="Last name"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+
+        <input
+          type="text"
+          id="username"
+          name="username"
+          placeholder="Choose a username"
+          required
+          autocomplete="username"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="you@example.com"
+          required
+          autocomplete="email"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Create a password"
+          required
+          autocomplete="new-password"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="date_of_birth">Date of birth</label>
+
+        <input type="date" id="date_of_birth" name="date_of_birth" required />
+      </div>
+
+      <div class="form-group">
+        <label for="role">Account type</label>
+
+        <select id="role" name="role" required>
+          <option value="">Select account type</option>
+          <option value="individual">Individual</option>
+          <option value="company">Company</option>
+        </select>
+      </div>
+
+      <div id="company-fields" class="company-section">
+        <h2>Company information</h2>
+
+        <p class="section-description">Tell us a little about your company.</p>
+
+        <div class="form-group">
+          <label for="company_name">Company name</label>
+
+          <input
+            type="text"
+            id="company_name"
+            name="company_name"
+            placeholder="Company name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="industry">Industry</label>
+
+          <input
+            type="text"
+            id="industry"
+            name="industry"
+            placeholder="e.g. Technology"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="company_size">Company size</label>
+
+          <select id="company_size" name="company_size">
+            <option value="">Select company size</option>
+            <option value="1-10">1-10 employees</option>
+            <option value="11-50">11-50 employees</option>
+            <option value="51-200">51-200 employees</option>
+            <option value="201-500">201-500 employees</option>
+            <option value="501-1000">501-1000 employees</option>
+            <option value="1000+">1000+ employees</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="location">Location</label>
+
+          <input
+            type="text"
+            id="location"
+            name="location"
+            placeholder="Company location"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="website">Website</label>
+
+          <input
+            type="url"
+            id="website"
+            name="website"
+            placeholder="https://example.com"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Company description</label>
+
+          <textarea
+            id="description"
+            name="description"
+            placeholder="Tell people about your company..."
+            rows="4"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="logo">Logo URL</label>
+
+          <input
+            type="url"
+            id="logo"
+            name="logo"
+            placeholder="https://example.com/logo.png"
+          />
+        </div>
+      </div>
+
+      <button type="submit" class="submit-button">Create Account</button>
+    </form>
+
+    <div class="auth-footer">
+      <p>
+        Already have an account?
+        <a href="/login">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const roleSelect = document.getElementById("role");
+  const companyFields = document.getElementById("company-fields");
+
+  function updateCompanyFields() {
+    if (roleSelect.value === "company") {
+      companyFields.style.display = "block";
+    } else {
+      companyFields.style.display = "none";
+    }
+  }
+
+  roleSelect.addEventListener("change", updateCompanyFields);
+
+  updateCompanyFields();
+</script>
+
+<style>
+  .auth-page {
+    display: flex;
+    justify-content: center;
+    padding: 30px 0;
+  }
+
+  .auth-card {
+    width: min(550px, 100%);
+    background: #ffffff;
+    padding: 35px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .auth-header h1 {
+    margin-bottom: 8px;
+    font-size: 28px;
+  }
+
+  .auth-header p {
+    color: #6b7280;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 600;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 15px;
+  }
+
+  .form-group textarea {
+    resize: vertical;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+  }
+
+  .company-section {
+    display: none;
+    margin: 25px 0;
+    padding: 20px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+  }
+
+  .company-section h2 {
+    margin-bottom: 5px;
+    font-size: 20px;
+  }
+
+  .section-description {
+    color: #6b7280;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+
+  .submit-button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 7px;
+    background: #2563eb;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .submit-button:hover {
+    background: #1d4ed8;
+  }
+
+  .auth-footer {
+    text-align: center;
+    margin-top: 25px;
+    color: #6b7280;
+  }
+
+  .auth-footer a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  @media (max-width: 600px) {
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .auth-card {
+      padding: 25px;
+    }
+  }
+</style>
+
+{{end}}

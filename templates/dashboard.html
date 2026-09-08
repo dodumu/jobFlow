@@ -1,0 +1,184 @@
+{{define "content"}}
+
+<div class="dashboard">
+  <div class="welcome">
+    <h1>Welcome, {{.User.FirstName}}</h1>
+    <p>See what's happening on JobFlow.</p>
+  </div>
+
+  <section class="create-post">
+    <h2>Create a post</h2>
+
+    <form action="/posts/create" method="POST">
+      <textarea
+        name="content"
+        placeholder="Share something professional with your network..."
+        required
+        rows="5"
+        style="width: 100%; padding: 12px; margin: 12px 0"
+      ></textarea>
+
+      <select name="type" style="padding: 10px; margin-bottom: 12px">
+        <option value="normal">Normal</option>
+        <option value="project">Project</option>
+        <option value="announcement">Announcement</option>
+      </select>
+
+      <br />
+
+      <button type="submit">Post</button>
+    </form>
+  </section>
+
+  <section class="feed">
+    <h2>Feed</h2>
+
+    {{if .Posts}} {{range .Posts}}
+
+    <article class="post">
+      <div class="post-author">
+        <strong> {{.AuthorFirstName}} {{.AuthorLastName}} </strong>
+
+        <span> @{{.AuthorUsername}} </span>
+      </div>
+
+      <div class="post-type">{{.Type}}</div>
+
+      <p class="post-content">{{.Content}}</p>
+
+      <div class="post-meta">
+        <span>{{.LikeCount}} likes</span>
+        <span>{{.CommentCount}} comments</span>
+        <span>{{.ShareCount}} shares</span>
+      </div>
+
+      <div class="post-actions">
+        {{if .HasLiked}}
+        <form action="/posts/unlike" method="POST">
+          <input type="hidden" name="post_id" value="{{.ID}}" />
+          <button type="submit">Unlike</button>
+        </form>
+        {{else}}
+        <form action="/posts/like" method="POST">
+          <input type="hidden" name="post_id" value="{{.ID}}" />
+          <button type="submit">Like</button>
+        </form>
+        {{end}}
+
+        <a href="/posts/{{.ID}}"> Comments </a>
+
+        <form action="/posts/share" method="POST">
+          <input type="hidden" name="post_id" value="{{.ID}}" />
+          <button type="submit">Share</button>
+        </form>
+      </div>
+    </article>
+
+    {{end}} {{else}}
+
+    <div class="empty-feed">
+      <h3>Your feed is empty</h3>
+      <p>Be the first to share something with the JobFlow community.</p>
+    </div>
+
+    {{end}}
+  </section>
+</div>
+
+<style>
+  .welcome {
+    margin-bottom: 25px;
+  }
+
+  .welcome h1 {
+    margin-bottom: 5px;
+  }
+
+  .create-post,
+  .post,
+  .empty-feed {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .create-post h2,
+  .feed h2 {
+    margin-bottom: 15px;
+  }
+
+  textarea {
+    font-family: inherit;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    resize: vertical;
+  }
+
+  select,
+  button {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 8px 12px;
+    background: white;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #f3f4f6;
+  }
+
+  .post-author {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .post-author span {
+    color: #6b7280;
+  }
+
+  .post-type {
+    display: inline-block;
+    font-size: 12px;
+    margin-bottom: 15px;
+    color: #6b7280;
+    text-transform: uppercase;
+  }
+
+  .post-content {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 18px;
+    white-space: pre-wrap;
+  }
+
+  .post-meta {
+    display: flex;
+    gap: 20px;
+    color: #6b7280;
+    font-size: 14px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .post-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+  }
+
+  .post-actions form {
+    display: inline;
+  }
+
+  .post-actions a {
+    text-decoration: none;
+    color: #374151;
+  }
+</style>
+
+{{end}}

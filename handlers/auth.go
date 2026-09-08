@@ -14,6 +14,13 @@ var validRoles = map[string]bool{
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		err := utils.RenderTemplate(w, "register.html", nil)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
+		return
+	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -50,7 +57,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := database.CreateUser(user)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "create user: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if role == "company" {

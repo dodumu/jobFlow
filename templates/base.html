@@ -1,0 +1,67 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>JobFlow</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f6f8;
+        color: #1f2937;
+      }
+
+      nav {
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 16px 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      nav .logo {
+        font-size: 22px;
+        font-weight: bold;
+      }
+
+      nav a {
+        text-decoration: none;
+        color: #374151;
+        margin-left: 20px;
+      }
+
+      nav a:hover {
+        color: #2563eb;
+      }
+
+      .container {
+        width: min(1100px, 92%);
+        margin: 30px auto;
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav>
+      <div class="logo">JobFlow</div>
+
+      <div>
+        <a href="/dashboard">Home</a>
+        <a href="/profile">Profile</a>
+      </div>
+    </nav>
+
+    <main class="container">{{template "content" .}}</main>
+  </body>
+</html>
+{{end}}
