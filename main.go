@@ -32,6 +32,25 @@ func main() {
 			http.HandlerFunc(handlers.EditProfileHandler),
 		),
 	)
+	http.Handle(
+		"/posts/create",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.CreatePostHandler),
+		),
+	)
+	http.Handle(
+		"/posts/like/",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.LikePostHandler),
+		),
+	)
+
+	http.Handle(
+		"/posts/unlike/",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.UnlikePostHandler),
+		),
+	)
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 
