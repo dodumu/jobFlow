@@ -242,6 +242,27 @@
   }
 
   /* =========================
+     DELETE POST
+     ========================= */
+
+  .delete-post-button {
+    margin-left: auto;
+    border: none;
+    background: transparent;
+    color: #dc2626;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+  }
+
+  .delete-post-button:hover {
+    background: #fef2f2;
+  }
+
+  /* =========================
      POST TYPE
      ========================= */
 
@@ -617,12 +638,14 @@
     <div class="card profile-card">
       <div class="profile-avatar">{{slice .User.FirstName 0 1}}</div>
 
+      ```
       <h3>{{.User.FirstName}} {{.User.LastName}}</h3>
 
       <p class="profile-username">@{{.User.Username}}</p>
 
       <a href="/profile" class="profile-link"> View Profile </a>
     </div>
+    ```
   </aside>
 
   <!-- =========================
@@ -632,6 +655,7 @@
   <section class="main-feed">
     <!-- COMPOSER -->
 
+    ```
     <div class="card composer">
       <div class="composer-header">
         <div class="composer-avatar">{{slice .User.FirstName 0 1}}</div>
@@ -694,12 +718,24 @@
           <span> @{{.AuthorUsername}} </span>
         </div>
 
+        {{if eq .UserID $.CurrentUserID}}
+        <form
+          action="/posts/delete"
+          method="POST"
+          onsubmit="return confirm('Are you sure you want to delete this post?');"
+        >
+          <input type="hidden" name="post_id" value="{{.ID}}" />
+
+          <button type="submit" class="delete-post-button">Delete</button>
+        </form>
+        {{else}}
         <div class="post-menu">•••</div>
+        {{end}}
       </div>
 
       <!-- =========================
-             SHARED POST
-             ========================= -->
+       SHARED POST
+       ========================= -->
 
       {{if .SharedPostID}}
 
@@ -740,8 +776,8 @@
       {{else}}
 
       <!-- =========================
-               NORMAL POST
-               ========================= -->
+       NORMAL POST
+       ========================= -->
 
       <!-- POST TYPE -->
 
@@ -852,7 +888,7 @@
       <p>Be the first to share something with the JobFlow community.</p>
     </div>
 
-    {{end}}
+    {{end}} ```
   </section>
 
   <!-- =========================
@@ -863,6 +899,7 @@
     <div class="card sidebar-card">
       <h3>Discover</h3>
 
+      ```
       <div class="discover-item">
         <strong> Build your profile </strong>
 
@@ -890,6 +927,7 @@
         professionals to discover you.
       </p>
     </div>
+    ```
   </aside>
 </div>
 

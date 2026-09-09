@@ -1,580 +1,638 @@
 {{define "content"}}
 
 <style>
-    .profile-page {
-        max-width: 1050px;
-        margin: 0 auto;
-    }
+  .profile-page {
+    max-width: 1050px;
+    margin: 0 auto;
+  }
 
-    .profile-header {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        overflow: hidden;
-        margin-bottom: 20px;
-    }
+  .profile-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
 
-    .profile-cover {
-        height: 150px;
-        background: linear-gradient(135deg, #2563eb, #1e40af);
-    }
+  .profile-cover {
+    height: 150px;
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+  }
 
-    .profile-header-content {
-        padding: 0 30px 25px;
-        position: relative;
+  .profile-header-content {
+    padding: 0 30px 25px;
+    position: relative;
+  }
+
+  .profile-main {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .large-avatar {
+    width: 100px;
+    height: 100px;
+    margin-top: -50px;
+    border-radius: 50%;
+    border: 5px solid white;
+    background: #dbeafe;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 800;
+  }
+
+  .profile-identity {
+    padding-top: 12px;
+  }
+
+  .profile-identity h1 {
+    font-size: 27px;
+    letter-spacing: -0.5px;
+    margin-bottom: 2px;
+  }
+
+  .username {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .headline {
+    font-size: 15px;
+    color: #374151;
+  }
+
+  .profile-actions {
+    padding-bottom: 4px;
+  }
+
+  .stats {
+    display: flex;
+    gap: 25px;
+    margin-top: 20px;
+    padding-top: 17px;
+    border-top: 1px solid var(--border);
+  }
+
+  .stat strong {
+    display: block;
+    font-size: 16px;
+  }
+
+  .stat span {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .profile-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .section-title h2 {
+    font-size: 18px;
+  }
+
+  .section-title span {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .empty-section {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .about-text {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+
+  .experience-item,
+  .education-item {
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .experience-item:first-child,
+  .education-item:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .experience-item h3,
+  .education-item h3 {
+    font-size: 15px;
+    margin-bottom: 3px;
+  }
+
+  .experience-company {
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .date-range {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .experience-description,
+  .education-description {
+    color: #4b5563;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  .skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .skill {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #dbeafe;
+    border-radius: 20px;
+    padding: 6px 11px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .info-list {
+    list-style: none;
+  }
+
+  .info-item {
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .info-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .info-label {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .info-value {
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .post-item {
+    padding: 17px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .post-item:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .post-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .post-type {
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .post-date {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .post-content {
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+  }
+
+  @media (max-width: 800px) {
+    .profile-grid {
+      grid-template-columns: 1fr;
     }
 
     .profile-main {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 20px;
-    }
-
-    .large-avatar {
-        width: 100px;
-        height: 100px;
-        margin-top: -50px;
-        border-radius: 50%;
-        border: 5px solid white;
-        background: #dbeafe;
-        color: var(--primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 36px;
-        font-weight: 800;
-    }
-
-    .profile-identity {
-        padding-top: 12px;
-    }
-
-    .profile-identity h1 {
-        font-size: 27px;
-        letter-spacing: -0.5px;
-        margin-bottom: 2px;
-    }
-
-    .username {
-        color: var(--muted);
-        font-size: 14px;
-        margin-bottom: 8px;
-    }
-
-    .headline {
-        font-size: 15px;
-        color: #374151;
+      align-items: flex-start;
+      flex-direction: column;
     }
 
     .profile-actions {
-        padding-bottom: 4px;
+      width: 100%;
+    }
+
+    .profile-actions .btn-primary {
+      width: 100%;
+    }
+
+    .profile-header-content {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+  }
+
+  @media (max-width: 500px) {
+    .profile-cover {
+      height: 110px;
+    }
+
+    .large-avatar {
+      width: 82px;
+      height: 82px;
+      margin-top: -41px;
+      font-size: 30px;
+    }
+
+    .profile-identity h1 {
+      font-size: 23px;
     }
 
     .stats {
-        display: flex;
-        gap: 25px;
-        margin-top: 20px;
-        padding-top: 17px;
-        border-top: 1px solid var(--border);
+      gap: 18px;
     }
+  }
+  .profile-identity-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
 
-    .stat strong {
-        display: block;
-        font-size: 16px;
-    }
+  .profile-picture {
+    object-fit: cover;
+  }
 
-    .stat span {
-        color: var(--muted);
-        font-size: 12px;
-    }
+  .headline.muted {
+    color: #777;
+    font-style: italic;
+  }
+  .company-info h3 {
+    margin-bottom: 6px;
+  }
 
-    .profile-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 310px;
-        gap: 20px;
-        align-items: start;
-    }
+  .company-info p {
+    margin: 6px 0;
+  }
 
-    .card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 22px;
-        margin-bottom: 20px;
-    }
-
-    .section-title {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-    }
-
-    .section-title h2 {
-        font-size: 18px;
-    }
-
-    .section-title span {
-        color: var(--muted);
-        font-size: 12px;
-    }
-
-    .empty-section {
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.6;
-    }
-
-    .about-text {
-        font-size: 14px;
-        color: #374151;
-        line-height: 1.7;
-        white-space: pre-wrap;
-    }
-
-    .experience-item,
-    .education-item {
-        padding: 16px 0;
-        border-top: 1px solid var(--border);
-    }
-
-    .experience-item:first-child,
-    .education-item:first-child {
-        border-top: none;
-        padding-top: 0;
-    }
-
-    .experience-item h3,
-    .education-item h3 {
-        font-size: 15px;
-        margin-bottom: 3px;
-    }
-
-    .experience-company {
-        color: var(--primary);
-        font-size: 13px;
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-
-    .date-range {
-        color: var(--muted);
-        font-size: 12px;
-        margin-bottom: 8px;
-    }
-
-    .experience-description,
-    .education-description {
-        color: #4b5563;
-        font-size: 13px;
-        line-height: 1.6;
-        white-space: pre-wrap;
-    }
-
-    .skill-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .skill {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #dbeafe;
-        border-radius: 20px;
-        padding: 6px 11px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .info-list {
-        list-style: none;
-    }
-
-    .info-item {
-        padding: 11px 0;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .info-item:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-
-    .info-label {
-        display: block;
-        color: var(--muted);
-        font-size: 11px;
-        margin-bottom: 2px;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-    }
-
-    .info-value {
-        font-size: 13px;
-        color: var(--text);
-    }
-
-    .post-item {
-        padding: 17px 0;
-        border-top: 1px solid var(--border);
-    }
-
-    .post-item:first-child {
-        border-top: none;
-        padding-top: 0;
-    }
-
-    .post-meta {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-    }
-
-    .post-type {
-        color: var(--primary);
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .post-date {
-        color: var(--muted);
-        font-size: 11px;
-    }
-
-    .post-content {
-        color: #374151;
-        font-size: 14px;
-        line-height: 1.65;
-        white-space: pre-wrap;
-    }
-
-    @media (max-width: 800px) {
-        .profile-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .profile-main {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-        .profile-actions {
-            width: 100%;
-        }
-
-        .profile-actions .btn-primary {
-            width: 100%;
-        }
-
-        .profile-header-content {
-            padding-left: 20px;
-            padding-right: 20px;
-        }
-    }
-
-    @media (max-width: 500px) {
-        .profile-cover {
-            height: 110px;
-        }
-
-        .large-avatar {
-            width: 82px;
-            height: 82px;
-            margin-top: -41px;
-            font-size: 30px;
-        }
-
-        .profile-identity h1 {
-            font-size: 23px;
-        }
-
-        .stats {
-            gap: 18px;
-        }
-    }
+  .company-description {
+    line-height: 1.5;
+  }
 </style>
 
 <div class="profile-page">
-    <!-- PROFILE HEADER -->
-
-    <section class="profile-header">
-        <div class="profile-cover"></div>
-
-        <div class="profile-header-content">
-            <div class="profile-main">
-                <div>
-                    <div class="large-avatar">{{slice .User.FirstName 0 1}}</div>
-
-                    <div class="profile-identity">
-                        <h1>{{.User.FirstName}} {{.User.LastName}}</h1>
-
-                        <p class="username">@{{.User.Username}}</p>
-
-                        {{if .Profile.Headline}}
-                        <p class="headline">{{.Profile.Headline}}</p>
-                        {{else}}
-                        <p class="headline">Add a professional headline to your profile.</p>
-                        {{end}}
-                    </div>
-                </div>
-
-                <div class="profile-actions">
-                    <a href="/profile/edit" class="btn-primary">
-                        Edit Profile
-                    </a>
-                </div>
-
-                <div class="stats">
-                    <div class="stat">
-                        <strong>{{.FollowerCount}}</strong>
-                        <span>Followers</span>
-                    </div>
-
-                    <div class="stat">
-                        <strong>{{.FollowingCount}}</strong>
-                        <span>Following</span>
-                    </div>
-
-                    <div class="stat">
-                        <strong>{{len .Posts}}</strong>
-                        <span>Posts</span>
-                    </div>
-                </div>
-            </div>
-    </section>
-
-    <div class="profile-grid">
-        <!-- MAIN COLUMN -->
-
-        <main>
-            <!-- ABOUT -->
-
-            <section class="card">
-                <div class="section-title">
-                    <h2>About</h2>
-                </div>
-
-                {{if .Profile.Bio}}
-
-                <p class="about-text">{{.Profile.Bio}}</p>
-
-                {{else}}
-
-                <p class="empty-section">
-                    Your professional story will appear here. Add a short bio describing
-                    who you are, what you do, and what you are interested in.
-                </p>
-
-                {{end}}
-            </section>
-
-            <!-- EXPERIENCE -->
-
-            <section class="card">
-                <div class="section-title">
-                    <h2>Experience</h2>
-                    <span>{{len .Experiences}} positions</span>
-                </div>
-
-                {{if .Experiences}} {{range .Experiences}}
-
-                <div class="experience-item">
-                    <h3>{{.Position}}</h3>
-
-                    <p class="experience-company">{{.Company}}</p>
-
-                    <p class="date-range">
-                        {{.StartDate.Format "Jan 2006"}} - {{if .CurrentlyWork}} Present
-                        {{else if .EndDate}} {{.EndDate.Format "Jan 2006"}} {{else}} Present
-                        {{end}}
-                    </p>
-
-                    {{if .Description}}
-                    <p class="experience-description">{{.Description}}</p>
-                    {{end}}
-                </div>
-
-                {{end}} {{else}}
-
-                <p class="empty-section">No work experience has been added yet.</p>
-
-                {{end}}
-            </section>
-
-            <!-- EDUCATION -->
-
-            <section class="card">
-                <div class="section-title">
-                    <h2>Education</h2>
-                    <span>{{len .Education}} entries</span>
-                </div>
-
-                {{if .Education}} {{range .Education}}
-
-                <div class="education-item">
-                    <h3>{{.Degree}}</h3>
-
-                    <p class="experience-company">{{.Institution}}</p>
-
-                    {{if .FieldOfStudy}}
-                    <p class="date-range">{{.FieldOfStudy}}</p>
-                    {{end}} {{if .Description}}
-                    <p class="education-description">{{.Description}}</p>
-                    {{end}}
-                </div>
-
-                {{end}} {{else}}
-
-                <p class="empty-section">
-                    No education information has been added yet.
-                </p>
-
-                {{end}}
-            </section>
-
-            <!-- POSTS -->
-
-            <section class="card">
-                <div class="section-title">
-                    <h2>Posts</h2>
-                    <span>Your professional activity</span>
-                </div>
-
-                {{if .Posts}} {{range .Posts}}
-
-                <article class="post-item">
-                    <div class="post-meta">
-                        <span class="post-type"> {{.Type}} </span>
-
-                        <span class="post-date"> {{.CreatedAt.Format "Jan 2, 2006"}} </span>
-                    </div>
-
-                    <p class="post-content">{{.Content}}</p>
-                </article>
-
-                {{end}} {{else}}
-
-                <p class="empty-section">You haven't published any posts yet.</p>
-
-                {{end}}
-            </section>
-        </main>
-
-        <!-- SIDEBAR -->
-
-        <aside>
-            <!-- SKILLS -->
-
-            <section class="card">
-                <div class="section-title">
-                    <h2>Skills</h2>
-                </div>
-
-                {{if .Skills}}
-
-                <div class="skill-list">
-                    {{range .Skills}}
-
-                    <span class="skill"> {{.Name}} </span>
-
-                    {{end}}
-                </div>
-
-                {{else}}
-
-                <p class="empty-section">
-                    Add skills to help companies discover your expertise.
-                </p>
-
-                {{end}}
-            </section>
-
-            <!-- PROFESSIONAL PREFERENCES -->
-
-            <section class="card">
-                <div class="section-title">
-                    <h2>Job Preferences</h2>
-                </div>
-
-                <ul class="info-list">
-                    {{if .EmploymentTypes}}
-
-                    <li class="info-item">
-                        <span class="info-label"> Employment </span>
-
-                        <span class="info-value">
-                            {{range $index, $item := .EmploymentTypes}} {{if $index}}, {{end}}
-                            {{$item.Name}} {{end}}
-                        </span>
-                    </li>
-
-                    {{end}} {{if .WorkArrangements}}
-
-                    <li class="info-item">
-                        <span class="info-label"> Work Arrangement </span>
-
-                        <span class="info-value">
-                            {{range $index, $item := .WorkArrangements}} {{if $index}},
-                            {{end}} {{$item.Name}} {{end}}
-                        </span>
-                    </li>
-
-                    {{end}} {{if .Preferences}} {{if .Preferences.SalaryMin}}
-
-                    <li class="info-item">
-                        <span class="info-label"> Minimum Salary </span>
-
-                        <span class="info-value"> ₦{{.Preferences.SalaryMin}} </span>
-                    </li>
-
-                    {{end}} {{if .Preferences.SalaryMax}}
-
-                    <li class="info-item">
-                        <span class="info-label"> Maximum Salary </span>
-
-                        <span class="info-value"> ₦{{.Preferences.SalaryMax}} </span>
-                    </li>
-
-                    {{end}} {{end}}
-                </ul>
-            </section>
-
-            <!-- ACCOUNT INFORMATION -->
-
-            <section class="card">
-                <div class="section-title">
-                    <h2>Profile Information</h2>
-                </div>
-
-                <ul class="info-list">
-                    <li class="info-item">
-                        <span class="info-label"> Username </span>
-
-                        <span class="info-value"> @{{.User.Username}} </span>
-                    </li>
-
-                    <li class="info-item">
-                        <span class="info-label"> Email </span>
-
-                        <span class="info-value"> {{.User.Email}} </span>
-                    </li>
-
-                    {{if .Profile.Location}}
-
-                    <li class="info-item">
-                        <span class="info-label"> Location </span>
-
-                        <span class="info-value"> {{.Profile.Location}} </span>
-                    </li>
-
-                    {{end}}
-                </ul>
-            </section>
-        </aside>
+  <!-- PROFILE HEADER -->
+
+  <section class="profile-header">
+    <div class="profile-cover"></div>
+
+    <div class="profile-header-content">
+      <div class="profile-main">
+        <div class="profile-identity-wrapper">
+          {{if .Profile.ProfilePicture}}
+          <img
+            src="{{.Profile.ProfilePicture}}"
+            alt="{{.User.FirstName}} {{.User.LastName}}"
+            class="large-avatar profile-picture"
+          />
+          {{else}}
+          <div class="large-avatar">{{slice .User.FirstName 0 1}}</div>
+          {{end}}
+
+          <div class="profile-identity">
+            <h1>{{.User.FirstName}} {{.User.LastName}}</h1>
+
+            <p class="username">@{{.User.Username}}</p>
+
+            {{if .Profile.Headline}}
+            <p class="headline">{{.Profile.Headline}}</p>
+            {{else}}
+            <p class="headline muted">
+              Add a professional headline to your profile.
+            </p>
+            {{end}}
+          </div>
+        </div>
+
+        <div class="profile-actions">
+          <a href="/profile/edit" class="btn-primary"> Edit Profile </a>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <strong>{{.FollowerCount}}</strong>
+          <span>Followers</span>
+        </div>
+
+        <div class="stat">
+          <strong>{{.FollowingCount}}</strong>
+          <span>Following</span>
+        </div>
+
+        <div class="stat">
+          <strong>{{len .Posts}}</strong>
+          <span>Posts</span>
+        </div>
+      </div>
     </div>
+  </section>
+
+  <div class="profile-grid">
+    <!-- MAIN COLUMN -->
+
+    <main>
+      <!-- ABOUT -->
+
+      <section class="card">
+        <div class="section-title">
+          <h2>About</h2>
+        </div>
+
+        {{if .Profile.Bio}}
+
+        <p class="about-text">{{.Profile.Bio}}</p>
+
+        {{else}}
+
+        <p class="empty-section">
+          Your professional story will appear here. Add a short bio describing
+          who you are, what you do, and what you are interested in.
+        </p>
+
+        {{end}}
+      </section>
+
+      <!-- EXPERIENCE -->
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Experience</h2>
+          <span>{{len .Experiences}} positions</span>
+        </div>
+
+        {{if .Experiences}} {{range .Experiences}}
+
+        <div class="experience-item">
+          <h3>{{.Position}}</h3>
+
+          <p class="experience-company">{{.Company}}</p>
+
+          <p class="date-range">
+            {{.StartDate.Format "Jan 2006"}} - {{if .CurrentlyWork}} Present
+            {{else if .EndDate}} {{.EndDate.Format "Jan 2006"}} {{else}} Present
+            {{end}}
+          </p>
+
+          {{if .Description}}
+          <p class="experience-description">{{.Description}}</p>
+          {{end}}
+        </div>
+
+        {{end}} {{else}}
+
+        <p class="empty-section">No work experience has been added yet.</p>
+
+        {{end}}
+      </section>
+
+      <!-- EDUCATION -->
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Education</h2>
+          <span>{{len .Education}} entries</span>
+        </div>
+
+        {{if .Education}} {{range .Education}}
+
+        <div class="education-item">
+          <h3>{{.Degree}}</h3>
+
+          <p class="experience-company">{{.Institution}}</p>
+
+          {{if .FieldOfStudy}}
+          <p class="date-range">{{.FieldOfStudy}}</p>
+          {{end}} {{if .Description}}
+          <p class="education-description">{{.Description}}</p>
+          {{end}}
+        </div>
+
+        {{end}} {{else}}
+
+        <p class="empty-section">
+          No education information has been added yet.
+        </p>
+
+        {{end}}
+      </section>
+
+      <!-- POSTS -->
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Posts</h2>
+          <span>Your professional activity</span>
+        </div>
+
+        {{if .Posts}} {{range .Posts}}
+
+        <article class="post-item">
+          <div class="post-meta">
+            <span class="post-type"> {{.Type}} </span>
+
+            <span class="post-date"> {{.CreatedAt.Format "Jan 2, 2006"}} </span>
+          </div>
+
+          <p class="post-content">{{.Content}}</p>
+        </article>
+
+        {{end}} {{else}}
+
+        <p class="empty-section">You haven't published any posts yet.</p>
+
+        {{end}}
+      </section>
+    </main>
+
+    <!-- SIDEBAR -->
+
+    <aside>
+      <!-- SKILLS -->
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Skills</h2>
+        </div>
+
+        {{if .Skills}}
+
+        <div class="skill-list">
+          {{range .Skills}}
+
+          <span class="skill"> {{.Name}} </span>
+
+          {{end}}
+        </div>
+
+        {{else}}
+
+        <p class="empty-section">
+          Add skills to help companies discover your expertise.
+        </p>
+
+        {{end}}
+      </section>
+
+      <!-- PROFESSIONAL PREFERENCES -->
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Job Preferences</h2>
+        </div>
+
+        <ul class="info-list">
+          {{if .EmploymentTypes}}
+
+          <li class="info-item">
+            <span class="info-label"> Employment </span>
+
+            <span class="info-value">
+              {{range $index, $item := .EmploymentTypes}} {{if $index}}, {{end}}
+              {{$item.Name}} {{end}}
+            </span>
+          </li>
+
+          {{end}} {{if .WorkArrangements}}
+
+          <li class="info-item">
+            <span class="info-label"> Work Arrangement </span>
+
+            <span class="info-value">
+              {{range $index, $item := .WorkArrangements}} {{if $index}},
+              {{end}} {{$item.Name}} {{end}}
+            </span>
+          </li>
+
+          {{end}} {{if .Preferences}} {{if .Preferences.SalaryMin}}
+
+          <li class="info-item">
+            <span class="info-label"> Minimum Salary </span>
+
+            <span class="info-value"> ₦{{.Preferences.SalaryMin}} </span>
+          </li>
+
+          {{end}} {{if .Preferences.SalaryMax}}
+
+          <li class="info-item">
+            <span class="info-label"> Maximum Salary </span>
+
+            <span class="info-value"> ₦{{.Preferences.SalaryMax}} </span>
+          </li>
+
+          {{end}} {{end}}
+        </ul>
+      </section>
+      {{if .Company}}
+      <section class="profile-card">
+        <h2>Company</h2>
+
+        <div class="company-info">
+          <h3>{{.Company.CompanyName}}</h3>
+
+          {{if .Company.Industry}}
+          <p>{{.Company.Industry}}</p>
+          {{end}} {{if .Company.Location}}
+          <p>{{.Company.Location}}</p>
+          {{end}} {{if .Company.Description}}
+          <p class="company-description">{{.Company.Description}}</p>
+          {{end}} {{if .Company.Website}}
+          <a
+            href="{{.Company.Website}}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Visit website
+          </a>
+          {{end}}
+        </div>
+      </section>
+      {{end}}
+      <!-- ACCOUNT INFORMATION -->
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Profile Information</h2>
+        </div>
+
+        <ul class="info-list">
+          <li class="info-item">
+            <span class="info-label"> Username </span>
+
+            <span class="info-value"> @{{.User.Username}} </span>
+          </li>
+
+          <li class="info-item">
+            <span class="info-label"> Email </span>
+
+            <span class="info-value"> {{.User.Email}} </span>
+          </li>
+
+          {{if .Profile.Location}}
+
+          <li class="info-item">
+            <span class="info-label"> Location </span>
+
+            <span class="info-value"> {{.Profile.Location}} </span>
+          </li>
+
+          {{end}}
+        </ul>
+      </section>
+    </aside>
+  </div>
 </div>
 
 {{end}}

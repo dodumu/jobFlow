@@ -70,6 +70,9 @@ func main() {
 			http.HandlerFunc(handlers.GetCommentsHandler),
 		),
 	)
+	http.Handle("/posts/delete", middleware.AuthMiddleware(
+		http.HandlerFunc(handlers.DeletePostHandler),
+	))
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 

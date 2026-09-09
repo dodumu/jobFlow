@@ -35,7 +35,6 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	profile, err := database.GetUserProfileByUserID(userID)
-
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.Printf("PROFILE ERROR - GetUserProfileByUserID: %v\n", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -105,24 +104,27 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := struct {
-		User             any
-		Profile          any
-		Experiences      any
-		Education        any
-		Skills           any
-		Preferences      any
-		EmploymentTypes  any
-		WorkArrangements any
-		Posts            any
-		FollowerCount    int
-		FollowingCount   int
-	}{
+	// A user does not have to own a company.
+	var company *models.Company
+
+	companyData, err := database.GetCompanyByUserID(userID)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			log.Printf("PROFILE ERROR - GetCompanyByUserID: %v\n", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		company = &companyData
+	}
+
+	data := models.ProfilePageData{
 		User:             user,
 		Profile:          profile,
+		Company:          company,
+		Skills:           skills,
 		Experiences:      experiences,
 		Education:        education,
-		Skills:           skills,
 		Preferences:      preferences,
 		EmploymentTypes:  employmentTypes,
 		WorkArrangements: workArrangements,
@@ -135,7 +137,6 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/base.html",
 		"templates/profile.html",
 	)
-
 	if err != nil {
 		log.Printf("PROFILE ERROR - ParseFiles: %v\n", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -148,7 +149,6 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
 func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		userID, ok := r.Context().Value(middleware.UserIDKey).(int)
