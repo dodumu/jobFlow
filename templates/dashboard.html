@@ -1,184 +1,804 @@
 {{define "content"}}
 
-<div class="dashboard">
-  <div class="welcome">
-    <h1>Welcome, {{.User.FirstName}}</h1>
-    <p>See what's happening on JobFlow.</p>
-  </div>
+<style>
+  /* =========================
+     DASHBOARD HEADER
+     ========================= */
 
-  <section class="create-post">
-    <h2>Create a post</h2>
+  .dashboard-header {
+    margin-bottom: 25px;
+  }
 
-    <form action="/posts/create" method="POST">
-      <textarea
-        name="content"
-        placeholder="Share something professional with your network..."
-        required
-        rows="5"
-        style="width: 100%; padding: 12px; margin: 12px 0"
-      ></textarea>
+  .dashboard-header h1 {
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    margin-bottom: 5px;
+  }
 
-      <select name="type" style="padding: 10px; margin-bottom: 12px">
-        <option value="normal">Normal</option>
-        <option value="project">Project</option>
-        <option value="announcement">Announcement</option>
-      </select>
+  .dashboard-header p {
+    color: var(--muted);
+    font-size: 14px;
+  }
 
-      <br />
+  /* =========================
+     DASHBOARD GRID
+     ========================= */
 
-      <button type="submit">Post</button>
-    </form>
-  </section>
+  .dashboard-grid {
+    display: grid;
 
-  <section class="feed">
-    <h2>Feed</h2>
+    grid-template-columns: 220px minmax(0, 1fr) 250px;
+
+    gap: 22px;
+
+    align-items: start;
+  }
+
+  /* =========================
+     CARDS
+     ========================= */
+
+  .card {
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    padding: 20px;
+
+    margin-bottom: 20px;
+  }
+
+  /* =========================
+     LEFT PROFILE CARD
+     ========================= */
+
+  .profile-card {
+    text-align: center;
+  }
+
+  .profile-avatar {
+    width: 64px;
+    height: 64px;
+
+    margin: 0 auto 12px;
+
+    border-radius: 50%;
+
+    background: #dbeafe;
+    color: var(--primary);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .profile-card h3 {
+    font-size: 16px;
+    margin-bottom: 3px;
+  }
+
+  .profile-username {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 18px;
+  }
+
+  .profile-link {
+    display: block;
+
+    text-decoration: none;
+
+    color: var(--primary);
+
+    font-size: 13px;
+    font-weight: 600;
+
+    padding-top: 12px;
+
+    border-top: 1px solid var(--border);
+  }
+
+  /* =========================
+     COMPOSER
+     ========================= */
+
+  .composer {
+    padding: 22px;
+  }
+
+  .composer-header {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    margin-bottom: 15px;
+  }
+
+  .composer-avatar {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 50%;
+
+    background: #dbeafe;
+    color: var(--primary);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 700;
+  }
+
+  .composer-header strong {
+    font-size: 14px;
+  }
+
+  .composer-header span {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 12px;
+  }
+
+  .composer textarea {
+    width: 100%;
+
+    min-height: 100px;
+
+    padding: 13px 14px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 9px;
+
+    resize: vertical;
+
+    outline: none;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+
+    color: var(--text);
+
+    background: #fafafa;
+
+    transition: 0.2s ease;
+  }
+
+  .composer textarea:focus {
+    border-color: var(--primary);
+
+    background: white;
+
+    box-shadow: 0 0 0 3px #dbeafe;
+  }
+
+  .post-form-footer {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-top: 12px;
+
+    gap: 15px;
+  }
+
+  .post-type-selector {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+  }
+
+  .selector-label {
+    color: var(--muted);
+
+    font-size: 12px;
+  }
+
+  .post-type-selector select {
+    border: 1px solid var(--border);
+
+    border-radius: 8px;
+
+    padding: 8px 10px;
+
+    background: white;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    color: var(--text);
+
+    cursor: pointer;
+
+    outline: none;
+  }
+
+  .post-type-selector select:focus {
+    border-color: var(--primary);
+  }
+
+  /* =========================
+     FEED
+     ========================= */
+
+  .feed-heading {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 12px;
+  }
+
+  .feed-heading h2 {
+    font-size: 18px;
+  }
+
+  .feed-heading span {
+    color: var(--muted);
+
+    font-size: 12px;
+  }
+
+  /* =========================
+     POST
+     ========================= */
+
+  .post {
+    padding: 20px;
+  }
+
+  .post-header {
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+  }
+
+  .post-avatar {
+    width: 43px;
+    height: 43px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #dbeafe;
+
+    color: var(--primary);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 700;
+  }
+
+  .post-author {
+    display: flex;
+
+    flex-direction: column;
+  }
+
+  .post-author strong {
+    font-size: 14px;
+  }
+
+  .post-author span {
+    color: var(--muted);
+
+    font-size: 12px;
+  }
+
+  .post-menu {
+    margin-left: auto;
+
+    color: var(--muted);
+
+    font-size: 17px;
+
+    letter-spacing: 2px;
+
+    cursor: pointer;
+  }
+
+  .post-menu:hover {
+    color: var(--text);
+  }
+
+  /* =========================
+     POST TYPE
+     ========================= */
+
+  .post-type {
+    display: inline-block;
+
+    margin-top: 15px;
+    margin-bottom: 12px;
+
+    padding: 5px 9px;
+
+    border-radius: 6px;
+
+    background: #f3f4f6;
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.3px;
+  }
+
+  /* =========================
+     POST CONTENT
+     ========================= */
+
+  .post-content {
+    font-size: 15px;
+
+    line-height: 1.7;
+
+    color: #374151;
+
+    white-space: pre-wrap;
+
+    margin-bottom: 18px;
+  }
+
+  /* =========================
+     POST STATS
+     ========================= */
+
+  .post-stats {
+    display: flex;
+
+    align-items: center;
+
+    gap: 16px;
+
+    padding-bottom: 12px;
+
+    border-bottom: 1px solid var(--border);
+
+    color: var(--muted);
+
+    font-size: 12px;
+  }
+
+  /* =========================
+     POST ACTIONS
+     ========================= */
+
+  .post-actions {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 5px;
+
+    margin-top: 7px;
+  }
+
+  .post-actions form {
+    display: block;
+  }
+
+  .post-action {
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    background: transparent;
+
+    padding: 10px;
+
+    border-radius: 8px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition: 0.15s ease;
+  }
+
+  .post-action:hover {
+    background: #f3f4f6;
+
+    color: var(--primary);
+  }
+
+  .post-action.liked {
+    color: var(--primary);
+  }
+
+  .post-action.liked:hover {
+    background: #eff6ff;
+  }
+
+  /* =========================
+     RIGHT SIDEBAR
+     ========================= */
+
+  .sidebar-card {
+    padding: 18px;
+  }
+
+  .sidebar-card h3 {
+    font-size: 15px;
+
+    margin-bottom: 13px;
+  }
+
+  .discover-item {
+    padding: 11px 0;
+
+    border-bottom: 1px solid var(--border);
+  }
+
+  .discover-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .discover-item strong {
+    display: block;
+
+    font-size: 13px;
+
+    margin-bottom: 2px;
+  }
+
+  .discover-item span {
+    color: var(--muted);
+
+    font-size: 12px;
+  }
+
+  .tip {
+    background: #eff6ff;
+
+    border: 1px solid #dbeafe;
+
+    color: #1e3a8a;
+  }
+
+  .tip p {
+    font-size: 12px;
+
+    line-height: 1.6;
+  }
+
+  /* =========================
+     EMPTY FEED
+     ========================= */
+
+  .empty-feed {
+    text-align: center;
+
+    padding: 45px 20px;
+  }
+
+  .empty-feed h3 {
+    margin-bottom: 6px;
+
+    font-size: 16px;
+  }
+
+  .empty-feed p {
+    color: var(--muted);
+
+    font-size: 13px;
+  }
+
+  /* =========================
+     RESPONSIVE
+     ========================= */
+
+  @media (max-width: 1000px) {
+    .dashboard-grid {
+      grid-template-columns: 200px minmax(0, 1fr);
+    }
+
+    .right-sidebar {
+      display: none;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .left-sidebar {
+      display: none;
+    }
+
+    .dashboard-header h1 {
+      font-size: 24px;
+    }
+
+    .post-form-footer {
+      align-items: stretch;
+
+      flex-direction: column;
+    }
+
+    .post-type-selector {
+      justify-content: space-between;
+    }
+
+    .post-form-footer .btn-primary {
+      width: 100%;
+    }
+
+    .post-actions {
+      gap: 2px;
+    }
+
+    .post-action {
+      padding: 9px 5px;
+
+      font-size: 12px;
+    }
+  }
+</style>
+
+<!-- =========================
+     DASHBOARD HEADER
+     ========================= -->
+
+<div class="dashboard-header">
+  <h1>Welcome back, {{.User.FirstName}} 👋</h1>
+
+  <p>Discover what's happening across your professional network.</p>
+</div>
+
+<!-- =========================
+     DASHBOARD GRID
+     ========================= -->
+
+<div class="dashboard-grid">
+  <!-- =========================
+       LEFT SIDEBAR
+       ========================= -->
+
+  <aside class="left-sidebar">
+    <div class="card profile-card">
+      <div class="profile-avatar">{{slice .User.FirstName 0 1}}</div>
+
+      <h3>{{.User.FirstName}} {{.User.LastName}}</h3>
+
+      <p class="profile-username">@{{.User.Username}}</p>
+
+      <a href="/profile" class="profile-link"> View Profile </a>
+    </div>
+  </aside>
+
+  <!-- =========================
+       MAIN FEED
+       ========================= -->
+
+  <section class="main-feed">
+    <!-- CREATE POST -->
+
+    <div class="card composer">
+      <div class="composer-header">
+        <div class="composer-avatar">{{slice .User.FirstName 0 1}}</div>
+
+        <div>
+          <strong> {{.User.FirstName}} {{.User.LastName}} </strong>
+
+          <span> Share something with your network </span>
+        </div>
+      </div>
+
+      <form action="/posts/create" method="POST">
+        <textarea
+          name="content"
+          placeholder="What would you like to share?"
+          required
+        ></textarea>
+
+        <div class="post-form-footer">
+          <div class="post-type-selector">
+            <span class="selector-label"> Post type </span>
+
+            <select name="type">
+              <option value="normal">💬 Professional Update</option>
+
+              <option value="project">🚀 Project</option>
+
+              <option value="announcement">📢 Announcement</option>
+
+              <option value="hiring">👔 Hiring</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary">Publish</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- FEED HEADING -->
+
+    <div class="feed-heading">
+      <h2>Your Feed</h2>
+
+      <span> Latest activity </span>
+    </div>
+
+    <!-- POSTS -->
 
     {{if .Posts}} {{range .Posts}}
 
-    <article class="post">
-      <div class="post-author">
-        <strong> {{.AuthorFirstName}} {{.AuthorLastName}} </strong>
+    <article class="card post">
+      <!-- POST HEADER -->
 
-        <span> @{{.AuthorUsername}} </span>
+      <div class="post-header">
+        <div class="post-avatar">{{slice .AuthorFirstName 0 1}}</div>
+
+        <div class="post-author">
+          <strong> {{.AuthorFirstName}} {{.AuthorLastName}} </strong>
+
+          <span> @{{.AuthorUsername}} </span>
+        </div>
+
+        <div class="post-menu">•••</div>
       </div>
 
-      <div class="post-type">{{.Type}}</div>
+      <!-- POST TYPE -->
+
+      <div class="post-type">
+        {{if eq .Type "normal"}} 💬 Professional Update {{else if eq .Type
+        "project"}} 🚀 Project {{else if eq .Type "announcement"}} 📢
+        Announcement {{else if eq .Type "hiring"}} 👔 Hiring {{else if eq .Type
+        "job"}} 💼 Job Opportunity {{else}} {{.Type}} {{end}}
+      </div>
+
+      <!-- POST CONTENT -->
 
       <p class="post-content">{{.Content}}</p>
 
-      <div class="post-meta">
-        <span>{{.LikeCount}} likes</span>
-        <span>{{.CommentCount}} comments</span>
-        <span>{{.ShareCount}} shares</span>
+      <!-- POST STATS -->
+
+      <div class="post-stats">
+        <span> 👍 {{.LikeCount}} </span>
+
+        <span> {{.CommentCount}} comments </span>
+
+        <span> {{.ShareCount}} shares </span>
       </div>
 
+      <!-- POST ACTIONS -->
+
       <div class="post-actions">
+        <!-- LIKE -->
+
         {{if .HasLiked}}
+
         <form action="/posts/unlike" method="POST">
           <input type="hidden" name="post_id" value="{{.ID}}" />
-          <button type="submit">Unlike</button>
+
+          <button type="submit" class="post-action liked">
+            👍
+            <span>Liked</span>
+          </button>
         </form>
+
         {{else}}
+
         <form action="/posts/like" method="POST">
           <input type="hidden" name="post_id" value="{{.ID}}" />
-          <button type="submit">Like</button>
+
+          <button type="submit" class="post-action">
+            👍
+            <span>Like</span>
+          </button>
         </form>
+
         {{end}}
 
-        <a href="/posts/{{.ID}}"> Comments </a>
+        <!-- COMMENT -->
+
+        <a href="/posts/{{.ID}}" class="post-action">
+          💬
+          <span>Comment</span>
+        </a>
+
+        <!-- SHARE -->
 
         <form action="/posts/share" method="POST">
           <input type="hidden" name="post_id" value="{{.ID}}" />
-          <button type="submit">Share</button>
+
+          <button type="submit" class="post-action">
+            ↗
+            <span>Share</span>
+          </button>
         </form>
       </div>
     </article>
 
     {{end}} {{else}}
 
-    <div class="empty-feed">
+    <div class="card empty-feed">
       <h3>Your feed is empty</h3>
+
       <p>Be the first to share something with the JobFlow community.</p>
     </div>
 
     {{end}}
   </section>
+
+  <!-- =========================
+       RIGHT SIDEBAR
+       ========================= -->
+
+  <aside class="right-sidebar">
+    <!-- DISCOVER -->
+
+    <div class="card sidebar-card">
+      <h3>Discover</h3>
+
+      <div class="discover-item">
+        <strong> Build your profile </strong>
+
+        <span> Add your skills and experience. </span>
+      </div>
+
+      <div class="discover-item">
+        <strong> Follow professionals </strong>
+
+        <span> Grow your network. </span>
+      </div>
+
+      <div class="discover-item">
+        <strong> Explore opportunities </strong>
+
+        <span> Find jobs that match your goals. </span>
+      </div>
+    </div>
+
+    <!-- TIP -->
+
+    <div class="card sidebar-card tip">
+      <h3>💡 JobFlow Tip</h3>
+
+      <p>
+        A strong professional profile makes it easier for companies and other
+        professionals to discover you.
+      </p>
+    </div>
+  </aside>
 </div>
-
-<style>
-  .welcome {
-    margin-bottom: 25px;
-  }
-
-  .welcome h1 {
-    margin-bottom: 5px;
-  }
-
-  .create-post,
-  .post,
-  .empty-feed {
-    background: #ffffff;
-    padding: 24px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #e5e7eb;
-  }
-
-  .create-post h2,
-  .feed h2 {
-    margin-bottom: 15px;
-  }
-
-  textarea {
-    font-family: inherit;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    resize: vertical;
-  }
-
-  select,
-  button {
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    padding: 8px 12px;
-    background: white;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background: #f3f4f6;
-  }
-
-  .post-author {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-
-  .post-author span {
-    color: #6b7280;
-  }
-
-  .post-type {
-    display: inline-block;
-    font-size: 12px;
-    margin-bottom: 15px;
-    color: #6b7280;
-    text-transform: uppercase;
-  }
-
-  .post-content {
-    font-size: 16px;
-    line-height: 1.6;
-    margin-bottom: 18px;
-    white-space: pre-wrap;
-  }
-
-  .post-meta {
-    display: flex;
-    gap: 20px;
-    color: #6b7280;
-    font-size: 14px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #e5e7eb;
-  }
-
-  .post-actions {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-top: 15px;
-  }
-
-  .post-actions form {
-    display: inline;
-  }
-
-  .post-actions a {
-    text-decoration: none;
-    color: #374151;
-  }
-</style>
 
 {{end}}

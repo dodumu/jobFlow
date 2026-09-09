@@ -20,7 +20,12 @@ func main() {
 			http.HandlerFunc(handlers.DashboardHandler),
 		),
 	)
-
+	http.Handle(
+		"/profile",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.ProfileHandler),
+		),
+	)
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 

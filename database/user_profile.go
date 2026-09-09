@@ -67,3 +67,28 @@ func GetUserProfileByUserID(userID int) (models.UserProfile, error) {
 
 	return profile, nil
 }
+
+func UpdateUserProfile(profile models.UserProfile) error {
+	_, err := DB.Exec(`
+		UPDATE user_profiles
+		SET
+			profile_picture = ?,
+			headline = ?,
+			bio = ?,
+			location = ?,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE user_id = ?
+	`,
+		profile.ProfilePicture,
+		profile.Headline,
+		profile.Bio,
+		profile.Location,
+		profile.UserID,
+	)
+
+	if err != nil {
+		return fmt.Errorf("updating user profile: %w", err)
+	}
+
+	return nil
+}

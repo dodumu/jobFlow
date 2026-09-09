@@ -49,7 +49,7 @@ func GetSkillsByUserID(userID int) ([]models.Skill, error) {
 		JOIN user_skills us ON us.skill_id = s.id
 		WHERE us.user_id = ?
 		ORDER BY s.name ASC
-	`)
+	`, userID)
 
 	if err != nil {
 		return nil, fmt.Errorf("getting user skills: %w", err)

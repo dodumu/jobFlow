@@ -56,7 +56,7 @@ func GetUserByEmail(email string) (models.User, error) {
 }
 
 func GetUserByUsername(username string) (models.User, error) {
-	query := `SELECT id, username, password_hash, first_name, last_name email, date_of_birth, role, created_at  FROM users  WHERE username = ?`
+	query := `SELECT id, username, password_hash, first_name, last_name, email, date_of_birth, role, created_at  FROM users  WHERE username = ?`
 	var user models.User
 	err := DB.QueryRow(query, username).Scan(&user.ID,
 		&user.Username,
