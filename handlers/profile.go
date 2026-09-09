@@ -9,6 +9,7 @@ import (
 
 	"jobFlow/database"
 	"jobFlow/middleware"
+	"jobFlow/models"
 )
 
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
@@ -146,4 +147,74 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+}
+
+func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		profile, err := database.GetUserProfileByUserID(userID)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			log.Printf("EDIT PROFILE ERROR - GetUserProfileByUserID: %v\n", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		data := struct {
+			Profile any
+		}{
+			Profile: profile,
+		}
+
+		tmpl, err := template.ParseFiles(
+			"templates/base.html",
+			"templates/edit-profile.html",
+		)
+
+		if err != nil {
+			log.Printf("EDIT PROFILE ERROR - ParseFiles: %v\n", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
+			log.Printf("EDIT PROFILE ERROR - ExecuteTemplate: %v\n", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	profile := models.UserProfile{
+		UserID:         userID,
+		ProfilePicture: r.FormValue("profile_picture"),
+		Headline:       r.FormValue("headline"),
+		Bio:            r.FormValue("bio"),
+		Location:       r.FormValue("location"),
+	}
+
+	err := database.UpdateUserProfile(profile)
+	if err != nil {
+		log.Printf("EDIT PROFILE ERROR - UpdateUserProfile: %v\n", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/profile", http.StatusSeeOther)
 }

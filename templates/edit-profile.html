@@ -1,0 +1,177 @@
+{{define "content"}}
+
+<style>
+  .edit-page {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .edit-header {
+    margin-bottom: 20px;
+  }
+
+  .edit-header h1 {
+    font-size: 26px;
+    margin-bottom: 5px;
+  }
+
+  .edit-header p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .edit-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 25px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 7px;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    background: #fafafa;
+    color: var(--text);
+  }
+
+  .form-group textarea {
+    min-height: 130px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px #dbeafe;
+  }
+
+  .form-help {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 5px;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  .cancel-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  @media (max-width: 600px) {
+    .edit-card {
+      padding: 20px;
+    }
+
+    .form-actions {
+      flex-direction: column-reverse;
+    }
+
+    .form-actions button,
+    .form-actions a {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+
+<div class="edit-page">
+  <div class="edit-header">
+    <h1>Edit Profile</h1>
+    <p>Update your professional information.</p>
+  </div>
+
+  <section class="edit-card">
+    <form action="/profile/edit" method="POST">
+      <div class="form-group">
+        <label for="profile_picture"> Profile Picture URL </label>
+
+        <input
+          type="url"
+          id="profile_picture"
+          name="profile_picture"
+          value="{{.Profile.ProfilePicture}}"
+          placeholder="https://example.com/profile.jpg"
+        />
+
+        <p class="form-help">We'll support direct image uploads later.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="headline"> Professional Headline </label>
+
+        <input
+          type="text"
+          id="headline"
+          name="headline"
+          value="{{.Profile.Headline}}"
+          maxlength="150"
+          placeholder="e.g. Backend Developer | Go & SQL"
+        />
+
+        <p class="form-help">
+          A short description that appears beneath your name.
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="bio"> About </label>
+
+        <textarea
+          id="bio"
+          name="bio"
+          maxlength="2000"
+          placeholder="Tell people about yourself, your experience, interests, and professional goals..."
+        >
+{{.Profile.Bio}}</textarea
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="location"> Location </label>
+
+        <input
+          type="text"
+          id="location"
+          name="location"
+          value="{{.Profile.Location}}"
+          maxlength="150"
+          placeholder="e.g. Otukpo, Benue State, Nigeria"
+        />
+      </div>
+
+      <div class="form-actions">
+        <a href="/profile" class="btn-secondary cancel-link"> Cancel </a>
+
+        <button type="submit" class="btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+{{end}}
