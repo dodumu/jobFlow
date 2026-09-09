@@ -1,5 +1,13 @@
 package models
 
+type FeedComment struct {
+	Comment
+
+	AuthorFirstName string
+	AuthorLastName  string
+	AuthorUsername  string
+}
+
 type FeedPost struct {
 	Post
 
@@ -12,4 +20,6 @@ type FeedPost struct {
 	ShareCount   int
 
 	HasLiked bool
+
+	Comments []FeedComment
 }
