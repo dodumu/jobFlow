@@ -51,6 +51,12 @@ func main() {
 			http.HandlerFunc(handlers.UnlikePostHandler),
 		),
 	)
+	http.Handle(
+		"/posts/comment",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.CreateCommentHandler),
+		),
+	)
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 
