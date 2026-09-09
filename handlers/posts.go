@@ -46,7 +46,7 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	post := models.Post{
-		UserID:  userID,
+		UserID:  &userID,
 		Content: content,
 		Type:    postType,
 	}
@@ -162,8 +162,17 @@ func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// A user can only delete their own post.
-	if post.UserID != userID {
+	// A post must have a user owner for this version.
+	if post.UserID == nil {
+		log.Printf("DELETE POST ERROR: post %d has no user owner", postID)
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	// Compare the VALUES, not the pointer addresses.
+	log.Printf("Post owner: %d, Current user: %d\n", *post.UserID, userID)
+
+	if *post.UserID != userID {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}

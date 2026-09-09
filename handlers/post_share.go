@@ -55,7 +55,7 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create a new post representing the share.
 	sharedPost := models.Post{
-		UserID:       userID,
+		UserID:       &userID,
 		Content:      originalPost.Content,
 		Type:         originalPost.Type,
 		SharedPostID: &originalPost.ID,

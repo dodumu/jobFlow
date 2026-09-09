@@ -12,16 +12,34 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 		SELECT
 			p.id,
 			p.user_id,
+			p.company_id,
 			p.content,
 			p.type,
 			p.shared_post_id,
 			p.created_at,
 			p.updated_at,
 
-			u.first_name,
-			u.last_name,
-			u.username,
+			CASE
+				WHEN p.company_id IS NOT NULL THEN 'company'
+				ELSE 'user'
+			END AS author_type,
 
+			CASE
+				WHEN p.user_id = ? THEN 1
+				WHEN p.company_id IS NOT NULL AND company.user_id = ? THEN 1
+				ELSE 0
+			END AS can_delete,
+
+			-- Individual author
+			COALESCE(u.first_name, '') AS author_first_name,
+			COALESCE(u.last_name, '') AS author_last_name,
+			COALESCE(u.username, '') AS author_username,
+
+			-- Company author
+			COALESCE(company.company_name, '') AS company_name,
+			COALESCE(company.logo, '') AS company_logo,
+
+			-- Engagement
 			(
 				SELECT COUNT(*)
 				FROM post_likes pl
@@ -47,16 +65,32 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 				AND ul.user_id = ?
 			) AS has_liked,
 
+			-- Original post author type
+			CASE
+				WHEN original_post.company_id IS NOT NULL THEN 'company'
+				WHEN original_post.user_id IS NOT NULL THEN 'user'
+				ELSE ''
+			END AS original_author_type,
+
+			-- Original individual author
 			COALESCE(original_user.first_name, '') AS original_first_name,
 			COALESCE(original_user.last_name, '') AS original_last_name,
 			COALESCE(original_user.username, '') AS original_username,
+
+			-- Original company author
+			COALESCE(original_company.company_name, '') AS original_company_name,
+			COALESCE(original_company.logo, '') AS original_company_logo,
+
 			COALESCE(original_post.content, '') AS original_content,
 			COALESCE(original_post.type, '') AS original_type
 
 		FROM posts p
 
-		JOIN users u
+		LEFT JOIN users u
 			ON u.id = p.user_id
+
+		LEFT JOIN companies company
+			ON company.id = p.company_id
 
 		LEFT JOIN posts original_post
 			ON original_post.id = p.shared_post_id
@@ -64,8 +98,11 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 		LEFT JOIN users original_user
 			ON original_user.id = original_post.user_id
 
+		LEFT JOIN companies original_company
+			ON original_company.id = original_post.company_id
+
 		ORDER BY p.created_at DESC
-	`, userID)
+	`, userID, userID, userID)
 
 	if err != nil {
 		return nil, fmt.Errorf("getting feed posts: %w", err)
@@ -81,24 +118,37 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 		err := rows.Scan(
 			&post.ID,
 			&post.UserID,
+			&post.CompanyID,
 			&post.Content,
 			&post.Type,
 			&sharedPostID,
 			&post.CreatedAt,
 			&post.UpdatedAt,
 
+			&post.AuthorType,
+			&post.CanDelete,
+
 			&post.AuthorFirstName,
 			&post.AuthorLastName,
 			&post.AuthorUsername,
+
+			&post.CompanyName,
+			&post.CompanyLogo,
 
 			&post.LikeCount,
 			&post.CommentCount,
 			&post.ShareCount,
 			&post.HasLiked,
 
+			&post.OriginalAuthorType,
+
 			&post.OriginalAuthorFirstName,
 			&post.OriginalAuthorLastName,
 			&post.OriginalAuthorUsername,
+
+			&post.OriginalCompanyName,
+			&post.OriginalCompanyLogo,
+
 			&post.OriginalContent,
 			&post.OriginalType,
 		)

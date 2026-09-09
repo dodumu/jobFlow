@@ -13,7 +13,12 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
-
+	http.Handle(
+		"/home",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.HomeHandler),
+		),
+	)
 	http.Handle(
 		"/dashboard",
 		middleware.AuthMiddleware(

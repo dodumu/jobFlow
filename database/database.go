@@ -206,20 +206,29 @@ func CreateTables() error {
 	);
 
 	CREATE TABLE IF NOT EXISTS posts (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT NULL,
-		content TEXT NOT NULL,
-		type TEXT NOT NULL DEFAULT 'normal',
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-		-- If this is a shared post, this points to the original post.
-		shared_post_id INTEGER,
+    user_id INTEGER,
+    company_id INTEGER,
 
-		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME,
+    content TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'normal',
 
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-		FOREIGN KEY (shared_post_id) REFERENCES posts(id) ON DELETE SET NULL
-	);
+    shared_post_id INTEGER,
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+    FOREIGN KEY (shared_post_id) REFERENCES posts(id) ON DELETE SET NULL,
+
+    CHECK (
+        (user_id IS NOT NULL AND company_id IS NULL)
+        OR
+        (user_id IS NULL AND company_id IS NOT NULL)
+    )
+);
 
 	CREATE TABLE IF NOT EXISTS post_likes (
 		post_id INTEGER NOT NULL,

@@ -11,10 +11,17 @@ type FeedComment struct {
 type FeedPost struct {
 	Post
 
-	// Person who appears at the top of the feed item.
+	// Author identity.
+	AuthorType string
+
+	// Individual author.
 	AuthorFirstName string
 	AuthorLastName  string
 	AuthorUsername  string
+
+	// Company author.
+	CompanyName string
+	CompanyLogo string
 
 	// Engagement information.
 	LikeCount    int
@@ -22,11 +29,16 @@ type FeedPost struct {
 	ShareCount   int
 	HasLiked     bool
 
+	//Authorization
+	CanDelete bool
+
 	// Original post information.
-	// These are populated only when this post is a shared post.
+	OriginalAuthorType      string
 	OriginalAuthorFirstName string
 	OriginalAuthorLastName  string
 	OriginalAuthorUsername  string
+	OriginalCompanyName     string
+	OriginalCompanyLogo     string
 	OriginalContent         string
 	OriginalType            string
 }
