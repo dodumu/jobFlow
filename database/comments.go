@@ -62,18 +62,21 @@ func GetCommentByID(id int) (models.Comment, error) {
 func GetCommentsByPostID(postID int) ([]models.Comment, error) {
 	rows, err := DB.Query(`
 		SELECT
-			id,
-			post_id,
-			user_id,
-			content,
-			created_at
-		FROM comments
-		WHERE post_id = ?
-		ORDER BY created_at ASC
+			c.id,
+			c.post_id,
+			c.user_id,
+			u.username,
+			c.content,
+			c.created_at
+		FROM comments c
+		JOIN users u
+			ON u.id = c.user_id
+		WHERE c.post_id = ?
+		ORDER BY c.created_at ASC
 	`, postID)
 
 	if err != nil {
-		return nil, fmt.Errorf("getting post comments: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -82,21 +85,24 @@ func GetCommentsByPostID(postID int) ([]models.Comment, error) {
 	for rows.Next() {
 		var comment models.Comment
 
-		if err := rows.Scan(
+		err := rows.Scan(
 			&comment.ID,
 			&comment.PostID,
 			&comment.UserID,
+			&comment.Username,
 			&comment.Content,
 			&comment.CreatedAt,
-		); err != nil {
-			return nil, fmt.Errorf("scanning comment: %w", err)
+		)
+
+		if err != nil {
+			return nil, err
 		}
 
 		comments = append(comments, comment)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating comments: %w", err)
+		return nil, err
 	}
 
 	return comments, nil

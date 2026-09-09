@@ -200,3 +200,4 @@ func DeletePost(id int) error {
 
 	return nil
 }
+

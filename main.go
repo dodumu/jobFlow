@@ -63,6 +63,13 @@ func main() {
 			http.HandlerFunc(handlers.SharePostHandler),
 		),
 	)
+
+	http.Handle(
+		"/posts/comments",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.GetCommentsHandler),
+		),
+	)
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 

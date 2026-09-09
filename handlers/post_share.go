@@ -6,6 +6,7 @@ import (
 	"jobFlow/models"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func SharePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +21,7 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	postID := r.FormValue("post_id")
+	postID := strings.TrimSpace(r.FormValue("post_id"))
 
 	if postID == "" {
 		http.Error(w, "post ID is required", http.StatusBadRequest)
@@ -33,6 +34,14 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Make sure the original post exists.
+	originalPost, err := database.GetPostByID(id)
+	if err != nil {
+		http.Error(w, "post not found", http.StatusNotFound)
+		return
+	}
+
+	// Record the share.
 	share := models.PostShare{
 		PostID: id,
 		UserID: userID,
@@ -40,7 +49,21 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = database.CreatePostShare(share)
 	if err != nil {
-		http.Error(w, "failed to share post", http.StatusInternalServerError)
+		http.Error(w, "failed to record share", http.StatusInternalServerError)
+		return
+	}
+
+	// Create a new post representing the share.
+	sharedPost := models.Post{
+		UserID:       userID,
+		Content:      originalPost.Content,
+		Type:         originalPost.Type,
+		SharedPostID: &originalPost.ID,
+	}
+
+	_, err = database.CreatePost(sharedPost)
+	if err != nil {
+		http.Error(w, "failed to create shared post", http.StatusInternalServerError)
 		return
 	}
 

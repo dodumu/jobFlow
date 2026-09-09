@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
@@ -21,7 +23,7 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	postID := r.FormValue("post_id")
+	postID := strings.TrimSpace(r.FormValue("post_id"))
 	content := strings.TrimSpace(r.FormValue("content"))
 
 	if postID == "" {
@@ -53,4 +55,43 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+}
+
+func GetCommentsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	_, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	postID := r.URL.Query().Get("post_id")
+
+	if postID == "" {
+		http.Error(w, "post ID is required", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(postID)
+	if err != nil {
+		http.Error(w, "invalid post ID", http.StatusBadRequest)
+		return
+	}
+
+	comments, err := database.GetCommentsByPostID(id)
+	if err != nil {
+		http.Error(w, "failed to get comments", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(comments); err != nil {
+		http.Error(w, fmt.Sprintf("failed to encode comments: %v", err), http.StatusInternalServerError)
+		return
+	}
 }

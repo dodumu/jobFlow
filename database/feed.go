@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 
 	"jobFlow/models"
@@ -13,6 +14,7 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 			p.user_id,
 			p.content,
 			p.type,
+			p.shared_post_id,
 			p.created_at,
 			p.updated_at,
 
@@ -43,11 +45,24 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 				FROM post_likes ul
 				WHERE ul.post_id = p.id
 				AND ul.user_id = ?
-			) AS has_liked
+			) AS has_liked,
+
+			COALESCE(original_user.first_name, '') AS original_first_name,
+			COALESCE(original_user.last_name, '') AS original_last_name,
+			COALESCE(original_user.username, '') AS original_username,
+			COALESCE(original_post.content, '') AS original_content,
+			COALESCE(original_post.type, '') AS original_type
 
 		FROM posts p
+
 		JOIN users u
 			ON u.id = p.user_id
+
+		LEFT JOIN posts original_post
+			ON original_post.id = p.shared_post_id
+
+		LEFT JOIN users original_user
+			ON original_user.id = original_post.user_id
 
 		ORDER BY p.created_at DESC
 	`, userID)
@@ -61,12 +76,14 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 
 	for rows.Next() {
 		var post models.FeedPost
+		var sharedPostID sql.NullInt64
 
 		err := rows.Scan(
 			&post.ID,
 			&post.UserID,
 			&post.Content,
 			&post.Type,
+			&sharedPostID,
 			&post.CreatedAt,
 			&post.UpdatedAt,
 
@@ -78,17 +95,22 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 			&post.CommentCount,
 			&post.ShareCount,
 			&post.HasLiked,
+
+			&post.OriginalAuthorFirstName,
+			&post.OriginalAuthorLastName,
+			&post.OriginalAuthorUsername,
+			&post.OriginalContent,
+			&post.OriginalType,
 		)
 
 		if err != nil {
 			return nil, fmt.Errorf("scanning feed post: %w", err)
 		}
-		comments, err := getFeedComments(post.ID)
-		if err != nil {
-			return nil, err
-		}
 
-		post.Comments = comments
+		if sharedPostID.Valid {
+			id := int(sharedPostID.Int64)
+			post.SharedPostID = &id
+		}
 
 		posts = append(posts, post)
 	}
@@ -98,62 +120,4 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 	}
 
 	return posts, nil
-}
-
-func getFeedComments(postID int) ([]models.FeedComment, error) {
-	rows, err := DB.Query(`
-		SELECT
-			c.id,
-			c.post_id,
-			c.user_id,
-			c.content,
-			c.created_at,
-
-			u.first_name,
-			u.last_name,
-			u.username
-
-		FROM comments c
-		JOIN users u
-			ON u.id = c.user_id
-
-		WHERE c.post_id = ?
-
-		ORDER BY c.created_at ASC
-	`, postID)
-
-	if err != nil {
-		return nil, fmt.Errorf("getting feed comments: %w", err)
-	}
-	defer rows.Close()
-
-	var comments []models.FeedComment
-
-	for rows.Next() {
-		var comment models.FeedComment
-
-		err := rows.Scan(
-			&comment.ID,
-			&comment.PostID,
-			&comment.UserID,
-			&comment.Content,
-			&comment.CreatedAt,
-
-			&comment.AuthorFirstName,
-			&comment.AuthorLastName,
-			&comment.AuthorUsername,
-		)
-
-		if err != nil {
-			return nil, fmt.Errorf("scanning feed comment: %w", err)
-		}
-
-		comments = append(comments, comment)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating feed comments: %w", err)
-	}
-
-	return comments, nil
 }

@@ -135,13 +135,11 @@
     line-height: 1.6;
     color: var(--text);
     background: #fafafa;
-    transition: 0.2s ease;
   }
 
   .composer textarea:focus {
     border-color: var(--primary);
     background: white;
-    box-shadow: 0 0 0 3px #dbeafe;
   }
 
   .post-form-footer {
@@ -173,10 +171,6 @@
     color: var(--text);
     cursor: pointer;
     outline: none;
-  }
-
-  .post-type-selector select:focus {
-    border-color: var(--primary);
   }
 
   /* =========================
@@ -245,11 +239,6 @@
     color: var(--muted);
     font-size: 17px;
     letter-spacing: 2px;
-    cursor: pointer;
-  }
-
-  .post-menu:hover {
-    color: var(--text);
   }
 
   /* =========================
@@ -280,6 +269,48 @@
     color: #374151;
     white-space: pre-wrap;
     margin-bottom: 18px;
+  }
+
+  /* =========================
+     SHARED POST
+     ========================= */
+
+  .shared-label {
+    margin-top: 14px;
+    margin-bottom: 12px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .shared-post {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 18px;
+    background: #fafafa;
+  }
+
+  .shared-post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .shared-post-header .post-avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 13px;
+  }
+
+  .shared-post .post-type {
+    margin-top: 12px;
+    margin-bottom: 10px;
+  }
+
+  .shared-post .post-content {
+    margin-bottom: 0;
+    font-size: 14px;
   }
 
   /* =========================
@@ -318,7 +349,6 @@
     justify-content: center;
     gap: 7px;
     background: transparent;
-    border: none;
     padding: 10px;
     border-radius: 8px;
     color: var(--muted);
@@ -326,6 +356,7 @@
     font-weight: 600;
     text-decoration: none;
     transition: 0.15s ease;
+    border: none;
     cursor: pointer;
     font-family: inherit;
   }
@@ -339,101 +370,12 @@
     color: var(--primary);
   }
 
-  .post-action.liked:hover {
-    background: #eff6ff;
-  }
-
-  /* =========================
-     COMMENTS
-     ========================= */
-
-  .comments-section {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border);
-  }
-
-  .comment {
-    display: flex;
-    gap: 10px;
-    padding: 8px 0;
-  }
-
-  .comment-avatar {
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    background: #dbeafe;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-
-  .comment-body {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .comment-header {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .comment-header strong {
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  .comment-header span {
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .comment-body p {
-    margin: 3px 0 0;
-    font-size: 13px;
-    line-height: 1.45;
-    color: #374151;
-    white-space: pre-wrap;
-  }
-
-  .comments-extra {
-    display: none;
-  }
-
-  .comments-extra.show {
-    display: block;
-  }
-
-  .view-comments {
-    border: none;
-    background: transparent;
-    padding: 7px 0;
-    color: var(--primary);
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .view-comments:hover {
-    text-decoration: underline;
-  }
-
   /* =========================
      COMMENT FORM
      ========================= */
 
   .comment-form {
     display: flex;
-    align-items: center;
     gap: 8px;
     margin-top: 12px;
   }
@@ -449,26 +391,23 @@
     font-size: 13px;
     color: var(--text);
     background: #fafafa;
-    transition: 0.2s ease;
   }
 
   .comment-form input:focus {
     border-color: var(--primary);
     background: white;
-    box-shadow: 0 0 0 3px #dbeafe;
   }
 
   .comment-form button {
     border: none;
     border-radius: 8px;
-    padding: 10px 14px;
+    padding: 0 15px;
     background: var(--primary);
     color: white;
     font-family: inherit;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    white-space: nowrap;
   }
 
   .comment-form button:hover {
@@ -476,7 +415,69 @@
   }
 
   /* =========================
-     RIGHT SIDEBAR
+     COMMENTS
+     ========================= */
+
+  .comments-section {
+    margin-top: 15px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .comment {
+    display: flex;
+    gap: 10px;
+  }
+
+  .comment-avatar {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .comment-body {
+    flex: 1;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 9px 12px;
+  }
+
+  .comment-body strong {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+
+  .comment-body p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #374151;
+  }
+
+  .comments-loading,
+  .comments-empty {
+    color: var(--muted);
+    font-size: 12px;
+    padding: 8px 0;
+  }
+
+  /* =========================
+     SIDEBAR
      ========================= */
 
   .sidebar-card {
@@ -495,7 +496,6 @@
 
   .discover-item:last-child {
     border-bottom: none;
-    padding-bottom: 0;
   }
 
   .discover-item strong {
@@ -567,8 +567,8 @@
     }
 
     .post-form-footer {
-      align-items: stretch;
       flex-direction: column;
+      align-items: stretch;
     }
 
     .post-type-selector {
@@ -590,11 +590,10 @@
 
     .comment-form {
       flex-direction: column;
-      align-items: stretch;
     }
 
     .comment-form button {
-      width: 100%;
+      padding: 10px;
     }
   }
 </style>
@@ -608,10 +607,6 @@
 
   <p>Discover what's happening across your professional network.</p>
 </div>
-
-<!-- =========================
-     DASHBOARD GRID
-     ========================= -->
 
 <div class="dashboard-grid">
   <!-- =========================
@@ -635,7 +630,7 @@
        ========================= -->
 
   <section class="main-feed">
-    <!-- CREATE POST -->
+    <!-- COMPOSER -->
 
     <div class="card composer">
       <div class="composer-header">
@@ -687,7 +682,7 @@
 
     {{if .Posts}} {{range .Posts}}
 
-    <article class="card post">
+    <article class="card post" data-post-id="{{.ID}}">
       <!-- POST HEADER -->
 
       <div class="post-header">
@@ -702,6 +697,52 @@
         <div class="post-menu">•••</div>
       </div>
 
+      <!-- =========================
+             SHARED POST
+             ========================= -->
+
+      {{if .SharedPostID}}
+
+      <div class="shared-label">
+        ↗ {{.AuthorFirstName}} {{.AuthorLastName}} shared a post
+      </div>
+
+      <div class="shared-post">
+        <!-- ORIGINAL POST HEADER -->
+
+        <div class="shared-post-header">
+          <div class="post-avatar">{{slice .OriginalAuthorFirstName 0 1}}</div>
+
+          <div class="post-author">
+            <strong>
+              {{.OriginalAuthorFirstName}} {{.OriginalAuthorLastName}}
+            </strong>
+
+            <span> @{{.OriginalAuthorUsername}} </span>
+          </div>
+        </div>
+
+        <!-- ORIGINAL POST TYPE -->
+
+        <div class="post-type">
+          {{if eq .OriginalType "normal"}} 💬 Professional Update {{else if eq
+          .OriginalType "project"}} 🚀 Project {{else if eq .OriginalType
+          "announcement"}} 📢 Announcement {{else if eq .OriginalType "hiring"}}
+          👔 Hiring {{else if eq .OriginalType "job"}} 💼 Job Opportunity
+          {{else}} {{.OriginalType}} {{end}}
+        </div>
+
+        <!-- ORIGINAL POST CONTENT -->
+
+        <p class="post-content">{{.OriginalContent}}</p>
+      </div>
+
+      {{else}}
+
+      <!-- =========================
+               NORMAL POST
+               ========================= -->
+
       <!-- POST TYPE -->
 
       <div class="post-type">
@@ -715,96 +756,22 @@
 
       <p class="post-content">{{.Content}}</p>
 
+      {{end}}
+
       <!-- POST STATS -->
 
       <div class="post-stats">
-        <span> 👍 {{.LikeCount}} </span>
+        <span class="like-count"> 👍 {{.LikeCount}} </span>
 
-        <span> {{.CommentCount}} comments </span>
+        <span class="comment-count"> {{.CommentCount}} comments </span>
 
         <span> {{.ShareCount}} shares </span>
       </div>
 
-      <!-- =========================
-             COMMENT PREVIEW
-             ========================= -->
-
-      {{if .Comments}}
-
-      <div class="comments-section" id="comments-{{.ID}}">
-        {{range $index, $comment := .Comments}} {{if lt $index 2}}
-
-        <div class="comment">
-          <div class="comment-avatar">
-            {{$comment.AuthorFirstName | printf
-            "%.1s"}}{{$comment.AuthorLastName | printf "%.1s"}}
-          </div>
-
-          <div class="comment-body">
-            <div class="comment-header">
-              <strong>
-                {{$comment.AuthorFirstName}} {{$comment.AuthorLastName}}
-              </strong>
-
-              <span> @{{$comment.AuthorUsername}} </span>
-            </div>
-
-            <p>{{$comment.Content}}</p>
-          </div>
-        </div>
-
-        {{end}} {{end}}
-
-        <!-- =========================
-               REMAINING COMMENTS
-               ========================= -->
-
-        {{if gt .CommentCount 2}}
-
-        <div class="comments-extra" id="extra-comments-{{.ID}}">
-          {{range $index, $comment := .Comments}} {{if ge $index 2}}
-
-          <div class="comment">
-            <div class="comment-avatar">
-              {{$comment.AuthorFirstName | printf
-              "%.1s"}}{{$comment.AuthorLastName | printf "%.1s"}}
-            </div>
-
-            <div class="comment-body">
-              <div class="comment-header">
-                <strong>
-                  {{$comment.AuthorFirstName}} {{$comment.AuthorLastName}}
-                </strong>
-
-                <span> @{{$comment.AuthorUsername}} </span>
-              </div>
-
-              <p>{{$comment.Content}}</p>
-            </div>
-          </div>
-
-          {{end}} {{end}}
-        </div>
-
-        <button
-          type="button"
-          class="view-comments"
-          onclick="toggleComments({{.ID}}, this)"
-        >
-          View all {{.CommentCount}} comments
-        </button>
-
-        {{end}}
-      </div>
-
-      {{end}}
-
-      <!-- =========================
-             POST ACTIONS
-             ========================= -->
+      <!-- POST ACTIONS -->
 
       <div class="post-actions">
-        <!-- LIKE -->
+        <!-- LIKE / UNLIKE -->
 
         {{if .HasLiked}}
 
@@ -834,8 +801,8 @@
 
         <button
           type="button"
-          class="post-action"
-          onclick="openComments({{.ID}})"
+          class="post-action comment-toggle"
+          data-post-id="{{.ID}}"
         >
           💬
           <span> Comment </span>
@@ -853,9 +820,7 @@
         </form>
       </div>
 
-      <!-- =========================
-             COMMENT FORM
-             ========================= -->
+      <!-- COMMENT FORM -->
 
       <form action="/posts/comment" method="POST" class="comment-form">
         <input type="hidden" name="post_id" value="{{.ID}}" />
@@ -869,9 +834,17 @@
 
         <button type="submit">Comment</button>
       </form>
+
+      <!-- COMMENTS -->
+
+      <div class="comments-section" data-comments-for="{{.ID}}">
+        <div class="comments-loading">Loading comments...</div>
+      </div>
     </article>
 
     {{end}} {{else}}
+
+    <!-- EMPTY FEED -->
 
     <div class="card empty-feed">
       <h3>Your feed is empty</h3>
@@ -887,8 +860,6 @@
        ========================= -->
 
   <aside class="right-sidebar">
-    <!-- DISCOVER -->
-
     <div class="card sidebar-card">
       <h3>Discover</h3>
 
@@ -911,8 +882,6 @@
       </div>
     </div>
 
-    <!-- TIP -->
-
     <div class="card sidebar-card tip">
       <h3>💡 JobFlow Tip</h3>
 
@@ -925,70 +894,168 @@
 </div>
 
 <!-- =========================
-     COMMENT INTERACTION
+     COMMENTS JAVASCRIPT
      ========================= -->
 
 <script>
-  function openComments(postID) {
-    const comments = document.getElementById("comments-" + postID);
+  document.addEventListener("DOMContentLoaded", function () {
+    const commentSections = document.querySelectorAll("[data-comments-for]");
 
-    if (!comments) {
-      const form = document.querySelector(
-        'form[action="/posts/comment"] input[name="post_id"][value="' +
-          postID +
-          '"]'
-      );
+    /*
+     * Load comments for a post
+     */
 
-      if (form) {
-        const input = form
-          .closest("form")
-          .querySelector('input[name="content"]');
+    async function loadComments(postID) {
+      const section = document.querySelector(`[data-comments-for="${postID}"]`);
 
-        if (input) {
-          input.focus();
+      if (!section) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/posts/comments?post_id=${postID}`);
+
+        if (!response.ok) {
+          throw new Error("Failed to load comments");
         }
-      }
 
-      return;
+        const comments = await response.json();
+
+        if (!comments || comments.length === 0) {
+          section.innerHTML = `
+            <div class="comments-empty">
+              No comments yet. Be the first to comment.
+            </div>
+          `;
+
+          return;
+        }
+
+        section.innerHTML = "";
+
+        comments.forEach(function (comment) {
+          const commentElement = document.createElement("div");
+
+          commentElement.className = "comment";
+
+          const avatar = document.createElement("div");
+
+          avatar.className = "comment-avatar";
+
+          avatar.textContent = comment.username.charAt(0).toUpperCase();
+
+          const body = document.createElement("div");
+
+          body.className = "comment-body";
+
+          const author = document.createElement("strong");
+
+          author.textContent = `@${comment.username}`;
+
+          const content = document.createElement("p");
+
+          content.textContent = comment.content;
+
+          body.appendChild(author);
+          body.appendChild(content);
+
+          commentElement.appendChild(avatar);
+          commentElement.appendChild(body);
+
+          section.appendChild(commentElement);
+        });
+      } catch (error) {
+        console.error(error);
+
+        section.innerHTML = `
+          <div class="comments-empty">
+            Unable to load comments.
+          </div>
+        `;
+      }
     }
 
-    const extraComments = document.getElementById("extra-comments-" + postID);
+    /*
+     * Load comments when dashboard opens
+     */
 
-    if (extraComments) {
-      extraComments.classList.add("show");
+    commentSections.forEach(function (section) {
+      const postID = section.dataset.commentsFor;
 
-      const button = comments.querySelector(".view-comments");
-
-      if (button) {
-        button.style.display = "none";
-      }
-    }
-
-    comments.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
+      loadComments(postID);
     });
-  }
 
-  function toggleComments(postID, button) {
-    const extraComments = document.getElementById("extra-comments-" + postID);
+    /*
+     * Toggle comment visibility
+     */
 
-    if (!extraComments) {
-      return;
-    }
+    const commentButtons = document.querySelectorAll(".comment-toggle");
 
-    const isShowing = extraComments.classList.contains("show");
+    commentButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        const postID = button.dataset.postId;
 
-    if (isShowing) {
-      extraComments.classList.remove("show");
+        const section = document.querySelector(
+          `[data-comments-for="${postID}"]`
+        );
 
-      button.textContent = "View all comments";
-    } else {
-      extraComments.classList.add("show");
+        if (!section) {
+          return;
+        }
 
-      button.textContent = "Hide comments";
-    }
-  }
+        if (section.style.display === "none") {
+          section.style.display = "block";
+
+          loadComments(postID);
+        } else {
+          section.style.display = "none";
+        }
+      });
+    });
+
+    /*
+     * Submit comments without reloading the page
+     */
+
+    const commentForms = document.querySelectorAll(".comment-form");
+
+    commentForms.forEach(function (form) {
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const postID = form.querySelector('input[name="post_id"]').value;
+
+        const input = form.querySelector('input[name="content"]');
+
+        const content = input.value.trim();
+
+        if (!content) {
+          return;
+        }
+
+        const formData = new FormData(form);
+
+        try {
+          const response = await fetch("/posts/comment", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to create comment");
+          }
+
+          input.value = "";
+
+          await loadComments(postID);
+        } catch (error) {
+          console.error(error);
+
+          alert("Failed to post comment.");
+        }
+      });
+    });
+  });
 </script>
 
 {{end}}
