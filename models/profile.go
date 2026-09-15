@@ -10,7 +10,7 @@ type ProfilePageData struct {
 	Preferences      UserPreference
 	EmploymentTypes  []string
 	WorkArrangements []string
-	Posts            []Post
+	Posts            []FeedPost
 
 	FollowerCount  int
 	FollowingCount int

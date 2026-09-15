@@ -22,7 +22,7 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := database.GetFeedPosts(userID)
+	posts, err := database.GetPostsByUserID(userID)
 	if err != nil {
 		log.Printf("DASHBOARD ERROR - GetFeedPosts: %v\n", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)

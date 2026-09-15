@@ -60,46 +60,86 @@ func GetPostByID(id int) (models.Post, error) {
 	return post, nil
 }
 
-func GetPostsByUserID(userID int) ([]models.Post, error) {
+func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 	rows, err := DB.Query(`
 		SELECT
-			id,
-			user_id,
-			content,
-			type,
-			created_at,
-			updated_at
-		FROM posts
-		WHERE user_id = ?
-		ORDER BY created_at DESC
+			p.id,
+			p.user_id,
+			p.company_id,
+			p.content,
+			p.type,
+			p.created_at,
+			p.updated_at,
+
+			u.first_name,
+			u.last_name,
+			u.username,
+
+			COUNT(DISTINCT pl.user_id) AS like_count,
+			COUNT(DISTINCT c.id) AS comment_count,
+			COUNT(DISTINCT ps.id) AS share_count
+
+		FROM posts p
+
+		LEFT JOIN users u
+			ON u.id = p.user_id
+
+		LEFT JOIN post_likes pl
+			ON pl.post_id = p.id
+
+		LEFT JOIN comments c
+			ON c.post_id = p.id
+
+		LEFT JOIN post_shares ps
+			ON ps.post_id = p.id
+
+		WHERE p.user_id = ?
+
+		GROUP BY p.id
+
+		ORDER BY p.created_at DESC
 	`, userID)
 
 	if err != nil {
-		return nil, fmt.Errorf("getting user posts: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
-	var posts []models.Post
+	var posts []models.FeedPost
 
 	for rows.Next() {
-		var post models.Post
+		var post models.FeedPost
 
-		if err := rows.Scan(
+		err := rows.Scan(
 			&post.ID,
 			&post.UserID,
+			&post.CompanyID,
 			&post.Content,
 			&post.Type,
 			&post.CreatedAt,
 			&post.UpdatedAt,
-		); err != nil {
-			return nil, fmt.Errorf("scanning post: %w", err)
+
+			&post.AuthorFirstName,
+			&post.AuthorLastName,
+			&post.AuthorUsername,
+
+			&post.LikeCount,
+			&post.CommentCount,
+			&post.ShareCount,
+		)
+
+		if err != nil {
+			return nil, err
 		}
+
+		post.AuthorType = "user"
+		post.CanDelete = true
 
 		posts = append(posts, post)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating posts: %w", err)
+		return nil, err
 	}
 
 	return posts, nil
