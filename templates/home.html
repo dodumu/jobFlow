@@ -396,21 +396,23 @@
   }
 
   /* =========================
-       COMMENTS
-       ========================= */
+   COMMENTS
+   ========================= */
 
   .comments {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    margin-top: 4px;
   }
 
   .comment {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 9px 11px;
     background: #f8fafc;
+    border: 1px solid #edf0f2;
     border-radius: 9px;
   }
 
@@ -435,11 +437,13 @@
 
   .comment-actions {
     margin-left: auto;
+    flex-shrink: 0;
   }
 
   .comment-delete {
     border: none;
     background: transparent;
+    padding: 3px 5px;
     color: #9ca3af;
     font-size: 11px;
     cursor: pointer;
@@ -836,7 +840,7 @@
 </div>
 
 <script>
-  const currentUserID = {{.CurrentUserID}};
+  const currentUserID = {{.CurrentUserID }};
 
   async function loadComments() {
     const containers = document.querySelectorAll(".comments");
@@ -867,40 +871,52 @@
     }
   }
 
-  function renderComment(container, comment) {
-    const commentElement = document.createElement("div");
+ function renderComment(container, comment) {
+  const commentElement = document.createElement("div");
 
-    commentElement.className = "comment";
-    commentElement.dataset.commentId = comment.id;
+  commentElement.className = "comment";
+  commentElement.dataset.commentId = comment.id;
 
-    const author = document.createElement("strong");
-    author.textContent = `@${comment.username}`;
+  const commentBody = document.createElement("div");
+  commentBody.className = "comment-body";
 
-    const content = document.createElement("span");
-    content.textContent = comment.content;
+  const author = document.createElement("div");
+  author.className = "comment-author";
+  author.textContent = `@${comment.username}`;
 
-    commentElement.appendChild(author);
-    commentElement.appendChild(content);
+  const content = document.createElement("div");
+  content.className = "comment-content";
+  content.textContent = comment.content;
 
-    const canDelete =
-      comment.user_id === currentUserID ||
-      container.dataset.canDelete === "true";
+  commentBody.appendChild(author);
+  commentBody.appendChild(content);
 
-    if (canDelete) {
-      const deleteButton = document.createElement("button");
+  commentElement.appendChild(commentBody);
 
-      deleteButton.type = "button";
-      deleteButton.textContent = "Delete";
+  const canDelete =
+    comment.user_id === currentUserID ||
+    container.dataset.canDelete === "true";
 
-      deleteButton.addEventListener("click", () => {
-        deleteComment(comment.id, commentElement);
-      });
+  if (canDelete) {
+    const actions = document.createElement("div");
+    actions.className = "comment-actions";
 
-      commentElement.appendChild(deleteButton);
-    }
+    const deleteButton = document.createElement("button");
 
-    container.appendChild(commentElement);
+    deleteButton.type = "button";
+    deleteButton.className = "comment-delete";
+    deleteButton.textContent = "Delete";
+
+    deleteButton.addEventListener("click", () => {
+      deleteComment(comment.id, commentElement);
+    });
+
+    actions.appendChild(deleteButton);
+    commentElement.appendChild(actions);
   }
+
+  container.appendChild(commentElement);
+}
 
   async function deleteComment(commentID, commentElement) {
     const confirmed = confirm(
