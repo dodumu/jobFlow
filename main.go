@@ -75,6 +75,12 @@ func main() {
 			http.HandlerFunc(handlers.GetCommentsHandler),
 		),
 	)
+	http.Handle(
+ 		"/posts/comments/delete",
+    	middleware.AuthMiddleware(
+        	http.HandlerFunc(handlers.DeleteCommentHandler),
+    	),
+	)
 	http.Handle("/posts/delete", middleware.AuthMiddleware(
 		http.HandlerFunc(handlers.DeletePostHandler),
 	))

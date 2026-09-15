@@ -2,12 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
 	"net/http"
 	"strconv"
+	"database/sql"
 	"strings"
 )
 
@@ -94,4 +97,64 @@ func GetCommentsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("failed to encode comments: %v", err), http.StatusInternalServerError)
 		return
 	}
+}
+
+func DeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	commentID, err := strconv.Atoi(r.FormValue("comment_id"))
+	if err != nil {
+		http.Error(w, "invalid comment ID", http.StatusBadRequest)
+		return
+	}
+
+	comment, err := database.GetCommentByID(commentID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "comment not found", http.StatusNotFound)
+			return
+		}
+
+		log.Printf("DELETE COMMENT ERROR - GetCommentByID: %v\n", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	post, err := database.GetPostByID(comment.PostID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "post not found", http.StatusNotFound)
+			return
+		}
+
+		log.Printf("DELETE COMMENT ERROR - GetPostByID: %v\n", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// The comment owner can delete their own comment.
+	// The post owner can delete any comment on their post.
+	if comment.UserID != userID {
+		if post.UserID == nil || *post.UserID != userID {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+	}
+
+	if err := database.DeleteComment(commentID); err != nil {
+		log.Printf("DELETE COMMENT ERROR - DeleteComment: %v\n", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

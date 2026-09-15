@@ -405,6 +405,50 @@
     gap: 8px;
   }
 
+  .comment {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 9px;
+  }
+
+  .comment-body {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .comment-author {
+    margin-bottom: 3px;
+    color: #1f2933;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .comment-content {
+    color: #4b5563;
+    font-size: 13px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .comment-actions {
+    margin-left: auto;
+  }
+
+  .comment-delete {
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .comment-delete:hover {
+    color: #dc2626;
+  }
+
   .comment-form {
     display: flex;
     gap: 8px;
@@ -751,7 +795,12 @@
         </div>
 
         <!-- COMMENTS -->
-        <div class="comments" id="comments-{{.ID}}"></div>
+        <div
+          class="comments"
+          id="comments-{{.ID}}"
+          data-post-id="{{.ID}}"
+          data-can-delete="{{.CanDelete}}"
+        ></div>
 
         <form class="comment-form" data-post-id="{{.ID}}">
           <input
@@ -803,33 +852,244 @@
 </div>
 
 <script>
-  document.querySelectorAll(".comment-form").forEach((form) => {
-    form.addEventListener("submit", async function (event) {
-      event.preventDefault();
+  const currentUserID = {{.CurrentUserID}};
 
-      const postID = this.dataset.postId;
-      const content = this.querySelector("input[name='content']").value;
+  /*
+   * =========================
+   * LOAD COMMENTS
+   * =========================
+   */
 
-      const response = await fetch("/posts/comments/create", {
+  async function loadComments() {
+    const commentContainers = document.querySelectorAll(".comments");
+
+    for (const container of commentContainers) {
+      const postID = container.dataset.postId;
+
+      try {
+        const response = await fetch(
+          `/posts/comments?post_id=${encodeURIComponent(postID)}`
+        );
+
+        if (!response.ok) {
+          console.error("Failed to load comments for post:", postID);
+          continue;
+        }
+
+        const comments = await response.json();
+
+        container.innerHTML = "";
+
+        comments.forEach((comment) => {
+          renderComment(container, comment);
+        });
+      } catch (error) {
+        console.error("Error loading comments:", error);
+      }
+    }
+
+    updateCommentCount();
+  }
+
+  /*
+   * =========================
+   * RENDER COMMENT
+   * =========================
+   */
+
+  function renderComment(container, comment) {
+    const commentElement = document.createElement("div");
+    commentElement.className = "comment";
+    commentElement.dataset.commentId = comment.id;
+
+    const body = document.createElement("div");
+    body.className = "comment-body";
+
+    const author = document.createElement("div");
+    author.className = "comment-author";
+    author.textContent = `@${comment.username}`;
+
+    const content = document.createElement("div");
+    content.className = "comment-content";
+    content.textContent = comment.content;
+
+    body.appendChild(author);
+    body.appendChild(content);
+
+    const canDelete =
+      comment.user_id === currentUserID ||
+      container.dataset.canDelete === "true";
+
+    if (canDelete) {
+      const actions = document.createElement("div");
+      actions.className = "comment-actions";
+
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "comment-delete";
+      deleteButton.textContent = "Delete";
+
+      deleteButton.addEventListener("click", () => {
+        deleteComment(comment.id, commentElement);
+      });
+
+      actions.appendChild(deleteButton);
+      commentElement.appendChild(body);
+      commentElement.appendChild(actions);
+    } else {
+      commentElement.appendChild(body);
+    }
+
+    container.appendChild(commentElement);
+  }
+
+  /*
+   * =========================
+   * DELETE COMMENT
+   * =========================
+   */
+
+  async function deleteComment(commentID, commentElement) {
+    const confirmed = confirm(
+      "Are you sure you want to delete this comment?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/posts/comments/delete", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
-          post_id: postID,
-          content: content,
+          comment_id: commentID,
         }),
       });
 
       if (response.ok) {
-        this.reset();
+        commentElement.remove();
+        updateCommentCount();
+        return;
+      }
 
-        window.location.reload();
-      } else {
+      if (response.status === 403) {
+        alert("You are not allowed to delete this comment.");
+        return;
+      }
+
+      if (response.status === 404) {
+        alert("Comment not found.");
+        return;
+      }
+
+      alert("Failed to delete comment.");
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      alert("Something went wrong while deleting the comment.");
+    }
+  }
+
+  /*
+   * =========================
+   * UPDATE COMMENT COUNT
+   * =========================
+   */
+
+  function updateCommentCount() {
+    document.querySelectorAll(".comments").forEach((container) => {
+      const count = container.querySelectorAll(".comment").length;
+      const post = container.closest(".feed-post");
+
+      if (!post) {
+        return;
+      }
+
+      const countElement = post.querySelector(
+        ".post-stats span:nth-child(2)"
+      );
+
+      if (countElement) {
+        countElement.textContent = `${count} comments`;
+      }
+    });
+  }
+
+  /*
+   * =========================
+   * CREATE COMMENT
+   * =========================
+   */
+
+  document.querySelectorAll(".comment-form").forEach((form) => {
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const postID = this.dataset.postId;
+      const contentInput = this.querySelector("input[name='content']");
+      const content = contentInput.value.trim();
+
+      if (!content) {
+        return;
+      }
+
+      try {
+        const response = await fetch("/posts/comments/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            post_id: postID,
+            content: content,
+          }),
+        });
+
+        if (response.ok) {
+          this.reset();
+
+          const container = document.querySelector(
+            `#comments-${postID}`
+          );
+
+          if (container) {
+            const commentsResponse = await fetch(
+              `/posts/comments?post_id=${encodeURIComponent(postID)}`
+            );
+
+            if (commentsResponse.ok) {
+              const comments = await commentsResponse.json();
+
+              container.innerHTML = "";
+
+              comments.forEach((comment) => {
+                renderComment(container, comment);
+              });
+
+              updateCommentCount();
+            }
+          }
+
+          return;
+        }
+
         alert("Failed to create comment.");
+      } catch (error) {
+        console.error("Error creating comment:", error);
+        alert("Something went wrong while creating the comment.");
       }
     });
   });
+
+  /*
+   * =========================
+   * INITIALIZE
+   * =========================
+   */
+
+  loadComments();
 </script>
 
 {{end}}
