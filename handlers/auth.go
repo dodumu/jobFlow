@@ -4,6 +4,7 @@ import (
 	"jobFlow/database"
 	"jobFlow/models"
 	"jobFlow/utils"
+	"log"
 	"net/http"
 	"time"
 )
@@ -67,17 +68,20 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = database.CreateUserProfile(profile)
 	if err != nil {
+		log.Printf("ERROR: %v\n", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 	if role == "company" {
-
+		industry := r.FormValue("industry")
+		companySize := r.FormValue("company_size")
+		// foundedYear := r.FormValue("founded_year")
 		companyName := r.FormValue("company_name")
 		description := r.FormValue("description")
 		website := r.FormValue("website")
 		location := r.FormValue("location")
 		logo := r.FormValue("logo")
-		if companyName == "" || description == "" || website == "" || location == "" {
+		if companyName == "" || description == "" || website == "" || location == "" || industry == "" {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
 		}
@@ -88,9 +92,13 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			Website:     website,
 			Location:    location,
 			Logo:        logo,
+			Industry:    industry,
+			FoundedYear: 0,
+			CompanySize: companySize,
 		}
 		_, err := database.CreateCompany(company)
 		if err != nil {
+			log.Printf("ERROR: %v\n", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}

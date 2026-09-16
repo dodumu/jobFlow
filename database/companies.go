@@ -6,15 +6,44 @@ import (
 )
 
 func CreateCompany(company models.Company) (int, error) {
-	query := `INSERT INTO companies (user_id, company_name, description, website, location, logo) VALUES(?, ?, ?, ?, ?, ?)`
-	res, err := DB.Exec(query, company.UserID, company.CompanyName, company.Description, company.Website, company.Location, company.Logo)
+	query := `
+		INSERT INTO companies (
+			user_id,
+			company_name,
+			description,
+			website,
+			location,
+			logo,
+			industry,
+			company_size,
+			founded_year,
+			verification_status
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`
+
+	res, err := DB.Exec(
+		query,
+		company.UserID,
+		company.CompanyName,
+		company.Description,
+		company.Website,
+		company.Location,
+		company.Logo,
+		company.Industry,
+		company.CompanySize,
+		company.FoundedYear,
+		company.VerificationStatus,
+	)
 	if err != nil {
 		return 0, err
 	}
+
 	id, err := res.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
+
 	return int(id), nil
 }
 
