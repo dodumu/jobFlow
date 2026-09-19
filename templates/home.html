@@ -767,76 +767,86 @@
 
         <!-- ACTIONS -->
         <div class="post-actions">
+
+          {{if .HasLiked}}
+          <form action="/posts/unlike" method="POST">
+            <input type="hidden" name="post_id" value="{{.ID}}" />
+
+            <button type="submit" class="post-action liked">
+              👍
+              <span>Liked</span>
+            </button>
+          </form>
+
+          {{else}}
           <form action="/posts/like" method="POST">
             <input type="hidden" name="post_id" value="{{.ID}}" />
 
-            {{if .HasLiked}}
-
-            <button type="submit">Unlike</button>
-
-            {{else}}
-
-            <button type="submit">Like</button>
-
-            {{end}}
+            <button type="submit" class="post-action">
+              👍
+              <span>Like</span>
+            </button>
           </form>
+          {{end}}
 
-          <button type="button" class="comment-button" data-post-id="{{.ID}}">
-            Comment
-          </button>
-
-          <form action="/posts/share" method="POST">
-            <input type="hidden" name="post_id" value="{{.ID}}" />
-
-            <button type="submit" class="share-button" data-post-id="{{.ID}}">Share</button>
-          </form>
         </div>
 
-        <!-- COMMENTS -->
-        <div class="comments" id="comments-{{.ID}}" data-post-id="{{.ID}}" data-can-delete="{{.CanDelete}}"></div>
+        <button type="button" class="comment-button" data-post-id="{{.ID}}">
+          Comment
+        </button>
 
-        <form class="comment-form" data-post-id="{{.ID}}">
-          <input type="text" name="content" placeholder="Write a comment..." required />
+        <form action="/posts/share" method="POST">
+          <input type="hidden" name="post_id" value="{{.ID}}" />
 
-          <button type="submit">Comment</button>
+          <button type="submit" class="share-button" data-post-id="{{.ID}}">Share</button>
         </form>
-      </article>
+</div>
 
-      {{end}} {{else}}
+<!-- COMMENTS -->
+<div class="comments" id="comments-{{.ID}}" data-post-id="{{.ID}}" data-can-delete="{{.CanDelete}}"></div>
 
-      <div class="home-card empty-feed">
-        <h3>Your feed is empty</h3>
+<form class="comment-form" data-post-id="{{.ID}}">
+  <input type="text" name="content" placeholder="Write a comment..." required />
 
-        <p>
-          Start sharing professional updates and connecting with people and
-          companies.
-        </p>
-      </div>
+  <button type="submit">Comment</button>
+</form>
+</article>
 
-      {{end}}
-    </section>
-  </main>
+{{end}} {{else}}
 
-  <!-- RIGHT SIDEBAR -->
-  <aside class="home-sidebar right-sidebar">
-    <div class="home-card">
-      <h3>Recommended jobs</h3>
+<div class="home-card empty-feed">
+  <h3>Your feed is empty</h3>
 
-      <p>Job recommendations will appear here.</p>
-    </div>
+  <p>
+    Start sharing professional updates and connecting with people and
+    companies.
+  </p>
+</div>
 
-    <div class="home-card">
-      <h3>People to follow</h3>
+{{end}}
+</section>
+</main>
 
-      <p>People recommendations will appear here.</p>
-    </div>
+<!-- RIGHT SIDEBAR -->
+<aside class="home-sidebar right-sidebar">
+  <div class="home-card">
+    <h3>Recommended jobs</h3>
 
-    <div class="home-card">
-      <h3>Companies to follow</h3>
+    <p>Job recommendations will appear here.</p>
+  </div>
 
-      <p>Company recommendations will appear here.</p>
-    </div>
-  </aside>
+  <div class="home-card">
+    <h3>People to follow</h3>
+
+    <p>People recommendations will appear here.</p>
+  </div>
+
+  <div class="home-card">
+    <h3>Companies to follow</h3>
+
+    <p>Company recommendations will appear here.</p>
+  </div>
+</aside>
 </div>
 
 <script>
@@ -871,52 +881,52 @@
     }
   }
 
- function renderComment(container, comment) {
-  const commentElement = document.createElement("div");
+  function renderComment(container, comment) {
+    const commentElement = document.createElement("div");
 
-  commentElement.className = "comment";
-  commentElement.dataset.commentId = comment.id;
+    commentElement.className = "comment";
+    commentElement.dataset.commentId = comment.id;
 
-  const commentBody = document.createElement("div");
-  commentBody.className = "comment-body";
+    const commentBody = document.createElement("div");
+    commentBody.className = "comment-body";
 
-  const author = document.createElement("div");
-  author.className = "comment-author";
-  author.textContent = `@${comment.username}`;
+    const author = document.createElement("div");
+    author.className = "comment-author";
+    author.textContent = `@${comment.username}`;
 
-  const content = document.createElement("div");
-  content.className = "comment-content";
-  content.textContent = comment.content;
+    const content = document.createElement("div");
+    content.className = "comment-content";
+    content.textContent = comment.content;
 
-  commentBody.appendChild(author);
-  commentBody.appendChild(content);
+    commentBody.appendChild(author);
+    commentBody.appendChild(content);
 
-  commentElement.appendChild(commentBody);
+    commentElement.appendChild(commentBody);
 
-  const canDelete =
-    comment.user_id === currentUserID ||
-    container.dataset.canDelete === "true";
+    const canDelete =
+      comment.user_id === currentUserID ||
+      container.dataset.canDelete === "true";
 
-  if (canDelete) {
-    const actions = document.createElement("div");
-    actions.className = "comment-actions";
+    if (canDelete) {
+      const actions = document.createElement("div");
+      actions.className = "comment-actions";
 
-    const deleteButton = document.createElement("button");
+      const deleteButton = document.createElement("button");
 
-    deleteButton.type = "button";
-    deleteButton.className = "comment-delete";
-    deleteButton.textContent = "Delete";
+      deleteButton.type = "button";
+      deleteButton.className = "comment-delete";
+      deleteButton.textContent = "Delete";
 
-    deleteButton.addEventListener("click", () => {
-      deleteComment(comment.id, commentElement);
-    });
+      deleteButton.addEventListener("click", () => {
+        deleteComment(comment.id, commentElement);
+      });
 
-    actions.appendChild(deleteButton);
-    commentElement.appendChild(actions);
+      actions.appendChild(deleteButton);
+      commentElement.appendChild(actions);
+    }
+
+    container.appendChild(commentElement);
   }
-
-  container.appendChild(commentElement);
-}
 
   async function deleteComment(commentID, commentElement) {
     const confirmed = confirm(

@@ -6,6 +6,7 @@ import (
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
+	"jobFlow/utils"
 	"log"
 	"net/http"
 	"strconv"
@@ -96,7 +97,7 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	utils.RedirectBack(w, r, "/home")
 }
 func UnlikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -129,7 +130,7 @@ func UnlikePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	utils.RedirectBack(w, r, "/home")
 }
 
 func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
