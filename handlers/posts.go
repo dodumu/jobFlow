@@ -93,12 +93,21 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = database.LikePost(like)
 	if err != nil {
+		log.Printf(
+			"LIKE POST ERROR - postID=%d userID=%d: %v\n",
+			id,
+			userID,
+			err,
+		)
+
 		http.Error(w, "failed to like post", http.StatusInternalServerError)
 		return
 	}
 
 	utils.RedirectBack(w, r, "/home")
+
 }
+
 func UnlikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

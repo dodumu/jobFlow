@@ -151,6 +151,7 @@
     font-family: inherit;
     font-size: 14px;
     line-height: 1.5;
+    box-sizing: border-box;
   }
 
   .composer textarea:focus {
@@ -373,6 +374,7 @@
     align-items: center;
     gap: 8px;
     padding: 9px 0;
+    border-bottom: 1px solid #edf0f2;
   }
 
   .post-actions form {
@@ -395,15 +397,22 @@
     color: #2563eb;
   }
 
+  .post-actions .liked {
+    color: #2563eb;
+  }
+
   /* =========================
-   COMMENTS
-   ========================= */
+       COMMENTS
+       ========================= */
+
+  .comments-section {
+    margin-top: 12px;
+  }
 
   .comments {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 4px;
   }
 
   .comment {
@@ -456,7 +465,7 @@
   .comment-form {
     display: flex;
     gap: 8px;
-    margin-top: 8px;
+    margin-top: 10px;
   }
 
   .comment-form input {
@@ -569,7 +578,6 @@
   }
 
   @media (max-width: 480px) {
-
     .composer,
     .feed-post {
       padding: 14px;
@@ -595,54 +603,87 @@
     .post-actions button {
       padding: 7px 8px;
     }
+
+    .comment-form {
+      flex-direction: column;
+    }
+
+    .comment-form button {
+      align-self: flex-end;
+    }
   }
 </style>
 
 <div class="home-layout">
+
   <!-- LEFT SIDEBAR -->
   <aside class="home-sidebar left-sidebar">
+
     <div class="home-card profile-summary">
+
       <div class="profile-avatar">
-        {{if .User.FirstName}} {{printf "%.1s" .User.FirstName}}{{printf "%.1s"
-        .User.LastName}} {{else}} U {{end}}
+        {{if .User.FirstName}}
+          {{printf "%.1s" .User.FirstName}}{{printf "%.1s" .User.LastName}}
+        {{else}}
+          U
+        {{end}}
       </div>
 
       <h2>{{.User.FirstName}} {{.User.LastName}}</h2>
 
       <p>@{{.User.Username}}</p>
 
-      <a href="/profile" class="profile-link"> View profile </a>
+      <a href="/profile" class="profile-link">
+        View profile
+      </a>
+
     </div>
 
     <div class="home-card quick-links">
+
       <h3>Quick links</h3>
 
       <a href="/dashboard">Dashboard</a>
       <a href="/profile">My profile</a>
+
     </div>
+
   </aside>
+
 
   <!-- MAIN FEED -->
   <main class="home-feed">
+
     <!-- POST COMPOSER -->
     <div class="home-card composer">
+
       <div class="composer-header">
+
         <div class="profile-avatar small">
-          {{if .User.FirstName}} {{printf "%.1s" .User.FirstName}}{{printf
-          "%.1s" .User.LastName}} {{else}} U {{end}}
+          {{if .User.FirstName}}
+            {{printf "%.1s" .User.FirstName}}{{printf "%.1s" .User.LastName}}
+          {{else}}
+            U
+          {{end}}
         </div>
 
         <div>
-          <strong> {{.User.FirstName}} {{.User.LastName}} </strong>
-
-          <span> @{{.User.Username}} </span>
+          <strong>{{.User.FirstName}} {{.User.LastName}}</strong>
+          <span>@{{.User.Username}}</span>
         </div>
+
       </div>
 
       <form action="/posts/create" method="POST">
-        <textarea name="content" placeholder="Share something professional..." required></textarea>
+
+        <textarea
+          name="content"
+          placeholder="Share something professional..."
+          required
+        ></textarea>
 
         <div class="composer-actions">
+
           <select name="type">
             <option value="normal">Post</option>
             <option value="project">Project</option>
@@ -651,220 +692,390 @@
           </select>
 
           <button type="submit">Post</button>
+
         </div>
+
       </form>
+
     </div>
+
 
     <!-- FEED -->
     <section class="feed">
-      {{if .Posts}} {{range .Posts}}
 
-      <article class="home-card feed-post">
-        <!-- AUTHOR -->
-        <div class="post-header">
-          <div class="post-author-avatar">
-            {{if eq .AuthorType "company"}} {{if .CompanyLogo}}
+      {{if .Posts}}
 
-            <img src="{{.CompanyLogo}}" alt="{{.CompanyName}} logo" />
+        {{range .Posts}}
+
+        <article class="home-card feed-post">
+
+          <!-- AUTHOR -->
+          <div class="post-header">
+
+            <div class="post-author-avatar">
+
+              {{if eq .AuthorType "company"}}
+
+                {{if .CompanyLogo}}
+
+                  <img
+                    src="{{.CompanyLogo}}"
+                    alt="{{.CompanyName}} logo"
+                  />
+
+                {{else}}
+
+                  <span>
+                    {{printf "%.1s" .CompanyName}}
+                  </span>
+
+                {{end}}
+
+              {{else}}
+
+                <span>
+                  {{if .AuthorFirstName}}
+                    {{printf "%.1s" .AuthorFirstName}}{{printf "%.1s" .AuthorLastName}}
+                  {{else}}
+                    U
+                  {{end}}
+                </span>
+
+              {{end}}
+
+            </div>
+
+
+            <div class="post-author-info">
+
+              {{if eq .AuthorType "company"}}
+
+                <strong>{{.CompanyName}}</strong>
+                <span>Company</span>
+
+              {{else}}
+
+                <strong>
+                  {{.AuthorFirstName}} {{.AuthorLastName}}
+                </strong>
+
+                <span>@{{.AuthorUsername}}</span>
+
+              {{end}}
+
+              <small>{{.CreatedAt}}</small>
+
+            </div>
+
+
+            <div class="post-menu">
+
+              {{if .CanDelete}}
+
+                <form
+                  action="/posts/delete"
+                  method="POST"
+                  onsubmit="return confirm('Are you sure you want to delete this post?');"
+                >
+
+                  <input
+                    type="hidden"
+                    name="post_id"
+                    value="{{.ID}}"
+                  />
+
+                  <button type="submit">
+                    Delete
+                  </button>
+
+                </form>
+
+              {{else}}
+
+                •••
+
+              {{end}}
+
+            </div>
+
+          </div>
+
+
+          <!-- POST TYPE -->
+          {{if ne .Type "normal"}}
+
+            <div class="post-type">
+              {{.Type}}
+            </div>
+
+          {{end}}
+
+
+          <!-- POST CONTENT -->
+          <div class="post-content">
+
+            <p>{{.Content}}</p>
+
+          </div>
+
+
+          <!-- SHARED POST -->
+          {{if .SharedPostID}}
+
+            <div class="shared-post">
+
+              <div class="shared-post-author">
+
+                {{if eq .OriginalAuthorType "company"}}
+
+                  <strong>
+                    {{.OriginalCompanyName}}
+                  </strong>
+
+                {{else}}
+
+                  <strong>
+                    {{.OriginalAuthorFirstName}}
+                    {{.OriginalAuthorLastName}}
+                  </strong>
+
+                  <span>
+                    @{{.OriginalAuthorUsername}}
+                  </span>
+
+                {{end}}
+
+              </div>
+
+
+              {{if .OriginalType}}
+
+                <small>
+                  {{.OriginalType}}
+                </small>
+
+              {{end}}
+
+              <p>
+                {{.OriginalContent}}
+              </p>
+
+            </div>
+
+          {{end}}
+
+
+          <!-- ENGAGEMENT STATS -->
+          <div class="post-stats">
+
+            <span>{{.LikeCount}} likes</span>
+            <span>{{.CommentCount}} comments</span>
+            <span>{{.ShareCount}} shares</span>
+
+          </div>
+
+
+          <!-- POST ACTIONS -->
+          <div class="post-actions">
+
+            <!-- LIKE -->
+            {{if .HasLiked}}
+
+              <form action="/posts/unlike" method="POST">
+
+                <input
+                  type="hidden"
+                  name="post_id"
+                  value="{{.ID}}"
+                />
+
+                <button
+                  type="submit"
+                  class="post-action liked"
+                >
+                  👍
+                  <span>Liked</span>
+                </button>
+
+              </form>
 
             {{else}}
 
-            <span> {{printf "%.1s" .CompanyName}} </span>
+              <form action="/posts/like" method="POST">
 
-            {{end}} {{else}}
+                <input
+                  type="hidden"
+                  name="post_id"
+                  value="{{.ID}}"
+                />
 
-            <span>
-              {{if .AuthorFirstName}} {{printf "%.1s" .AuthorFirstName}}{{printf
-              "%.1s" .AuthorLastName}} {{else}} U {{end}}
-            </span>
+                <button
+                  type="submit"
+                  class="post-action"
+                >
+                  👍
+                  <span>Like</span>
+                </button>
 
-            {{end}}
-          </div>
-
-          <div class="post-author-info">
-            {{if eq .AuthorType "company"}}
-
-            <strong> {{.CompanyName}} </strong>
-
-            <span> Company </span>
-
-            {{else}}
-
-            <strong> {{.AuthorFirstName}} {{.AuthorLastName}} </strong>
-
-            <span> @{{.AuthorUsername}} </span>
+              </form>
 
             {{end}}
 
-            <small> {{.CreatedAt}} </small>
-          </div>
 
-          <div class="post-menu">
-            {{if .CanDelete}}
+            <!-- COMMENT -->
+            <button
+              type="button"
+              class="post-action comment-button"
+              data-post-id="{{.ID}}"
+            >
+              💬
+              <span>Comment</span>
+            </button>
 
-            <form action="/posts/delete" method="POST"
-              onsubmit="return confirm('Are you sure you want to delete this post?');">
-              <input type="hidden" name="post_id" value="{{.ID}}" />
 
-              <button type="submit">Delete</button>
+            <!-- SHARE -->
+            <form action="/posts/share" method="POST">
+
+              <input
+                type="hidden"
+                name="post_id"
+                value="{{.ID}}"
+              />
+
+              <button
+                type="submit"
+                class="post-action share-button"
+              >
+                🔄
+                <span>Share</span>
+              </button>
+
             </form>
 
-            {{else}} ••• {{end}}
           </div>
-        </div>
 
-        <!-- POST TYPE -->
-        {{if ne .Type "normal"}}
 
-        <div class="post-type">{{.Type}}</div>
+          <!-- COMMENTS SECTION -->
+          <div class="comments-section">
+
+            <div
+              class="comments"
+              id="comments-{{.ID}}"
+              data-post-id="{{.ID}}"
+              data-can-delete="{{.CanDelete}}"
+            ></div>
+
+
+            <form
+              class="comment-form"
+              data-post-id="{{.ID}}"
+            >
+
+              <input
+                type="text"
+                name="content"
+                placeholder="Write a comment..."
+                required
+              />
+
+              <button type="submit">
+                Comment
+              </button>
+
+            </form>
+
+          </div>
+
+        </article>
 
         {{end}}
 
-        <!-- POST CONTENT -->
-        <div class="post-content">
-          <p>{{.Content}}</p>
-        </div>
+      {{else}}
 
-        <!-- SHARED POST -->
-        {{if .SharedPostID}}
+        <div class="home-card empty-feed">
 
-        <div class="shared-post">
-          <div class="shared-post-author">
-            {{if eq .OriginalAuthorType "company"}}
+          <h3>Your feed is empty</h3>
 
-            <strong> {{.OriginalCompanyName}} </strong>
-
-            {{else}}
-
-            <strong>
-              {{.OriginalAuthorFirstName}} {{.OriginalAuthorLastName}}
-            </strong>
-
-            <span> @{{.OriginalAuthorUsername}} </span>
-
-            {{end}}
-          </div>
-
-          {{if .OriginalType}}
-
-          <small> {{.OriginalType}} </small>
-
-          {{end}}
-
-          <p>{{.OriginalContent}}</p>
-        </div>
-
-        {{end}}
-
-        <!-- ENGAGEMENT STATS -->
-        <div class="post-stats">
-          <span> {{.LikeCount}} likes </span>
-
-          <span> {{.CommentCount}} comments </span>
-
-          <span> {{.ShareCount}} shares </span>
-        </div>
-
-        <!-- ACTIONS -->
-        <div class="post-actions">
-
-          {{if .HasLiked}}
-          <form action="/posts/unlike" method="POST">
-            <input type="hidden" name="post_id" value="{{.ID}}" />
-
-            <button type="submit" class="post-action liked">
-              👍
-              <span>Liked</span>
-            </button>
-          </form>
-
-          {{else}}
-          <form action="/posts/like" method="POST">
-            <input type="hidden" name="post_id" value="{{.ID}}" />
-
-            <button type="submit" class="post-action">
-              👍
-              <span>Like</span>
-            </button>
-          </form>
-          {{end}}
+          <p>
+            Start sharing professional updates and connecting with people
+            and companies.
+          </p>
 
         </div>
 
-        <button type="button" class="comment-button" data-post-id="{{.ID}}">
-          Comment
-        </button>
+      {{end}}
 
-        <form action="/posts/share" method="POST">
-          <input type="hidden" name="post_id" value="{{.ID}}" />
+    </section>
 
-          <button type="submit" class="share-button" data-post-id="{{.ID}}">Share</button>
-        </form>
+  </main>
+
+
+  <!-- RIGHT SIDEBAR -->
+  <aside class="home-sidebar right-sidebar">
+
+    <div class="home-card">
+
+      <h3>Recommended jobs</h3>
+
+      <p>
+        Job recommendations will appear here.
+      </p>
+
+    </div>
+
+
+    <div class="home-card">
+
+      <h3>People to follow</h3>
+
+      <p>
+        People recommendations will appear here.
+      </p>
+
+    </div>
+
+
+    <div class="home-card">
+
+      <h3>Companies to follow</h3>
+
+      <p>
+        Company recommendations will appear here.
+      </p>
+
+    </div>
+
+  </aside>
+
 </div>
 
-<!-- COMMENTS -->
-<div class="comments" id="comments-{{.ID}}" data-post-id="{{.ID}}" data-can-delete="{{.CanDelete}}"></div>
-
-<form class="comment-form" data-post-id="{{.ID}}">
-  <input type="text" name="content" placeholder="Write a comment..." required />
-
-  <button type="submit">Comment</button>
-</form>
-</article>
-
-{{end}} {{else}}
-
-<div class="home-card empty-feed">
-  <h3>Your feed is empty</h3>
-
-  <p>
-    Start sharing professional updates and connecting with people and
-    companies.
-  </p>
-</div>
-
-{{end}}
-</section>
-</main>
-
-<!-- RIGHT SIDEBAR -->
-<aside class="home-sidebar right-sidebar">
-  <div class="home-card">
-    <h3>Recommended jobs</h3>
-
-    <p>Job recommendations will appear here.</p>
-  </div>
-
-  <div class="home-card">
-    <h3>People to follow</h3>
-
-    <p>People recommendations will appear here.</p>
-  </div>
-
-  <div class="home-card">
-    <h3>Companies to follow</h3>
-
-    <p>Company recommendations will appear here.</p>
-  </div>
-</aside>
-</div>
 
 <script>
-  const currentUserID = {{.CurrentUserID }};
+  const currentUserID = {{.CurrentUserID}};
+
 
   async function loadComments() {
-    const containers = document.querySelectorAll(".comments");
+
+    const containers =
+      document.querySelectorAll(".comments");
 
     for (const container of containers) {
+
       const postID = container.dataset.postId;
 
       try {
+
         const response = await fetch(
           `/posts/comments?post_id=${postID}`
         );
 
         if (!response.ok) {
-          console.error("Failed to load comments for post:", postID);
+
+          console.error(
+            "Failed to load comments for post:",
+            postID
+          );
+
           continue;
         }
 
@@ -873,62 +1084,128 @@
         container.innerHTML = "";
 
         comments.forEach((comment) => {
-          renderComment(container, comment);
+
+          renderComment(
+            container,
+            comment
+          );
+
         });
+
       } catch (error) {
-        console.error("Error loading comments:", error);
+
+        console.error(
+          "Error loading comments:",
+          error
+        );
+
       }
+
     }
+
   }
 
+
   function renderComment(container, comment) {
-    const commentElement = document.createElement("div");
+
+    const commentElement =
+      document.createElement("div");
 
     commentElement.className = "comment";
-    commentElement.dataset.commentId = comment.id;
 
-    const commentBody = document.createElement("div");
-    commentBody.className = "comment-body";
+    commentElement.dataset.commentId =
+      comment.id;
 
-    const author = document.createElement("div");
-    author.className = "comment-author";
-    author.textContent = `@${comment.username}`;
 
-    const content = document.createElement("div");
-    content.className = "comment-content";
-    content.textContent = comment.content;
+    const commentBody =
+      document.createElement("div");
+
+    commentBody.className =
+      "comment-body";
+
+
+    const author =
+      document.createElement("div");
+
+    author.className =
+      "comment-author";
+
+    author.textContent =
+      `@${comment.username}`;
+
+
+    const content =
+      document.createElement("div");
+
+    content.className =
+      "comment-content";
+
+    content.textContent =
+      comment.content;
+
 
     commentBody.appendChild(author);
     commentBody.appendChild(content);
 
     commentElement.appendChild(commentBody);
 
+
     const canDelete =
       comment.user_id === currentUserID ||
       container.dataset.canDelete === "true";
 
-    if (canDelete) {
-      const actions = document.createElement("div");
-      actions.className = "comment-actions";
 
-      const deleteButton = document.createElement("button");
+    if (canDelete) {
+
+      const actions =
+        document.createElement("div");
+
+      actions.className =
+        "comment-actions";
+
+
+      const deleteButton =
+        document.createElement("button");
 
       deleteButton.type = "button";
-      deleteButton.className = "comment-delete";
-      deleteButton.textContent = "Delete";
 
-      deleteButton.addEventListener("click", () => {
-        deleteComment(comment.id, commentElement);
-      });
+      deleteButton.className =
+        "comment-delete";
+
+      deleteButton.textContent =
+        "Delete";
+
+
+      deleteButton.addEventListener(
+        "click",
+        () => {
+          deleteComment(
+            comment.id,
+            commentElement
+          );
+        }
+      );
+
 
       actions.appendChild(deleteButton);
+
       commentElement.appendChild(actions);
+
     }
 
-    container.appendChild(commentElement);
+
+    container.appendChild(
+      commentElement
+    );
+
   }
 
-  async function deleteComment(commentID, commentElement) {
+
+  async function deleteComment(
+    commentID,
+    commentElement
+  ) {
+
     const confirmed = confirm(
       "Are you sure you want to delete this comment?"
     );
@@ -937,80 +1214,151 @@
       return;
     }
 
-    const response = await fetch("/posts/comments/delete", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        comment_id: commentID,
-      }),
-    });
 
-    if (response.ok) {
-      commentElement.remove();
-    } else if (response.status === 403) {
-      alert("You are not allowed to delete this comment.");
-    } else if (response.status === 404) {
-      alert("Comment not found.");
-    } else {
-      alert("Failed to delete comment.");
-    }
-  }
-
-  document.querySelectorAll(".comment-form").forEach((form) => {
-    form.addEventListener("submit", async function (event) {
-      event.preventDefault();
-
-      const postID = this.dataset.postId;
-
-      const input = this.querySelector(
-        "input[name='content']"
-      );
-
-      const content = input.value.trim();
-
-      if (!content) {
-        return;
-      }
-
-      const response = await fetch("/posts/comments/create", {
+    const response = await fetch(
+      "/posts/comments/delete",
+      {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type":
+            "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
-          post_id: postID,
-          content: content,
+          comment_id: commentID,
         }),
-      });
-
-      if (response.ok) {
-        this.reset();
-
-        const container = document.querySelector(
-          `#comments-${postID}`
-        );
-
-        const commentsResponse = await fetch(
-          `/posts/comments?post_id=${postID}`
-        );
-
-        if (commentsResponse.ok) {
-          const comments = await commentsResponse.json();
-
-          container.innerHTML = "";
-
-          comments.forEach((comment) => {
-            renderComment(container, comment);
-          });
-        }
-      } else {
-        alert("Failed to create comment.");
       }
+    );
+
+
+    if (response.ok) {
+
+      commentElement.remove();
+
+    } else if (response.status === 403) {
+
+      alert(
+        "You are not allowed to delete this comment."
+      );
+
+    } else if (response.status === 404) {
+
+      alert(
+        "Comment not found."
+      );
+
+    } else {
+
+      alert(
+        "Failed to delete comment."
+      );
+
+    }
+
+  }
+
+
+  document
+    .querySelectorAll(".comment-form")
+    .forEach((form) => {
+
+      form.addEventListener(
+        "submit",
+        async function (event) {
+
+          event.preventDefault();
+
+
+          const postID =
+            this.dataset.postId;
+
+
+          const input =
+            this.querySelector(
+              "input[name='content']"
+            );
+
+
+          const content =
+            input.value.trim();
+
+
+          if (!content) {
+            return;
+          }
+
+
+          const response =
+            await fetch(
+              "/posts/comments/create",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type":
+                    "application/x-www-form-urlencoded",
+                },
+                body: new URLSearchParams({
+                  post_id: postID,
+                  content: content,
+                }),
+              }
+            );
+
+
+          if (response.ok) {
+
+            this.reset();
+
+
+            const container =
+              document.querySelector(
+                `#comments-${postID}`
+              );
+
+
+            const commentsResponse =
+              await fetch(
+                `/posts/comments?post_id=${postID}`
+              );
+
+
+            if (commentsResponse.ok) {
+
+              const comments =
+                await commentsResponse.json();
+
+
+              container.innerHTML = "";
+
+
+              comments.forEach(
+                (comment) => {
+
+                  renderComment(
+                    container,
+                    comment
+                  );
+
+                }
+              );
+
+            }
+
+          } else {
+
+            alert(
+              "Failed to create comment."
+            );
+
+          }
+
+        }
+      );
+
     });
-  });
+
 
   loadComments();
 </script>
+
 {{end}}
+

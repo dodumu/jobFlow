@@ -77,7 +77,14 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 
 			COUNT(DISTINCT pl.user_id) AS like_count,
 			COUNT(DISTINCT c.id) AS comment_count,
-			COUNT(DISTINCT ps.id) AS share_count
+			COUNT(DISTINCT ps.id) AS share_count,
+
+			EXISTS (
+				SELECT 1
+				FROM post_likes ul
+				WHERE ul.post_id = p.id
+				AND ul.user_id = ?
+			) AS has_liked
 
 		FROM posts p
 
@@ -98,7 +105,7 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 		GROUP BY p.id
 
 		ORDER BY p.created_at DESC
-	`, userID)
+	`, userID, userID)
 
 	if err != nil {
 		return nil, err
@@ -126,6 +133,8 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 			&post.LikeCount,
 			&post.CommentCount,
 			&post.ShareCount,
+
+			&post.HasLiked,
 		)
 
 		if err != nil {
@@ -144,7 +153,6 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 
 	return posts, nil
 }
-
 func GetPosts() ([]models.Post, error) {
 	rows, err := DB.Query(`
 		SELECT
