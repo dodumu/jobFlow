@@ -91,3 +91,47 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	companyID := r.FormValue("company_id")
+	title := r.FormValue("title")
+	description := r.FormValue("description")
+	location := r.FormValue("location")
+	employmentType := r.FormValue("employment_type")
+	salaryMin := r.FormValue("salary_min")
+	salaryMax := r.FormValue("salary_max")
+	deadline := r.FormValue("deadline")
+	status := r.FormValue("status")
+
+	compID, err := strconv.Atoi(companyID)
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	minSalary, err := strconv.Atoi(companyID)
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	maxSalary, err := strconv.Atoi(companyID)
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	job := models.Job{
+		CompanyID:      compID,
+		Title:          title,
+		Description:    description,
+		Location:       location,
+		EmploymentType: employmentType,
+		SalaryMin:      minSalary,
+		SalaryMax:      maxSalary,
+		Deadline:       deadline,
+		Status:         status,
+	}
+}
