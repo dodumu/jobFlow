@@ -965,7 +965,7 @@
          COMMENT FORM
          ========================= -->
 
-      <form action="/posts/comment" method="POST" class="comment-form">
+      <form action="/posts/comments/create" method="POST" class="comment-form">
 
         <input type="hidden" name="post_id" value="{{.ID}}" />
 
@@ -1266,7 +1266,7 @@
           try {
 
             const response =
-              await fetch("/posts/comment", {
+              await fetch("/posts/comments/create", {
                 method: "POST",
                 body: formData,
               });

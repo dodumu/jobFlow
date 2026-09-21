@@ -57,7 +57,7 @@ func main() {
 		),
 	)
 	http.Handle(
-		"/posts/comment",
+		"/posts/comments/create",
 		middleware.AuthMiddleware(
 			http.HandlerFunc(handlers.CreateCommentHandler),
 		),
@@ -76,10 +76,10 @@ func main() {
 		),
 	)
 	http.Handle(
- 		"/posts/comments/delete",
-    	middleware.AuthMiddleware(
-        	http.HandlerFunc(handlers.DeleteCommentHandler),
-    	),
+		"/posts/comments/delete",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.DeleteCommentHandler),
+		),
 	)
 	http.Handle("/posts/delete", middleware.AuthMiddleware(
 		http.HandlerFunc(handlers.DeletePostHandler),

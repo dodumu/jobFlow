@@ -53,11 +53,12 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = database.CreateComment(comment)
 	if err != nil {
+		log.Printf("ERROR: %v", err)
 		http.Error(w, "failed to create comment", http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	http.Redirect(w, r, "/home", http.StatusSeeOther)
 }
 
 func GetCommentsHandler(w http.ResponseWriter, r *http.Request) {
