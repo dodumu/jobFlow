@@ -1,0 +1,595 @@
+{{define "content"}}
+
+<style>
+  /* =========================
+     PAGE HEADER
+     ========================= */
+
+  .page-header {
+    margin-bottom: 25px;
+  }
+
+  .page-header h1 {
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .page-header p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* =========================
+     FORM CARD
+     ========================= */
+
+  .job-form-card {
+    max-width: 820px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+
+  /* =========================
+     FORM SECTIONS
+     ========================= */
+
+  .form-section {
+    margin-bottom: 28px;
+  }
+
+  .form-section:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .form-section h2 {
+    font-size: 17px;
+    margin-bottom: 5px;
+  }
+
+  .form-section-description {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 18px;
+  }
+
+  /* =========================
+     FORM GROUPS
+     ========================= */
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 17px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .form-group.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .required {
+    color: #dc2626;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fafafa;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: 0.15s ease;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--primary);
+    background: white;
+  }
+
+  /* =========================
+     READONLY COMPANY ID
+     ========================= */
+
+  .form-group input[readonly] {
+    background: #f3f4f6;
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  .form-group input[readonly]:focus {
+    border-color: var(--border);
+    background: #f3f4f6;
+  }
+
+  .form-group textarea {
+    min-height: 130px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  .form-group textarea.requirements {
+    min-height: 150px;
+  }
+
+  .form-help {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  /* =========================
+     SALARY
+     ========================= */
+
+  .salary-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .salary-input {
+    position: relative;
+  }
+
+  .salary-input span {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 13px;
+    pointer-events: none;
+  }
+
+  .salary-input input {
+    padding-left: 28px;
+  }
+
+  /* =========================
+     FORM FOOTER
+     ========================= */
+
+  .form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .form-footer-note {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cancel-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 17px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: white;
+    color: var(--text);
+    text-decoration: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .cancel-button:hover {
+    background: #f3f4f6;
+  }
+
+  /* =========================
+     RESPONSIVE
+     ========================= */
+
+  @media (max-width: 700px) {
+
+    .job-form-card {
+      padding: 20px;
+    }
+
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-group.full-width {
+      grid-column: auto;
+    }
+
+    .salary-group {
+      grid-template-columns: 1fr;
+    }
+
+    .form-footer {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form-actions {
+      width: 100%;
+    }
+
+    .form-actions a,
+    .form-actions button {
+      flex: 1;
+    }
+  }
+</style>
+
+<!-- =========================
+     PAGE HEADER
+     ========================= -->
+
+<div class="page-header">
+
+  <h1>Create a Job</h1>
+
+  <p>
+    Create a new opportunity and find the right candidate for your company.
+  </p>
+
+</div>
+
+<!-- =========================
+     JOB FORM
+     ========================= -->
+
+<div class="job-form-card">
+
+  <form action="/jobs/create" method="POST">
+
+    <!-- =========================
+         BASIC INFORMATION
+         ========================= -->
+
+    <div class="form-section">
+
+      <h2>Basic Information</h2>
+
+      <p class="form-section-description">
+        Provide the basic details about the position you're hiring for.
+      </p>
+
+      <div class="form-grid">
+
+        <!-- COMPANY ID -->
+
+        <div class="form-group">
+
+          <label for="company_id">
+            Company ID
+          </label>
+
+          <input
+            type="text"
+            id="company_id"
+            name="company_id"
+            value="{{.CompanyID}}"
+            readonly
+          />
+
+          <span class="form-help">
+            This company ID is assigned to your account and cannot be changed.
+          </span>
+
+        </div>
+
+
+        <!-- JOB TITLE -->
+
+        <div class="form-group">
+
+          <label for="title">
+            Job Title <span class="required">*</span>
+          </label>
+
+          <input
+            type="text"
+            id="title"
+            name="title"
+            placeholder="e.g. Backend Go Developer"
+            required
+          />
+
+        </div>
+
+
+        <!-- LOCATION -->
+
+        <div class="form-group">
+
+          <label for="location">
+            Location <span class="required">*</span>
+          </label>
+
+          <input
+            type="text"
+            id="location"
+            name="location"
+            placeholder="e.g. Lagos, Nigeria"
+            required
+          />
+
+        </div>
+
+
+        <!-- EMPLOYMENT TYPE -->
+
+        <div class="form-group">
+
+          <label for="employment_type">
+            Employment Type <span class="required">*</span>
+          </label>
+
+          <select
+            id="employment_type"
+            name="employment_type"
+            required
+          >
+
+            <option value="">
+              Select employment type
+            </option>
+
+            <option value="full-time">
+              Full-time
+            </option>
+
+            <option value="part-time">
+              Part-time
+            </option>
+
+            <option value="contract">
+              Contract
+            </option>
+
+            <option value="internship">
+              Internship
+            </option>
+
+            <option value="temporary">
+              Temporary
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         JOB DESCRIPTION
+         ========================= -->
+
+    <div class="form-section">
+
+      <h2>Job Description</h2>
+
+      <p class="form-section-description">
+        Explain what the candidate will be doing in this role.
+      </p>
+
+      <div class="form-group">
+
+        <label for="description">
+          Description <span class="required">*</span>
+        </label>
+
+        <textarea
+          id="description"
+          name="description"
+          placeholder="Describe the role, responsibilities, and what the successful candidate will work on..."
+          required
+        ></textarea>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         REQUIREMENTS
+         ========================= -->
+
+    <div class="form-section">
+
+      <h2>Requirements</h2>
+
+      <p class="form-section-description">
+        List the skills, qualifications, and experience you're looking for.
+      </p>
+
+      <div class="form-group">
+
+        <label for="requirements">
+          Requirements <span class="required">*</span>
+        </label>
+
+        <textarea
+          id="requirements"
+          name="requirements"
+          class="requirements"
+          placeholder="e.g.&#10;- 2+ years of Go experience&#10;- Experience with SQL databases&#10;- Understanding of REST APIs&#10;- Good communication skills"
+          required
+        ></textarea>
+
+        <span class="form-help">
+          You can separate multiple requirements using line breaks.
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         COMPENSATION
+         ========================= -->
+
+    <div class="form-section">
+
+      <h2>Compensation</h2>
+
+      <p class="form-section-description">
+        Provide the expected salary range for this position.
+      </p>
+
+      <div class="salary-group">
+
+        <div class="form-group">
+
+          <label for="salary_min">
+            Minimum Salary <span class="required">*</span>
+          </label>
+
+          <div class="salary-input">
+
+            <span>₦</span>
+
+            <input
+              type="number"
+              id="salary_min"
+              name="salary_min"
+              min="0"
+              step="1"
+              placeholder="0"
+              required
+            />
+
+          </div>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="salary_max">
+            Maximum Salary <span class="required">*</span>
+          </label>
+
+          <div class="salary-input">
+
+            <span>₦</span>
+
+            <input
+              type="number"
+              id="salary_max"
+              name="salary_max"
+              min="0"
+              step="1"
+              placeholder="0"
+              required
+            />
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         APPLICATION DEADLINE
+         ========================= -->
+
+    <div class="form-section">
+
+      <h2>Application Deadline</h2>
+
+      <p class="form-section-description">
+        Set the final date candidates can apply for this position.
+      </p>
+
+      <div class="form-group">
+
+        <label for="deadline">
+          Deadline <span class="required">*</span>
+        </label>
+
+        <input
+          type="date"
+          id="deadline"
+          name="deadline"
+          required
+        />
+
+        <span class="form-help">
+          Candidates will not be able to apply after this date.
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         FORM FOOTER
+         ========================= -->
+
+    <div class="form-footer">
+
+      <span class="form-footer-note">
+        Fields marked with * are required.
+      </span>
+
+      <div class="form-actions">
+
+        <a href="/jobs" class="cancel-button">
+          Cancel
+        </a>
+
+        <button
+          type="submit"
+          class="btn-primary"
+        >
+          Publish Job
+        </button>
+
+      </div>
+
+    </div>
+
+  </form>
+
+</div>
+
+{{end}}

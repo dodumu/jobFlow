@@ -111,6 +111,18 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodGet:
 		// Show the create-job form.
+		userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		company, err := database.GetCompanyByUserID(userID)
+		if err != nil {
+			http.Error(w, "company not found", http.StatusForbidden)
+			return
+		}
+
 		tmpl, err := template.ParseFiles(
 			"templates/base.html",
 			"templates/create-job.html",
@@ -120,36 +132,39 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = tmpl.ExecuteTemplate(w, "base", nil)
+		data := struct {
+			CompanyID int
+		}{
+			CompanyID: company.ID,
+		}
+
+		err = tmpl.ExecuteTemplate(w, "base", data)
 		if err != nil {
 			http.Error(w, "failed to render template", http.StatusInternalServerError)
 			return
 		}
-
 	case http.MethodPost:
 		// Read form values.
 		companyID := strings.TrimSpace(r.FormValue("company_id"))
 		title := strings.TrimSpace(r.FormValue("title"))
 		description := strings.TrimSpace(r.FormValue("description"))
+		requirements := strings.TrimSpace(r.FormValue("requirements"))
 		location := strings.TrimSpace(r.FormValue("location"))
 		employmentType := strings.TrimSpace(r.FormValue("employment_type"))
 		salaryMin := strings.TrimSpace(r.FormValue("salary_min"))
 		salaryMax := strings.TrimSpace(r.FormValue("salary_max"))
 		deadlineStr := strings.TrimSpace(r.FormValue("deadline"))
 
-		deadline, err := time.Parse("2006-01-02T15:04", deadlineStr)
-		if err != nil {
-			http.Error(w, "invalid deadline", http.StatusBadRequest)
-			return
-		}
 		// Validate required fields.
 		if companyID == "" ||
 			title == "" ||
 			description == "" ||
+			requirements == "" ||
 			location == "" ||
 			employmentType == "" ||
 			salaryMin == "" ||
-			salaryMax == "" {
+			salaryMax == "" ||
+			deadlineStr == "" {
 
 			http.Error(
 				w,
@@ -190,10 +205,19 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// The HTML form uses <input type="date">,
+		// so the value comes as YYYY-MM-DD.
+		deadline, err := time.Parse("2006-01-02", deadlineStr)
+		if err != nil {
+			http.Error(w, "invalid deadline", http.StatusBadRequest)
+			return
+		}
+
 		job := models.Job{
 			CompanyID:      compID,
 			Title:          title,
 			Description:    description,
+			Requirements:   requirements,
 			Location:       location,
 			EmploymentType: employmentType,
 			SalaryMin:      minSalary,
