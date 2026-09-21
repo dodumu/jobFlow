@@ -84,6 +84,18 @@ func main() {
 	http.Handle("/posts/delete", middleware.AuthMiddleware(
 		http.HandlerFunc(handlers.DeletePostHandler),
 	))
+	http.Handle(
+		"/jobs",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.JobsHandler),
+		),
+	)
+	http.Handle(
+		"/jobs/",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.JobDetailsHandler),
+		),
+	)
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 

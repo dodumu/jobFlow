@@ -1,0 +1,58 @@
+{{define "content"}}
+
+<div class="jobs-page">
+
+    <div class="jobs-header">
+        <h1>Jobs</h1>
+        <p>Find opportunities from companies on JobFlow.</p>
+    </div>
+
+    {{if .Jobs}}
+
+        <div class="jobs-list">
+
+            {{range .Jobs}}
+
+                <div class="job-card">
+
+                    <h2>{{.Title}}</h2>
+
+                    <p>{{.Description}}</p>
+
+                    <div class="job-details">
+
+                        <span>
+                            📍 {{.Location}}
+                        </span>
+
+                        <span>
+                            💼 {{.EmploymentType}}
+                        </span>
+
+                        {{if or .SalaryMin .SalaryMax}}
+                        <span>
+                            💰 {{.SalaryMin}} - {{.SalaryMax}}
+                        </span>
+                        {{end}}
+
+                    </div>
+
+                    <a href="/jobs/{{.ID}}">
+                        View Job
+                    </a>
+
+                </div>
+
+            {{end}}
+
+        </div>
+
+    {{else}}
+
+        <p>No jobs are currently available.</p>
+
+    {{end}}
+
+</div>
+
+{{end}}

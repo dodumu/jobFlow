@@ -1,0 +1,71 @@
+{{define "content"}}
+
+<div class="job-details-page">
+
+    <div class="job-header">
+        <h1>{{.Title}}</h1>
+
+        <p>
+            Location: {{.Location}}
+        </p>
+
+        <p>
+            Employment Type: {{.EmploymentType}}
+        </p>
+    </div>
+
+    <hr>
+
+    <section class="job-section">
+        <h2>Description</h2>
+        <p>{{.Description}}</p>
+    </section>
+
+    <section class="job-section">
+        <h2>Requirements</h2>
+        <p>{{.Requirements}}</p>
+    </section>
+
+    <section class="job-section">
+        <h2>Salary</h2>
+
+        <p>
+            {{.SalaryMin}} - {{.SalaryMax}}
+        </p>
+    </section>
+
+    <section class="job-section">
+        <h2>Deadline</h2>
+
+        <p>
+            {{.Deadline}}
+        </p>
+    </section>
+
+    <section class="job-section">
+        <h2>Status</h2>
+
+        <p>
+            {{.Status}}
+        </p>
+    </section>
+
+    {{if eq .Status "open"}}
+
+        <div class="job-actions">
+            <a href="/jobs/{{.ID}}/apply">
+                Apply Now
+            </a>
+        </div>
+
+    {{else}}
+
+        <p>
+            This job is no longer accepting applications.
+        </p>
+
+    {{end}}
+
+</div>
+
+{{end}}
