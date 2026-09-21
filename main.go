@@ -96,6 +96,12 @@ func main() {
 			http.HandlerFunc(handlers.JobDetailsHandler),
 		),
 	)
+	http.Handle(
+		"/jobs/create",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.CreateJobHandler),
+		),
+	)
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 

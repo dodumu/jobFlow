@@ -20,3 +20,8 @@ type Job struct {
 	CreatedAt      time.Time    `json:"created_at"`
 	UpdatedAt      sql.NullTime `json:"updated_at"`
 }
+
+type JobsPageData struct {
+	Jobs      []Job
+	IsCompany bool
+}

@@ -2,56 +2,76 @@
 
 <div class="jobs-page">
 
-    <div class="jobs-header">
+<div class="jobs-header">
+
+    <div>
         <h1>Jobs</h1>
         <p>Find opportunities from companies on JobFlow.</p>
     </div>
 
-    {{if .Jobs}}
+    {{if .IsCompany}}
+        <a href="/jobs/create" class="create-job-button">
+            + Create Job
+        </a>
+    {{end}}
 
-        <div class="jobs-list">
+</div>
 
-            {{range .Jobs}}
+{{if .Jobs}}
 
-                <div class="job-card">
+    <div class="jobs-list">
 
-                    <h2>{{.Title}}</h2>
+        {{range .Jobs}}
 
-                    <p>{{.Description}}</p>
+            <div class="job-card">
 
-                    <div class="job-details">
+                <h2>{{.Title}}</h2>
 
-                        <span>
-                            📍 {{.Location}}
-                        </span>
+                <p>{{.Description}}</p>
 
-                        <span>
-                            💼 {{.EmploymentType}}
-                        </span>
+                <div class="job-details">
 
-                        {{if or .SalaryMin .SalaryMax}}
+                    <span>
+                        📍 {{.Location}}
+                    </span>
+
+                    <span>
+                        💼 {{.EmploymentType}}
+                    </span>
+
+                    {{if or .SalaryMin .SalaryMax}}
                         <span>
                             💰 {{.SalaryMin}} - {{.SalaryMax}}
                         </span>
-                        {{end}}
-
-                    </div>
-
-                    <a href="/jobs/{{.ID}}">
-                        View Job
-                    </a>
+                    {{end}}
 
                 </div>
 
-            {{end}}
+                <a href="/jobs/{{.ID}}">
+                    View Job
+                </a>
 
-        </div>
+            </div>
 
-    {{else}}
+        {{end}}
 
+    </div>
+
+{{else}}
+
+    <div class="empty-jobs">
         <p>No jobs are currently available.</p>
 
-    {{end}}
+        {{if .IsCompany}}
+            <p>Be the first to create a job opportunity.</p>
+
+            <a href="/jobs/create" class="create-job-button">
+                + Create Job
+            </a>
+        {{end}}
+    </div>
+
+{{end}}
 
 </div>
 
