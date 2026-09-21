@@ -25,3 +25,8 @@ type JobsPageData struct {
 	Jobs      []Job
 	IsCompany bool
 }
+
+type JobDetailsData struct {
+	Job
+	CanEdit bool
+}

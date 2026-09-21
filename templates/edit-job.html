@@ -1,0 +1,592 @@
+{{define "content"}}
+
+<style>
+  /* =========================
+     EDIT JOB PAGE
+     ========================= */
+
+  .edit-job-page {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* =========================
+     BACK LINK
+     ========================= */
+
+  .back-to-job {
+    display: inline-flex;
+    align-items: center;
+
+    margin-bottom: 20px;
+
+    color: var(--muted);
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    transition: 0.15s ease;
+  }
+
+  .back-to-job:hover {
+    color: var(--text);
+  }
+
+  /* =========================
+     PAGE HEADER
+     ========================= */
+
+  .edit-job-header {
+    margin-bottom: 20px;
+  }
+
+  .edit-job-header h1 {
+    margin: 0 0 8px;
+
+    color: var(--text);
+
+    font-size: 28px;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+  }
+
+  .edit-job-header p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* =========================
+     FORM CARD
+     ========================= */
+
+  .job-form {
+    padding: 28px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  /* =========================
+     FORM SECTIONS
+     ========================= */
+
+  .form-section {
+    padding-bottom: 25px;
+    margin-bottom: 25px;
+
+    border-bottom: 1px solid var(--border);
+  }
+
+  .form-section:last-of-type {
+    padding-bottom: 0;
+    margin-bottom: 0;
+
+    border-bottom: none;
+  }
+
+  .form-section-header {
+    margin-bottom: 18px;
+  }
+
+  .form-section-header h2 {
+    margin: 0 0 5px;
+
+    color: var(--text);
+
+    font-size: 15px;
+    letter-spacing: -0.2px;
+  }
+
+  .form-section-header p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  /* =========================
+     FORM GROUPS
+     ========================= */
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 16px;
+  }
+
+  .form-group label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: var(--text);
+
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 10px 12px;
+
+    background: var(--surface);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    font: inherit;
+    font-size: 13px;
+
+    outline: none;
+
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .form-group textarea {
+    min-height: 130px;
+
+    resize: vertical;
+
+    line-height: 1.6;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    border-color: var(--primary);
+
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+  }
+
+  .form-hint {
+    display: block;
+
+    margin-top: 6px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  /* =========================
+     ACTIONS
+     ========================= */
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding-top: 25px;
+    margin-top: 25px;
+
+    border-top: 1px solid var(--border);
+  }
+
+  .cancel-button,
+  .save-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 10px 17px;
+
+    border-radius: 7px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition: 0.15s ease;
+  }
+
+  .cancel-button {
+    background: var(--surface);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+  }
+
+  .cancel-button:hover {
+    background: #f8fafc;
+  }
+
+  .save-button {
+    border: 1px solid var(--primary);
+
+    background: var(--primary);
+    color: white;
+  }
+
+  .save-button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  /* =========================
+     RESPONSIVE
+     ========================= */
+
+  @media (max-width: 650px) {
+
+    .edit-job-page {
+      max-width: 100%;
+    }
+
+    .job-form {
+      padding: 20px;
+    }
+
+    .edit-job-header h1 {
+      font-size: 24px;
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .form-actions {
+      flex-direction: column-reverse;
+    }
+
+    .cancel-button,
+    .save-button {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+  }
+</style>
+
+
+<div class="edit-job-page">
+
+  <!-- =========================
+       BACK LINK
+       ========================= -->
+
+  <a href="/jobs/{{.ID}}" class="back-to-job">
+    ← Back to Job
+  </a>
+
+
+  <!-- =========================
+       HEADER
+       ========================= -->
+
+  <div class="edit-job-header">
+
+    <h1>Edit Job</h1>
+
+    <p>
+      Update the details of your job listing.
+    </p>
+
+  </div>
+
+
+  <!-- =========================
+       EDIT FORM
+       ========================= -->
+
+  <form
+    action="/jobs/{{.ID}}/edit"
+    method="POST"
+    class="job-form"
+  >
+
+    <!-- =========================
+         BASIC INFORMATION
+         ========================= -->
+
+    <section class="form-section">
+
+      <div class="form-section-header">
+
+        <h2>Basic Information</h2>
+
+        <p>
+          Update the main information applicants will see.
+        </p>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="title">
+          Job Title
+        </label>
+
+        <input
+          type="text"
+          id="title"
+          name="title"
+          value="{{.Title}}"
+          required
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="description">
+          Job Description
+        </label>
+
+        <textarea
+          id="description"
+          name="description"
+          rows="6"
+          required
+        >{{.Description}}</textarea>
+
+        <span class="form-hint">
+          Describe the role, responsibilities and what the candidate can expect.
+        </span>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         JOB DETAILS
+         ========================= -->
+
+    <section class="form-section">
+
+      <div class="form-section-header">
+
+        <h2>Job Details</h2>
+
+        <p>
+          Specify the location and type of employment.
+        </p>
+
+      </div>
+
+
+      <div class="form-row">
+
+        <div class="form-group">
+
+          <label for="location">
+            Location
+          </label>
+
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value="{{.Location}}"
+            required
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="employment_type">
+            Employment Type
+          </label>
+
+          <select
+            id="employment_type"
+            name="employment_type"
+            required
+          >
+
+            <option
+              value="Full-time"
+              {{if eq .EmploymentType "Full-time"}}selected{{end}}
+            >
+              Full-time
+            </option>
+
+            <option
+              value="Part-time"
+              {{if eq .EmploymentType "Part-time"}}selected{{end}}
+            >
+              Part-time
+            </option>
+
+            <option
+              value="Contract"
+              {{if eq .EmploymentType "Contract"}}selected{{end}}
+            >
+              Contract
+            </option>
+
+            <option
+              value="Internship"
+              {{if eq .EmploymentType "Internship"}}selected{{end}}
+            >
+              Internship
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         COMPENSATION
+         ========================= -->
+
+    <section class="form-section">
+
+      <div class="form-section-header">
+
+        <h2>Compensation</h2>
+
+        <p>
+          Update the salary range for this position.
+        </p>
+
+      </div>
+
+
+      <div class="form-row">
+
+        <div class="form-group">
+
+          <label for="salary_min">
+            Minimum Salary
+          </label>
+
+          <input
+            type="number"
+            id="salary_min"
+            name="salary_min"
+            value="{{.SalaryMin}}"
+            min="0"
+            required
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="salary_max">
+            Maximum Salary
+          </label>
+
+          <input
+            type="number"
+            id="salary_max"
+            name="salary_max"
+            value="{{.SalaryMax}}"
+            min="0"
+            required
+          >
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         APPLICATION DEADLINE
+         ========================= -->
+
+    <section class="form-section">
+
+      <div class="form-section-header">
+
+        <h2>Application Deadline</h2>
+
+        <p>
+          Set the final date candidates can apply for this position.
+        </p>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="deadline">
+          Deadline
+        </label>
+
+        <input
+          type="date"
+          id="deadline"
+          name="deadline"
+          value="{{formatDate .Deadline}}"
+          required
+        >
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         FORM ACTIONS
+         ========================= -->
+
+    <div class="form-actions">
+
+      <a
+        href="/jobs/{{.ID}}"
+        class="cancel-button"
+      >
+        Cancel
+      </a>
+
+      <button
+        type="submit"
+        class="save-button"
+      >
+        Save Changes
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
+
+{{end}}

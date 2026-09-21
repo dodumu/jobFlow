@@ -91,17 +91,26 @@ func main() {
 		),
 	)
 	http.Handle(
-		"/jobs/",
+		"GET /jobs/{id}",
 		middleware.AuthMiddleware(
 			http.HandlerFunc(handlers.JobDetailsHandler),
 		),
 	)
+
 	http.Handle(
-		"/jobs/create",
+		"GET /jobs/{id}/edit",
 		middleware.AuthMiddleware(
-			http.HandlerFunc(handlers.CreateJobHandler),
+			http.HandlerFunc(handlers.EditJobHandler),
 		),
 	)
+
+	http.Handle(
+		"POST /jobs/{id}/edit",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.EditJobHandler),
+		),
+	)
+
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 

@@ -66,6 +66,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get job ID from URL: /jobs/{id}
 	idStr := strings.TrimPrefix(r.URL.Path, "/jobs/")
 
 	if idStr == "" {
@@ -79,6 +80,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get the job.
 	job, err := database.GetJobByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -90,6 +92,29 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// By default, the current user cannot edit this job.
+	canEdit := false
+
+	// Get authenticated user's ID.
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+
+	if ok {
+		// Check whether this user owns a company.
+		company, err := database.GetCompanyByUserID(userID)
+
+		// If they own a company, check whether that company owns this job.
+		if err == nil && company.ID == job.CompanyID {
+			canEdit = true
+		}
+	}
+
+	// Combine the Job model with page-specific information.
+	data := models.JobDetailsData{
+		Job:     job,
+		CanEdit: canEdit,
+	}
+
+	// Parse template.
 	tmpl, err := template.ParseFiles(
 		"templates/base.html",
 		"templates/job.html",
@@ -99,7 +124,8 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "base", job)
+	// Render template using JobDetailsData instead of just Job.
+	err = tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
 		http.Error(w, "failed to render job", http.StatusInternalServerError)
 		return
@@ -247,4 +273,103 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+func EditJobHandler(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	jobID := strings.TrimPrefix(r.URL.Path, "/jobs/")
+	jobID = strings.TrimSuffix(jobID, "/edit")
+	jobIDInt, err := strconv.Atoi(jobID)
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	job, err := database.GetJobByID(jobIDInt)
+	if err != nil {
+		http.Error(w, "job not found", http.StatusNotFound)
+		return
+	}
+	company, err := database.GetCompanyByUserID(userID)
+	if err != nil {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	if job.CompanyID != company.ID {
+		http.Error(w, "forbiddent", http.StatusForbidden)
+		return
+	}
+	if r.Method == http.MethodGet {
+		funcMap := template.FuncMap{
+			"formatDate": func(t time.Time) string {
+				return t.Format("2006-01-02")
+			},
+		}
+
+		tmpl, err := template.New("base.html").
+			Funcs(funcMap).
+			ParseFiles(
+				"templates/base.html",
+				"templates/edit-job.html",
+			)
+		if err != nil {
+			http.Error(w, "failed to load template", http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.ExecuteTemplate(w, "base", job)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	title := r.FormValue("title")
+	description := r.FormValue("description")
+	location := r.FormValue("location")
+	employmentType := r.FormValue("employment_type")
+	salaryMin := r.FormValue("salary_min")
+	salaryMax := r.FormValue("salary_max")
+	deadlineStr := r.FormValue("deadline")
+
+	if title == "" || description == "" || location == "" || employmentType == "" || salaryMin == "" || salaryMax == "" || deadlineStr == "" {
+		http.Error(w, "required feilds can not be empty", http.StatusBadRequest)
+		return
+	}
+	minSalary, err := strconv.Atoi(salaryMin)
+	if err != nil {
+		http.Error(w, "invalid minimum salary", http.StatusBadRequest)
+		return
+	}
+	maxSalary, err := strconv.Atoi(salaryMax)
+	if err != nil {
+		http.Error(w, "invalid maximum salary", http.StatusBadRequest)
+		return
+	}
+	deadline, err := time.Parse("2006-01-02", deadlineStr)
+	if err != nil {
+		http.Error(w, "invalid deadline", http.StatusBadRequest)
+		return
+	}
+	job.Title = title
+	job.Description = description
+	job.Location = location
+	job.EmploymentType = employmentType
+	job.SalaryMin = minSalary
+	job.SalaryMax = maxSalary
+	job.Deadline = deadline
+
+	err = database.UpdateJob(job.ID, job)
+	if err != nil {
+		http.Error(w, "unable to update job", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/jobs/%d", job.ID), http.StatusSeeOther)
 }

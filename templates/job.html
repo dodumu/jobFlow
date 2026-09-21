@@ -17,15 +17,11 @@
   .back-to-jobs {
     display: inline-flex;
     align-items: center;
-
     margin-bottom: 20px;
-
     color: var(--muted);
     text-decoration: none;
-
     font-size: 12px;
     font-weight: 600;
-
     transition: 0.15s ease;
   }
 
@@ -39,9 +35,7 @@
 
   .job-header {
     padding: 28px;
-
     background: var(--surface);
-
     border: 1px solid var(--border);
     border-radius: 12px;
   }
@@ -50,24 +44,19 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-
     gap: 20px;
   }
 
   .job-header h1 {
     margin: 0 0 10px;
-
     font-size: 30px;
     line-height: 1.25;
-
     letter-spacing: -0.6px;
   }
 
   .job-header-description {
     margin: 0;
-
     color: var(--muted);
-
     font-size: 13px;
   }
 
@@ -78,17 +67,12 @@
   .job-status {
     display: inline-flex;
     align-items: center;
-
     padding: 6px 10px;
-
     border-radius: 20px;
-
     background: #ecfdf3;
     color: #15803d;
-
     font-size: 11px;
     font-weight: 600;
-
     white-space: nowrap;
   }
 
@@ -104,25 +88,18 @@
   .job-meta {
     display: flex;
     flex-wrap: wrap;
-
     gap: 9px;
-
     margin-top: 20px;
   }
 
   .job-meta-item {
     display: inline-flex;
     align-items: center;
-
     padding: 7px 10px;
-
     background: #f8fafc;
-
     border: 1px solid var(--border);
     border-radius: 7px;
-
     color: var(--muted);
-
     font-size: 11px;
   }
 
@@ -132,11 +109,8 @@
 
   .job-content {
     display: grid;
-
     grid-template-columns: minmax(0, 1fr) 280px;
-
     gap: 20px;
-
     margin-top: 20px;
   }
 
@@ -147,34 +121,27 @@
   .job-main {
     display: flex;
     flex-direction: column;
-
     gap: 20px;
   }
 
   .job-section {
     padding: 24px;
-
     background: var(--surface);
-
     border: 1px solid var(--border);
     border-radius: 12px;
   }
 
   .job-section h2 {
     margin: 0 0 13px;
-
     font-size: 17px;
     letter-spacing: -0.2px;
   }
 
   .job-section p {
     margin: 0;
-
     color: var(--muted);
-
     font-size: 13px;
     line-height: 1.7;
-
     white-space: pre-line;
   }
 
@@ -185,28 +152,23 @@
   .job-sidebar {
     display: flex;
     flex-direction: column;
-
     gap: 15px;
   }
 
   .job-summary {
     padding: 20px;
-
     background: var(--surface);
-
     border: 1px solid var(--border);
     border-radius: 12px;
   }
 
   .job-summary h2 {
     margin: 0 0 18px;
-
     font-size: 16px;
   }
 
   .summary-item {
     padding: 13px 0;
-
     border-bottom: 1px solid var(--border);
   }
 
@@ -221,11 +183,8 @@
 
   .summary-label {
     display: block;
-
     margin-bottom: 5px;
-
     color: var(--muted);
-
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -233,48 +192,42 @@
 
   .summary-value {
     display: block;
-
     color: var(--text);
-
     font-size: 13px;
     font-weight: 600;
   }
 
   /* =========================
-     APPLY BUTTON
+     JOB ACTIONS
      ========================= */
 
   .job-actions {
     padding: 20px;
-
     background: var(--surface);
-
     border: 1px solid var(--border);
     border-radius: 12px;
   }
 
-  .apply-button {
+  .apply-button,
+  .edit-job-button {
     display: flex;
     align-items: center;
     justify-content: center;
-
     width: 100%;
-
     box-sizing: border-box;
-
     padding: 12px 16px;
-
     border-radius: 8px;
-
-    background: var(--primary);
-    color: white;
-
     text-decoration: none;
-
     font-size: 13px;
     font-weight: 600;
-
     transition: 0.15s ease;
+  }
+
+  /* APPLY */
+
+  .apply-button {
+    background: var(--primary);
+    color: white;
   }
 
   .apply-button:hover {
@@ -282,14 +235,24 @@
     transform: translateY(-1px);
   }
 
+  /* EDIT */
+
+  .edit-job-button {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .edit-job-button:hover {
+    background: #f8fafc;
+    transform: translateY(-1px);
+  }
+
   .closed-message {
     margin: 0;
-
     color: var(--muted);
-
     font-size: 12px;
     line-height: 1.5;
-
     text-align: center;
   }
 
@@ -298,7 +261,6 @@
      ========================= */
 
   @media (max-width: 800px) {
-
     .job-content {
       grid-template-columns: 1fr;
     }
@@ -310,11 +272,9 @@
     .job-sidebar {
       order: -1;
     }
-
   }
 
   @media (max-width: 600px) {
-
     .job-header {
       padding: 20px;
     }
@@ -331,7 +291,6 @@
     .job-actions {
       padding: 18px;
     }
-
   }
 </style>
 
@@ -529,25 +488,44 @@
 
 
       <!-- =========================
-           APPLICATION
+           JOB ACTIONS
            ========================= -->
 
       <div class="job-actions">
 
-        {{if eq .Status "open"}}
+        <!--
+          The company that owns this job sees Edit Job.
+
+          Everyone else sees Apply Now when the job is open.
+        -->
+
+        {{if .CanEdit}}
 
           <a
-            href="/jobs/{{.ID}}/apply"
-            class="apply-button"
+            href="/jobs/{{.ID}}/edit"
+            class="edit-job-button"
           >
-            Apply Now
+            Edit Job
           </a>
 
         {{else}}
 
-          <p class="closed-message">
-            This job is no longer accepting applications.
-          </p>
+          {{if eq .Status "open"}}
+
+            <a
+              href="/jobs/{{.ID}}/apply"
+              class="apply-button"
+            >
+              Apply Now
+            </a>
+
+          {{else}}
+
+            <p class="closed-message">
+              This job is no longer accepting applications.
+            </p>
+
+          {{end}}
 
         {{end}}
 
