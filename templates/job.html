@@ -1,70 +1,561 @@
 {{define "content"}}
 
+<style>
+  /* =========================
+     JOB DETAILS PAGE
+     ========================= */
+
+  .job-details-page {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* =========================
+     BACK LINK
+     ========================= */
+
+  .back-to-jobs {
+    display: inline-flex;
+    align-items: center;
+
+    margin-bottom: 20px;
+
+    color: var(--muted);
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    transition: 0.15s ease;
+  }
+
+  .back-to-jobs:hover {
+    color: var(--text);
+  }
+
+  /* =========================
+     JOB HEADER
+     ========================= */
+
+  .job-header {
+    padding: 28px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .job-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+  }
+
+  .job-header h1 {
+    margin: 0 0 10px;
+
+    font-size: 30px;
+    line-height: 1.25;
+
+    letter-spacing: -0.6px;
+  }
+
+  .job-header-description {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+  }
+
+  /* =========================
+     STATUS BADGE
+     ========================= */
+
+  .job-status {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 6px 10px;
+
+    border-radius: 20px;
+
+    background: #ecfdf3;
+    color: #15803d;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    white-space: nowrap;
+  }
+
+  .job-status.closed {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  /* =========================
+     JOB META
+     ========================= */
+
+  .job-meta {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 9px;
+
+    margin-top: 20px;
+  }
+
+  .job-meta-item {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 7px 10px;
+
+    background: #f8fafc;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+  }
+
+  /* =========================
+     MAIN CONTENT
+     ========================= */
+
+  .job-content {
+    display: grid;
+
+    grid-template-columns: minmax(0, 1fr) 280px;
+
+    gap: 20px;
+
+    margin-top: 20px;
+  }
+
+  /* =========================
+     CONTENT SECTIONS
+     ========================= */
+
+  .job-main {
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
+  }
+
+  .job-section {
+    padding: 24px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .job-section h2 {
+    margin: 0 0 13px;
+
+    font-size: 17px;
+    letter-spacing: -0.2px;
+  }
+
+  .job-section p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.7;
+
+    white-space: pre-line;
+  }
+
+  /* =========================
+     SIDEBAR
+     ========================= */
+
+  .job-sidebar {
+    display: flex;
+    flex-direction: column;
+
+    gap: 15px;
+  }
+
+  .job-summary {
+    padding: 20px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .job-summary h2 {
+    margin: 0 0 18px;
+
+    font-size: 16px;
+  }
+
+  .summary-item {
+    padding: 13px 0;
+
+    border-bottom: 1px solid var(--border);
+  }
+
+  .summary-item:first-of-type {
+    padding-top: 0;
+  }
+
+  .summary-item:last-of-type {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .summary-label {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .summary-value {
+    display: block;
+
+    color: var(--text);
+
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* =========================
+     APPLY BUTTON
+     ========================= */
+
+  .job-actions {
+    padding: 20px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .apply-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 12px 16px;
+
+    border-radius: 8px;
+
+    background: var(--primary);
+    color: white;
+
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    transition: 0.15s ease;
+  }
+
+  .apply-button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .closed-message {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 12px;
+    line-height: 1.5;
+
+    text-align: center;
+  }
+
+  /* =========================
+     RESPONSIVE
+     ========================= */
+
+  @media (max-width: 800px) {
+
+    .job-content {
+      grid-template-columns: 1fr;
+    }
+
+    .job-header-top {
+      flex-direction: column;
+    }
+
+    .job-sidebar {
+      order: -1;
+    }
+
+  }
+
+  @media (max-width: 600px) {
+
+    .job-header {
+      padding: 20px;
+    }
+
+    .job-header h1 {
+      font-size: 24px;
+    }
+
+    .job-section {
+      padding: 20px;
+    }
+
+    .job-summary,
+    .job-actions {
+      padding: 18px;
+    }
+
+  }
+</style>
+
+
 <div class="job-details-page">
 
-    <div class="job-header">
-        <h1>{{.Title}}</h1>
+  <!-- =========================
+       BACK LINK
+       ========================= -->
 
-        <p>
-            Location: {{.Location}}
+  <a href="/jobs" class="back-to-jobs">
+    ← Back to Jobs
+  </a>
+
+
+  <!-- =========================
+       JOB HEADER
+       ========================= -->
+
+  <div class="job-header">
+
+    <div class="job-header-top">
+
+      <div>
+
+        <h1>
+          {{.Title}}
+        </h1>
+
+        <p class="job-header-description">
+          Job opportunity available on JobFlow.
         </p>
 
-        <p>
-            Employment Type: {{.EmploymentType}}
-        </p>
+      </div>
+
+
+      {{if eq .Status "open"}}
+
+        <span class="job-status">
+          ● Open
+        </span>
+
+      {{else}}
+
+        <span class="job-status closed">
+          ● {{.Status}}
+        </span>
+
+      {{end}}
+
     </div>
 
-    <hr>
 
-    <section class="job-section">
-        <h2>Description</h2>
-        <p>{{.Description}}</p>
-    </section>
+    <!-- JOB META -->
 
-    <section class="job-section">
-        <h2>Requirements</h2>
-        <p>{{.Requirements}}</p>
-    </section>
+    <div class="job-meta">
 
-    <section class="job-section">
-        <h2>Salary</h2>
+      <span class="job-meta-item">
+        📍 {{.Location}}
+      </span>
+
+      <span class="job-meta-item">
+        💼 {{.EmploymentType}}
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       MAIN CONTENT
+       ========================= -->
+
+  <div class="job-content">
+
+    <!-- =========================
+         MAIN COLUMN
+         ========================= -->
+
+    <main class="job-main">
+
+      <!-- DESCRIPTION -->
+
+      <section class="job-section">
+
+        <h2>
+          Job Description
+        </h2>
 
         <p>
-            {{.SalaryMin}} - {{.SalaryMax}}
+          {{.Description}}
         </p>
-    </section>
 
-    <section class="job-section">
-        <h2>Deadline</h2>
+      </section>
+
+
+      <!-- REQUIREMENTS -->
+
+      <section class="job-section">
+
+        <h2>
+          Requirements
+        </h2>
 
         <p>
-            {{.Deadline}}
+          {{.Requirements}}
         </p>
-    </section>
 
-    <section class="job-section">
-        <h2>Status</h2>
+      </section>
 
-        <p>
-            {{.Status}}
-        </p>
-    </section>
+    </main>
 
-    {{if eq .Status "open"}}
 
-        <div class="job-actions">
-            <a href="/jobs/{{.ID}}/apply">
-                Apply Now
-            </a>
+    <!-- =========================
+         SIDEBAR
+         ========================= -->
+
+    <aside class="job-sidebar">
+
+      <!-- JOB SUMMARY -->
+
+      <div class="job-summary">
+
+        <h2>
+          Job Overview
+        </h2>
+
+
+        <div class="summary-item">
+
+          <span class="summary-label">
+            Salary
+          </span>
+
+          <span class="summary-value">
+            ₦{{.SalaryMin}} - ₦{{.SalaryMax}}
+          </span>
+
         </div>
 
-    {{else}}
 
-        <p>
+        <div class="summary-item">
+
+          <span class="summary-label">
+            Employment Type
+          </span>
+
+          <span class="summary-value">
+            {{.EmploymentType}}
+          </span>
+
+        </div>
+
+
+        <div class="summary-item">
+
+          <span class="summary-label">
+            Location
+          </span>
+
+          <span class="summary-value">
+            {{.Location}}
+          </span>
+
+        </div>
+
+
+        <div class="summary-item">
+
+          <span class="summary-label">
+            Application Deadline
+          </span>
+
+          <span class="summary-value">
+            {{.Deadline}}
+          </span>
+
+        </div>
+
+
+        <div class="summary-item">
+
+          <span class="summary-label">
+            Status
+          </span>
+
+          <span class="summary-value">
+            {{.Status}}
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- =========================
+           APPLICATION
+           ========================= -->
+
+      <div class="job-actions">
+
+        {{if eq .Status "open"}}
+
+          <a
+            href="/jobs/{{.ID}}/apply"
+            class="apply-button"
+          >
+            Apply Now
+          </a>
+
+        {{else}}
+
+          <p class="closed-message">
             This job is no longer accepting applications.
-        </p>
+          </p>
 
-    {{end}}
+        {{end}}
+
+      </div>
+
+    </aside>
+
+  </div>
 
 </div>
 

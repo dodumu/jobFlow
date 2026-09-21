@@ -1,77 +1,477 @@
 {{define "content"}}
 
+<style>
+  /* =========================
+     JOBS PAGE
+     ========================= */
+
+  .jobs-page {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* =========================
+     PAGE HEADER
+     ========================= */
+
+  .jobs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+
+  .jobs-header h1 {
+    margin: 0 0 6px;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+  }
+
+  .jobs-header p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* =========================
+     CREATE JOB BUTTON
+     ========================= */
+
+  .create-job-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    padding: 10px 16px;
+
+    border-radius: 8px;
+    background: var(--primary);
+    color: white;
+
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    transition: 0.15s ease;
+  }
+
+  .create-job-button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  /* =========================
+     JOBS GRID
+     ========================= */
+
+  .jobs-list {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 20px;
+  }
+
+  /* =========================
+     JOB CARD
+     ========================= */
+
+  .job-card {
+    display: flex;
+    flex-direction: column;
+
+    min-height: 270px;
+
+    padding: 22px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .job-card:hover {
+    transform: translateY(-3px);
+
+    border-color: #d1d5db;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  /* =========================
+     JOB TITLE
+     ========================= */
+
+  .job-card h2 {
+    margin: 0 0 10px;
+
+    font-size: 19px;
+    line-height: 1.35;
+
+    letter-spacing: -0.2px;
+  }
+
+  /* =========================
+     DESCRIPTION
+     ========================= */
+
+  .job-description {
+    margin: 0 0 18px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.6;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+  }
+
+  /* =========================
+     JOB DETAILS
+     ========================= */
+
+  .job-details {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-bottom: 18px;
+  }
+
+  .job-detail {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 6px 9px;
+
+    background: #f8fafc;
+
+    border: 1px solid var(--border);
+    border-radius: 6px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+  }
+
+  /* =========================
+     SALARY
+     ========================= */
+
+  .job-salary {
+    margin-top: auto;
+    margin-bottom: 18px;
+
+    padding: 12px;
+
+    border-radius: 8px;
+
+    background: #f8fafc;
+
+    border: 1px solid var(--border);
+  }
+
+  .job-salary-label {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .job-salary-value {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* =========================
+     JOB FOOTER
+     ========================= */
+
+  .job-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding-top: 15px;
+
+    border-top: 1px solid var(--border);
+  }
+
+  .job-status {
+    font-size: 11px;
+    color: #16a34a;
+    font-weight: 600;
+  }
+
+  .view-job-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px 13px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background: white;
+    color: var(--text);
+
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    transition: 0.15s ease;
+  }
+
+  .view-job-button:hover {
+    background: #f3f4f6;
+  }
+
+  /* =========================
+     EMPTY STATE
+     ========================= */
+
+  .empty-jobs {
+    padding: 60px 25px;
+
+    text-align: center;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .empty-jobs h2 {
+    margin: 0 0 8px;
+
+    font-size: 18px;
+  }
+
+  .empty-jobs p {
+    margin: 5px 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+  }
+
+  .empty-jobs .create-job-button {
+    margin-top: 18px;
+  }
+
+  /* =========================
+     RESPONSIVE
+     ========================= */
+
+  @media (max-width: 800px) {
+
+    .jobs-list {
+      grid-template-columns: 1fr;
+    }
+
+  }
+
+  @media (max-width: 600px) {
+
+    .jobs-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .create-job-button {
+      width: 100%;
+    }
+
+    .job-card {
+      padding: 18px;
+    }
+
+  }
+</style>
+
+
 <div class="jobs-page">
 
-<div class="jobs-header">
+  <!-- =========================
+       PAGE HEADER
+       ========================= -->
+
+  <div class="jobs-header">
 
     <div>
-        <h1>Jobs</h1>
-        <p>Find opportunities from companies on JobFlow.</p>
+
+      <h1>Jobs</h1>
+
+      <p>
+        Find opportunities from companies on JobFlow.
+      </p>
+
     </div>
 
+
     {{if .IsCompany}}
-        <a href="/jobs/create" class="create-job-button">
-            + Create Job
-        </a>
+
+      <a href="/jobs/create" class="create-job-button">
+        + Create Job
+      </a>
+
     {{end}}
 
-</div>
+  </div>
 
-{{if .Jobs}}
+
+  <!-- =========================
+       JOB LIST
+       ========================= -->
+
+  {{if .Jobs}}
 
     <div class="jobs-list">
 
-        {{range .Jobs}}
+      {{range .Jobs}}
 
-            <div class="job-card">
+        <article class="job-card">
 
-                <h2>{{.Title}}</h2>
+          <!-- JOB TITLE -->
 
-                <p>{{.Description}}</p>
+          <h2>
+            {{.Title}}
+          </h2>
 
-                <div class="job-details">
 
-                    <span>
-                        📍 {{.Location}}
-                    </span>
+          <!-- DESCRIPTION -->
 
-                    <span>
-                        💼 {{.EmploymentType}}
-                    </span>
+          <p class="job-description">
+            {{.Description}}
+          </p>
 
-                    {{if or .SalaryMin .SalaryMax}}
-                        <span>
-                            💰 {{.SalaryMin}} - {{.SalaryMax}}
-                        </span>
-                    {{end}}
 
-                </div>
+          <!-- JOB DETAILS -->
 
-                <a href="/jobs/{{.ID}}">
-                    View Job
-                </a>
+          <div class="job-details">
+
+            <span class="job-detail">
+              📍 {{.Location}}
+            </span>
+
+            <span class="job-detail">
+              💼 {{.EmploymentType}}
+            </span>
+
+          </div>
+
+
+          <!-- SALARY -->
+
+          {{if or .SalaryMin .SalaryMax}}
+
+            <div class="job-salary">
+
+              <span class="job-salary-label">
+                Salary Range
+              </span>
+
+              <span class="job-salary-value">
+                ₦{{.SalaryMin}} - ₦{{.SalaryMax}}
+              </span>
 
             </div>
 
-        {{end}}
+          {{end}}
+
+
+          <!-- CARD FOOTER -->
+
+          <div class="job-card-footer">
+
+            {{if eq .Status "open"}}
+
+              <span class="job-status">
+                ● Open
+              </span>
+
+            {{else}}
+
+              <span class="job-status">
+                ● {{.Status}}
+              </span>
+
+            {{end}}
+
+
+            <a
+              href="/jobs/{{.ID}}"
+              class="view-job-button"
+            >
+              View Job →
+            </a>
+
+          </div>
+
+        </article>
+
+      {{end}}
 
     </div>
 
-{{else}}
+
+  {{else}}
+
+    <!-- =========================
+         EMPTY STATE
+         ========================= -->
 
     <div class="empty-jobs">
-        <p>No jobs are currently available.</p>
 
-        {{if .IsCompany}}
-            <p>Be the first to create a job opportunity.</p>
+      <h2>No jobs available</h2>
 
-            <a href="/jobs/create" class="create-job-button">
-                + Create Job
-            </a>
-        {{end}}
+      <p>
+        There are currently no job opportunities available on JobFlow.
+      </p>
+
+
+      {{if .IsCompany}}
+
+        <p>
+          Create your first job opportunity and start finding candidates.
+        </p>
+
+        <a
+          href="/jobs/create"
+          class="create-job-button"
+        >
+          + Create Job
+        </a>
+
+      {{end}}
+
     </div>
 
-{{end}}
+  {{end}}
 
 </div>
 
