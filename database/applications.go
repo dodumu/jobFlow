@@ -135,3 +135,23 @@ func WithdrawApplication(id int) error {
 	}
 	return nil
 }
+
+func HasUserApplied(jobID int, userID int) (bool, error) {
+	var exists bool
+
+	query := `
+		SELECT EXISTS(
+			SELECT 1
+			FROM applications
+			WHERE job_id = ?
+			AND user_id = ?
+		)
+	`
+
+	err := DB.QueryRow(query, jobID, userID).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}

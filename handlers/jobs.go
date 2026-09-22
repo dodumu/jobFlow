@@ -373,3 +373,167 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, fmt.Sprintf("/jobs/%d", job.ID), http.StatusSeeOther)
 }
+
+func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Get authenticated user.
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Get job ID from the route.
+	jobIDStr := r.PathValue("id")
+
+	jobID, err := strconv.Atoi(jobIDStr)
+	if err != nil {
+		http.Error(w, "invalid job ID", http.StatusBadRequest)
+		return
+	}
+
+	// Get the job.
+	job, err := database.GetJobByID(jobID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+			return
+		}
+
+		http.Error(w, "failed to load job", http.StatusInternalServerError)
+		return
+	}
+
+	// Get the company belonging to the logged-in user.
+	company, err := database.GetCompanyByUserID(userID)
+	if err != nil {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	// Security check:
+	// only the company that owns the job can close it.
+	if job.CompanyID != company.ID {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	// Don't try to close an already closed job.
+	if job.Status == "closed" {
+		http.Redirect(
+			w,
+			r,
+			fmt.Sprintf("/jobs/%d", job.ID),
+			http.StatusSeeOther,
+		)
+		return
+	}
+
+	// Close the job.
+	err = database.CloseJob(job.ID)
+	if err != nil {
+		http.Error(w, "failed to close job", http.StatusInternalServerError)
+		return
+	}
+
+	// Return to job details.
+	http.Redirect(
+		w,
+		r,
+		fmt.Sprintf("/jobs/%d", job.ID),
+		http.StatusSeeOther,
+	)
+}
+
+func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	jobID := strings.TrimPrefix(r.URL.Path, "/jobs/")
+	jobID = strings.TrimSuffix(jobID, "/apply")
+
+	jobIDInt, err := strconv.Atoi(jobID)
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	job, err := database.GetJobByID(jobIDInt)
+	if err != nil {
+		http.Error(w, "job does not exist", http.StatusNotFound)
+		return
+	}
+	if job.Status != "open" {
+		http.Error(w, "job already closed", http.StatusNotAcceptable)
+		return
+	}
+	user, err := database.GetUserByID(userID)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+	if user.Role != "individual" {
+		http.Error(w, "cannot apply for position", http.StatusForbidden)
+		return
+	}
+	hasApplied, err := database.HasUserApplied(jobIDInt, userID)
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	if hasApplied {
+		http.Error(w, "has applied already", http.StatusForbidden)
+		return
+	}
+	switch r.Method {
+	case http.MethodGet:
+		tmpl, err := template.ParseFiles(
+			"templates/base.html",
+			"templates/apply-job.html",
+		)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		err = tmpl.ExecuteTemplate(w, "base", job)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+	case http.MethodPost:
+		coverLetter := strings.TrimSpace(r.FormValue("cover_letter"))
+
+		if coverLetter == "" {
+			http.Error(w, "cover letter is required", http.StatusBadRequest)
+			return
+		}
+
+		application := models.Application{
+			JobID:       jobIDInt,
+			UserID:      userID,
+			CoverLetter: coverLetter,
+			Status:      "pending",
+		}
+
+		_, err := database.CreateApplication(application)
+		if err != nil {
+			http.Error(w, "failed to submit application", http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/applications", http.StatusSeeOther)
+		return
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+
+	}
+
+}

@@ -10,6 +10,40 @@
     margin: 0 auto;
   }
 
+  .close-job-form {
+    margin-top: 10px;
+  }
+
+  .close-job-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 12px 16px;
+
+    background: #fff;
+    color: #dc2626;
+
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.15s ease;
+  }
+
+  .close-job-button:hover {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    transform: translateY(-1px);
+  }
+
   /* =========================
      BACK LINK
      ========================= */
@@ -329,15 +363,15 @@
 
       {{if eq .Status "open"}}
 
-        <span class="job-status">
-          ● Open
-        </span>
+      <span class="job-status">
+        ● Open
+      </span>
 
       {{else}}
 
-        <span class="job-status closed">
-          ● {{.Status}}
-        </span>
+      <span class="job-status closed">
+        ● {{.Status}}
+      </span>
 
       {{end}}
 
@@ -501,31 +535,41 @@
 
         {{if .CanEdit}}
 
-          <a
-            href="/jobs/{{.ID}}/edit"
-            class="edit-job-button"
-          >
-            Edit Job
-          </a>
+        <a href="/jobs/{{.ID}}/edit" class="edit-job-button">
+          Edit Job
+        </a>
+
+        {{if eq .Status "open"}}
+
+        <form action="/jobs/{{.ID}}/close" method="POST" class="close-job-form">
+          <button type="submit" class="close-job-button">
+            Close Job
+          </button>
+        </form>
 
         {{else}}
 
-          {{if eq .Status "open"}}
+        <p class="closed-message">
+          This job has been closed.
+        </p>
 
-            <a
-              href="/jobs/{{.ID}}/apply"
-              class="apply-button"
-            >
-              Apply Now
-            </a>
+        {{end}}
 
-          {{else}}
+        {{else}}
 
-            <p class="closed-message">
-              This job is no longer accepting applications.
-            </p>
+        {{if eq .Status "open"}}
 
-          {{end}}
+        <a href="/jobs/{{.ID}}/apply" class="apply-button">
+          Apply Now
+        </a>
+
+        {{else}}
+
+        <p class="closed-message">
+          This job is no longer accepting applications.
+        </p>
+
+        {{end}}
 
         {{end}}
 
