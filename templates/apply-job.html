@@ -1,0 +1,486 @@
+{{define "content"}}
+
+<style>
+  /* =========================
+     APPLY JOB PAGE
+     ========================= */
+
+  .apply-job-page {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* =========================
+     BACK LINK
+     ========================= */
+
+  .back-to-job {
+    display: inline-flex;
+    align-items: center;
+
+    margin-bottom: 20px;
+
+    color: var(--muted);
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    transition: 0.15s ease;
+  }
+
+  .back-to-job:hover {
+    color: var(--text);
+  }
+
+  /* =========================
+     HEADER
+     ========================= */
+
+  .apply-header {
+    margin-bottom: 20px;
+  }
+
+  .apply-header h1 {
+    margin: 0 0 8px;
+
+    color: var(--text);
+
+    font-size: 28px;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+  }
+
+  .apply-header p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* =========================
+     JOB PREVIEW
+     ========================= */
+
+  .job-preview {
+    padding: 20px;
+
+    margin-bottom: 20px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .job-preview-label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .job-preview h2 {
+    margin: 0 0 10px;
+
+    color: var(--text);
+
+    font-size: 18px;
+    letter-spacing: -0.2px;
+  }
+
+  .job-preview-meta {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 8px;
+  }
+
+  .job-preview-meta span {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 6px 9px;
+
+    background: #f8fafc;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+  }
+
+  /* =========================
+     APPLICATION FORM
+     ========================= */
+
+  .application-form {
+    padding: 28px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .form-header {
+    padding-bottom: 20px;
+    margin-bottom: 22px;
+
+    border-bottom: 1px solid var(--border);
+  }
+
+  .form-header h2 {
+    margin: 0 0 6px;
+
+    color: var(--text);
+
+    font-size: 17px;
+    letter-spacing: -0.2px;
+  }
+
+  .form-header p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  /* =========================
+     FORM GROUP
+     ========================= */
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: var(--text);
+
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .form-group textarea {
+    width: 100%;
+    min-height: 220px;
+
+    box-sizing: border-box;
+
+    padding: 12px;
+
+    background: var(--surface);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.6;
+
+    resize: vertical;
+
+    outline: none;
+
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .form-group textarea:focus {
+    border-color: var(--primary);
+
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+  }
+
+  .form-hint {
+    display: block;
+
+    margin-top: 7px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    line-height: 1.5;
+  }
+
+  /* =========================
+     PROFILE NOTICE
+     ========================= */
+
+  .profile-notice {
+    padding: 14px;
+
+    margin-bottom: 22px;
+
+    background: #f8fafc;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .profile-notice strong {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: var(--text);
+
+    font-size: 11px;
+  }
+
+  .profile-notice p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  /* =========================
+     FORM ACTIONS
+     ========================= */
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding-top: 22px;
+
+    border-top: 1px solid var(--border);
+  }
+
+  .cancel-button,
+  .submit-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 10px 17px;
+
+    border-radius: 7px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition: 0.15s ease;
+  }
+
+  .cancel-button {
+    background: var(--surface);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+  }
+
+  .cancel-button:hover {
+    background: #f8fafc;
+  }
+
+  .submit-button {
+    border: 1px solid var(--primary);
+
+    background: var(--primary);
+    color: white;
+
+    cursor: pointer;
+  }
+
+  .submit-button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  /* =========================
+     RESPONSIVE
+     ========================= */
+
+  @media (max-width: 600px) {
+    .apply-header h1 {
+      font-size: 24px;
+    }
+
+    .application-form {
+      padding: 20px;
+    }
+
+    .job-preview {
+      padding: 18px;
+    }
+
+    .form-actions {
+      flex-direction: column-reverse;
+    }
+
+    .cancel-button,
+    .submit-button {
+      width: 100%;
+      box-sizing: border-box;
+    }
+  }
+</style>
+
+
+<div class="apply-job-page">
+
+  <!-- BACK -->
+
+  <a
+    href="/jobs/{{.ID}}"
+    class="back-to-job"
+  >
+    ← Back to Job
+  </a>
+
+
+  <!-- HEADER -->
+
+  <div class="apply-header">
+
+    <h1>Apply for this position</h1>
+
+    <p>
+      Submit your application to the company for review.
+    </p>
+
+  </div>
+
+
+  <!-- JOB PREVIEW -->
+
+  <div class="job-preview">
+
+    <span class="job-preview-label">
+      Applying for
+    </span>
+
+    <h2>
+      {{.Title}}
+    </h2>
+
+    <div class="job-preview-meta">
+
+      <span>
+        📍 {{.Location}}
+      </span>
+
+      <span>
+        💼 {{.EmploymentType}}
+      </span>
+
+      <span>
+        ₦{{.SalaryMin}} - ₦{{.SalaryMax}}
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <!-- APPLICATION FORM -->
+
+  <form
+    action="/jobs/{{.ID}}/apply"
+    method="POST"
+    class="application-form"
+  >
+
+    <div class="form-header">
+
+      <h2>Your Application</h2>
+
+      <p>
+        Introduce yourself and explain why you're interested in this opportunity.
+      </p>
+
+    </div>
+
+
+    <!-- PROFILE INFO -->
+
+    <div class="profile-notice">
+
+      <strong>
+        Your JobFlow profile will accompany this application
+      </strong>
+
+      <p>
+        The company will be able to review your professional profile together
+        with the information you provide below.
+      </p>
+
+    </div>
+
+
+    <!-- COVER LETTER -->
+
+    <div class="form-group">
+
+      <label for="cover_letter">
+        Cover Letter
+      </label>
+
+      <textarea
+        id="cover_letter"
+        name="cover_letter"
+        placeholder="Tell the company why you're interested in this role and what makes you a good fit..."
+        required
+      ></textarea>
+
+      <span class="form-hint">
+        Keep your message relevant to the position and highlight your experience,
+        skills, or projects that make you a strong candidate.
+      </span>
+
+    </div>
+
+
+    <!-- ACTIONS -->
+
+    <div class="form-actions">
+
+      <a
+        href="/jobs/{{.ID}}"
+        class="cancel-button"
+      >
+        Cancel
+      </a>
+
+      <button
+        type="submit"
+        class="submit-button"
+      >
+        Submit Application
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
+
+{{end}}

@@ -128,6 +128,12 @@ func main() {
 			http.HandlerFunc(handlers.ApplyJobHandler),
 		),
 	)
+	http.Handle(
+		"GET /applications",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.ApplicationHandler),
+		),
+	)
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 

@@ -1,0 +1,460 @@
+{{define "content"}}
+
+<style>
+  /* =========================
+     MY APPLICATIONS PAGE
+     ========================= */
+
+  .applications-page {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* =========================
+     HEADER
+     ========================= */
+
+  .applications-header {
+    margin-bottom: 24px;
+  }
+
+  .applications-header h1 {
+    margin: 0 0 7px;
+
+    color: var(--text);
+
+    font-size: 28px;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+  }
+
+  .applications-header p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* =========================
+     APPLICATION LIST
+     ========================= */
+
+  .applications-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+  }
+
+  /* =========================
+     APPLICATION CARD
+     ========================= */
+
+  .application-card {
+    padding: 20px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    transition:
+      border-color 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .application-card:hover {
+    transform: translateY(-1px);
+  }
+
+  .application-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+  }
+
+  /* =========================
+     JOB INFORMATION
+     ========================= */
+
+  .application-job-info {
+    min-width: 0;
+  }
+
+  .application-job-info h2 {
+    margin: 0 0 9px;
+
+    color: var(--text);
+
+    font-size: 17px;
+    line-height: 1.3;
+    letter-spacing: -0.2px;
+  }
+
+  .application-meta {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 7px;
+  }
+
+  .application-meta span {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 5px 8px;
+
+    background: #f8fafc;
+
+    border: 1px solid var(--border);
+    border-radius: 6px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+  }
+
+  /* =========================
+     STATUS
+     ========================= */
+
+  .application-status {
+    display: inline-flex;
+    align-items: center;
+
+    flex-shrink: 0;
+
+    padding: 6px 10px;
+
+    border-radius: 20px;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    text-transform: capitalize;
+  }
+
+  .status-pending {
+    background: #fffbeb;
+    color: #b45309;
+  }
+
+  .status-accepted {
+    background: #ecfdf3;
+    color: #15803d;
+  }
+
+  .status-rejected {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  /* =========================
+     APPLICATION FOOTER
+     ========================= */
+
+  .application-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding-top: 16px;
+    margin-top: 17px;
+
+    border-top: 1px solid var(--border);
+  }
+
+  .application-date {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 10px;
+  }
+
+  /* =========================
+     VIEW JOB BUTTON
+     ========================= */
+
+  .view-job-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px 13px;
+
+    background: var(--surface);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    transition: 0.15s ease;
+  }
+
+  .view-job-button:hover {
+    background: #f8fafc;
+
+    transform: translateY(-1px);
+  }
+
+  /* =========================
+     EMPTY STATE
+     ========================= */
+
+  .applications-empty {
+    padding: 50px 25px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    text-align: center;
+  }
+
+  .empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 48px;
+    height: 48px;
+
+    margin: 0 auto 16px;
+
+    background: #f8fafc;
+
+    border: 1px solid var(--border);
+    border-radius: 50%;
+
+    font-size: 20px;
+  }
+
+  .applications-empty h2 {
+    margin: 0 0 7px;
+
+    color: var(--text);
+
+    font-size: 17px;
+  }
+
+  .applications-empty p {
+    max-width: 400px;
+
+    margin: 0 auto 18px;
+
+    color: var(--muted);
+
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .browse-jobs-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 10px 16px;
+
+    background: var(--primary);
+    color: white;
+
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    transition: 0.15s ease;
+  }
+
+  .browse-jobs-button:hover {
+    opacity: 0.9;
+
+    transform: translateY(-1px);
+  }
+
+  /* =========================
+     RESPONSIVE
+     ========================= */
+
+  @media (max-width: 600px) {
+
+    .applications-header h1 {
+      font-size: 24px;
+    }
+
+    .application-card-top {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .application-card-footer {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .view-job-button {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+  }
+</style>
+
+
+<div class="applications-page">
+
+  <!-- =========================
+       HEADER
+       ========================= -->
+
+  <div class="applications-header">
+
+    <h1>My Applications</h1>
+
+    <p>
+      Track the jobs you've applied for and monitor your application status.
+    </p>
+
+  </div>
+
+
+  <!-- =========================
+       APPLICATIONS
+       ========================= -->
+
+  {{if .}}
+
+    <div class="applications-list">
+
+      {{range .}}
+
+        <article class="application-card">
+
+          <!-- TOP -->
+
+          <div class="application-card-top">
+
+            <div class="application-job-info">
+
+              <h2>
+                {{.JobTitle}}
+              </h2>
+
+              <div class="application-meta">
+
+                <span>
+                  📍 {{.Location}}
+                </span>
+
+                <span>
+                  💼 {{.EmploymentType}}
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <!-- STATUS -->
+
+            {{if eq .Status "pending"}}
+
+              <span class="application-status status-pending">
+                ● Pending
+              </span>
+
+            {{else if eq .Status "accepted"}}
+
+              <span class="application-status status-accepted">
+                ● Accepted
+              </span>
+
+            {{else if eq .Status "rejected"}}
+
+              <span class="application-status status-rejected">
+                ● Rejected
+              </span>
+
+            {{else}}
+
+              <span class="application-status">
+                {{.Status}}
+              </span>
+
+            {{end}}
+
+          </div>
+
+
+          <!-- FOOTER -->
+
+          <div class="application-card-footer">
+
+            <p class="application-date">
+              Applied {{.AppliedAt.Format "Jan 02, 2006"}}
+            </p>
+
+            <a
+              href="/jobs/{{.JobID}}"
+              class="view-job-button"
+            >
+              View Job
+            </a>
+
+          </div>
+
+        </article>
+
+      {{end}}
+
+    </div>
+
+
+  {{else}}
+
+    <!-- =========================
+         EMPTY STATE
+         ========================= -->
+
+    <div class="applications-empty">
+
+      <div class="empty-icon">
+        💼
+      </div>
+
+      <h2>No applications yet</h2>
+
+      <p>
+        You haven't applied to any jobs yet. Explore available opportunities
+        and submit your first application.
+      </p>
+
+      <a
+        href="/jobs"
+        class="browse-jobs-button"
+      >
+        Browse Jobs
+      </a>
+
+    </div>
+
+  {{end}}
+
+</div>
+
+{{end}}

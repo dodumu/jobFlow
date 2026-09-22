@@ -155,3 +155,104 @@ func HasUserApplied(jobID int, userID int) (bool, error) {
 
 	return exists, nil
 }
+
+func GetApplicationsByUserID(userID int) ([]models.UserApplication, error) {
+	query := `
+		SELECT
+			a.id,
+			a.job_id,
+			j.title,
+			j.location,
+			j.employment_type,
+			a.status,
+			a.applied_at
+		FROM applications a
+		INNER JOIN jobs j ON a.job_id = j.id
+		WHERE a.user_id = ?
+		ORDER BY a.applied_at DESC
+	`
+
+	rows, err := DB.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var applications []models.UserApplication
+
+	for rows.Next() {
+		var application models.UserApplication
+
+		err := rows.Scan(
+			&application.ApplicationID,
+			&application.JobID,
+			&application.JobTitle,
+			&application.Location,
+			&application.EmploymentType,
+			&application.Status,
+			&application.AppliedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		applications = append(applications, application)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return applications, nil
+}
+
+func GetApplicationsByCompanyID(companyID int) ([]models.CompanyApplication, error) {
+	query := `
+		SELECT
+			a.id,
+			j.id,
+			j.title,
+			u.id,
+			u.username,
+			a.status,
+			a.applied_at
+		FROM applications a
+		INNER JOIN jobs j ON a.job_id = j.id
+		INNER JOIN users u ON a.user_id = u.id
+		WHERE j.company_id = ?
+		ORDER BY a.applied_at DESC
+	`
+
+	rows, err := DB.Query(query, companyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var applications []models.CompanyApplication
+
+	for rows.Next() {
+		var application models.CompanyApplication
+
+		err := rows.Scan(
+			&application.ApplicationID,
+			&application.JobID,
+			&application.JobTitle,
+			&application.UserID,
+			&application.ApplicantName,
+			&application.Status,
+			&application.AppliedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		applications = append(applications, application)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return applications, nil
+}
