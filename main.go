@@ -134,6 +134,12 @@ func main() {
 			http.HandlerFunc(handlers.ApplicationHandler),
 		),
 	)
+	http.Handle(
+		"GET /applications/{id}",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.ViewApplicationHandler),
+		),
+	)
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 

@@ -1,0 +1,816 @@
+{{define "content"}}
+
+<style>
+  /* =========================
+     APPLICATION DETAILS PAGE
+     ========================= */
+
+  .application-details-page {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* =========================
+     BACK LINK
+     ========================= */
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    margin-bottom: 20px;
+
+    color: var(--muted);
+
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    transition: 0.15s ease;
+  }
+
+  .back-link:hover {
+    color: var(--text);
+  }
+
+  /* =========================
+     PAGE HEADER
+     ========================= */
+
+  .application-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 24px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    margin-bottom: 16px;
+  }
+
+  .application-header-info {
+    min-width: 0;
+  }
+
+  .application-label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .application-header h1 {
+    margin: 0 0 8px;
+
+    color: var(--text);
+
+    font-size: 26px;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+  }
+
+  .application-job-title {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .application-job-title strong {
+    color: var(--text);
+  }
+
+  /* =========================
+     STATUS
+     ========================= */
+
+  .application-status {
+    display: inline-flex;
+    align-items: center;
+
+    flex-shrink: 0;
+
+    padding: 7px 11px;
+
+    border-radius: 20px;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    text-transform: capitalize;
+  }
+
+  .status-pending {
+    background: #fffbeb;
+    color: #b45309;
+  }
+
+  .status-accepted {
+    background: #ecfdf3;
+    color: #15803d;
+  }
+
+  .status-rejected {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  /* =========================
+     GRID
+     ========================= */
+
+  .application-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+
+    gap: 16px;
+  }
+
+  .application-main,
+  .application-sidebar {
+    display: flex;
+    flex-direction: column;
+
+    gap: 16px;
+  }
+
+  /* =========================
+     CARD
+     ========================= */
+
+  .details-card {
+    padding: 22px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .details-card h2 {
+    margin: 0 0 18px;
+
+    color: var(--text);
+
+    font-size: 16px;
+    letter-spacing: -0.2px;
+  }
+
+  /* =========================
+     APPLICANT
+     ========================= */
+
+  .applicant-profile {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    padding-bottom: 18px;
+    margin-bottom: 18px;
+
+    border-bottom: 1px solid var(--border);
+  }
+
+  .applicant-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 48px;
+    height: 48px;
+
+    flex-shrink: 0;
+
+    background: #f8fafc;
+
+    border: 1px solid var(--border);
+    border-radius: 50%;
+
+    color: var(--text);
+
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .applicant-profile h3 {
+    margin: 0 0 4px;
+
+    color: var(--text);
+
+    font-size: 15px;
+  }
+
+  .applicant-profile p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+  }
+
+  .applicant-information {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 12px;
+  }
+
+  .information-item {
+    padding: 11px;
+
+    background: #f8fafc;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+  }
+
+  .information-label {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: var(--muted);
+
+    font-size: 9px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .information-value {
+    color: var(--text);
+
+    font-size: 11px;
+    font-weight: 500;
+
+    word-break: break-word;
+  }
+
+  /* =========================
+     COVER LETTER
+     ========================= */
+
+  .cover-letter {
+    color: var(--text);
+
+    font-size: 12px;
+    line-height: 1.8;
+
+    white-space: pre-wrap;
+  }
+
+  /* =========================
+     JOB INFORMATION
+     ========================= */
+
+  .job-information {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+  }
+
+  .job-info-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding-bottom: 11px;
+
+    border-bottom: 1px solid var(--border);
+  }
+
+  .job-info-row:last-child {
+    padding-bottom: 0;
+
+    border-bottom: 0;
+  }
+
+  .job-info-label {
+    color: var(--muted);
+
+    font-size: 10px;
+  }
+
+  .job-info-value {
+    color: var(--text);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    text-align: right;
+  }
+
+  .view-job-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    margin-top: 16px;
+    padding: 9px 13px;
+
+    background: var(--surface);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    transition: 0.15s ease;
+  }
+
+  .view-job-link:hover {
+    background: #f8fafc;
+  }
+
+  /* =========================
+     DECISION CARD
+     ========================= */
+
+  .decision-description {
+    margin: 0 0 16px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  .decision-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .decision-actions form {
+    flex: 1;
+  }
+
+  .accept-button,
+  .reject-button {
+    width: 100%;
+
+    padding: 9px 12px;
+
+    border-radius: 7px;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.15s ease;
+  }
+
+  .accept-button {
+    background: #15803d;
+    color: white;
+
+    border: 1px solid #15803d;
+  }
+
+  .accept-button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .reject-button {
+    background: var(--surface);
+    color: #dc2626;
+
+    border: 1px solid #fecaca;
+  }
+
+  .reject-button:hover {
+    background: #fef2f2;
+  }
+
+  /* =========================
+     COMPLETED DECISION
+     ========================= */
+
+  .decision-complete {
+    padding: 12px;
+
+    border-radius: 7px;
+
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .decision-accepted {
+    background: #ecfdf3;
+    color: #15803d;
+
+    border: 1px solid #bbf7d0;
+  }
+
+  .decision-rejected {
+    background: #fef2f2;
+    color: #dc2626;
+
+    border: 1px solid #fecaca;
+  }
+
+  /* =========================
+     RESPONSIVE
+     ========================= */
+
+  @media (max-width: 750px) {
+
+    .application-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .application-header {
+      flex-direction: column;
+    }
+
+  }
+
+  @media (max-width: 500px) {
+
+    .application-header {
+      padding: 18px;
+    }
+
+    .application-header h1 {
+      font-size: 22px;
+    }
+
+    .details-card {
+      padding: 18px;
+    }
+
+    .applicant-information {
+      grid-template-columns: 1fr;
+    }
+
+    .decision-actions {
+      flex-direction: column;
+    }
+
+  }
+</style>
+
+
+<div class="application-details-page">
+
+  <!-- BACK -->
+
+  <a href="/applications" class="back-link">
+    ← Back to applications
+  </a>
+
+
+  <!-- =========================
+       HEADER
+       ========================= -->
+
+  <section class="application-header">
+
+    <div class="application-header-info">
+
+      <span class="application-label">
+        Application
+      </span>
+
+      <h1>
+        {{.Applicant.Username}}
+      </h1>
+
+      <p class="application-job-title">
+        Applied for
+        <strong>{{.Job.Title}}</strong>
+      </p>
+
+    </div>
+
+
+    <!-- STATUS -->
+
+    {{if eq .Application.Status "pending"}}
+
+      <span class="application-status status-pending">
+        ● Pending
+      </span>
+
+    {{else if eq .Application.Status "accepted"}}
+
+      <span class="application-status status-accepted">
+        ● Accepted
+      </span>
+
+    {{else if eq .Application.Status "rejected"}}
+
+      <span class="application-status status-rejected">
+        ● Rejected
+      </span>
+
+    {{else}}
+
+      <span class="application-status">
+        {{.Application.Status}}
+      </span>
+
+    {{end}}
+
+  </section>
+
+
+  <!-- =========================
+       PAGE GRID
+       ========================= -->
+
+  <div class="application-layout">
+
+
+    <!-- =========================
+         LEFT SIDE
+         ========================= -->
+
+    <main class="application-main">
+
+
+      <!-- APPLICANT INFORMATION -->
+
+      <section class="details-card">
+
+        <h2>Applicant Information</h2>
+
+        <div class="applicant-profile">
+
+          <div class="applicant-avatar">
+            {{printf "%.1s" .Applicant.Username}}
+          </div>
+
+          <div>
+
+            <h3>
+              {{.Applicant.Username}}
+            </h3>
+
+            <p>
+              JobFlow applicant
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="applicant-information">
+
+          <div class="information-item">
+
+            <span class="information-label">
+              Username
+            </span>
+
+            <span class="information-value">
+              {{.Applicant.Username}}
+            </span>
+
+          </div>
+
+
+          <div class="information-item">
+
+            <span class="information-label">
+              Email
+            </span>
+
+            <span class="information-value">
+              {{.Applicant.Email}}
+            </span>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           COVER LETTER
+           ========================= -->
+
+      <section class="details-card">
+
+        <h2>Cover Letter</h2>
+
+        <div class="cover-letter">{{.Application.CoverLetter}}</div>
+
+      </section>
+
+    </main>
+
+
+    <!-- =========================
+         RIGHT SIDE
+         ========================= -->
+
+    <aside class="application-sidebar">
+
+
+      <!-- JOB INFORMATION -->
+
+      <section class="details-card">
+
+        <h2>Job Information</h2>
+
+        <div class="job-information">
+
+
+          <div class="job-info-row">
+
+            <span class="job-info-label">
+              Position
+            </span>
+
+            <span class="job-info-value">
+              {{.Job.Title}}
+            </span>
+
+          </div>
+
+
+          <div class="job-info-row">
+
+            <span class="job-info-label">
+              Location
+            </span>
+
+            <span class="job-info-value">
+              {{.Job.Location}}
+            </span>
+
+          </div>
+
+
+          <div class="job-info-row">
+
+            <span class="job-info-label">
+              Employment
+            </span>
+
+            <span class="job-info-value">
+              {{.Job.EmploymentType}}
+            </span>
+
+          </div>
+
+
+          <div class="job-info-row">
+
+            <span class="job-info-label">
+              Salary
+            </span>
+
+            <span class="job-info-value">
+              ₦{{.Job.SalaryMin}} - ₦{{.Job.SalaryMax}}
+            </span>
+
+          </div>
+
+
+          <div class="job-info-row">
+
+            <span class="job-info-label">
+              Job Status
+            </span>
+
+            <span class="job-info-value">
+              {{.Job.Status}}
+            </span>
+
+          </div>
+
+
+          <div class="job-info-row">
+
+            <span class="job-info-label">
+              Applied
+            </span>
+
+            <span class="job-info-value">
+              {{.Application.AppliedAt.Format "Jan 02, 2006"}}
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <a
+          href="/jobs/{{.Job.ID}}"
+          class="view-job-link"
+        >
+          View Job
+        </a>
+
+      </section>
+
+
+      <!-- =========================
+           APPLICATION DECISION
+           ========================= -->
+
+      <section class="details-card">
+
+        <h2>Application Decision</h2>
+
+
+        {{if eq .Application.Status "pending"}}
+
+          <p class="decision-description">
+            Review the candidate's application before making a decision.
+          </p>
+
+
+          <div class="decision-actions">
+
+            <form
+              action="/applications/{{.Application.ID}}/reject"
+              method="POST"
+            >
+
+              <button
+                type="submit"
+                class="reject-button"
+              >
+                Reject
+              </button>
+
+            </form>
+
+
+            <form
+              action="/applications/{{.Application.ID}}/accept"
+              method="POST"
+            >
+
+              <button
+                type="submit"
+                class="accept-button"
+              >
+                Accept
+              </button>
+
+            </form>
+
+          </div>
+
+
+        {{else if eq .Application.Status "accepted"}}
+
+          <div class="decision-complete decision-accepted">
+            ✓ This application has been accepted.
+          </div>
+
+
+        {{else if eq .Application.Status "rejected"}}
+
+          <div class="decision-complete decision-rejected">
+            This application has been rejected.
+          </div>
+
+        {{end}}
+
+      </section>
+
+    </aside>
+
+  </div>
+
+</div>
+
+{{end}}
