@@ -140,6 +140,18 @@ func main() {
 			http.HandlerFunc(handlers.ViewApplicationHandler),
 		),
 	)
+	http.Handle(
+		"POST /applications/{id}/accept",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.AcceptApplicationHandler),
+		),
+	)
+	http.Handle(
+		"POST /applications/{id}/reject",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.RejectApplicationHandler),
+		),
+	)
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 

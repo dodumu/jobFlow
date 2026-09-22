@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"html/template"
 	"jobFlow/database"
 	"jobFlow/middleware"
@@ -161,4 +162,79 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+}
+
+func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, status string) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := database.GetUserByID(userID)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+	if user.Role != "company" {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	company, err := database.GetCompanyByUserID(userID)
+	if err != nil {
+		http.Error(w, "company not found", http.StatusNotFound)
+		return
+	}
+	applicationID := r.PathValue("id")
+	applicationIDInt, err := strconv.Atoi(applicationID)
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	application, err := database.GetApplicationByID(applicationIDInt)
+	if err != nil {
+		http.Error(w, "application not found", http.StatusNotFound)
+		return
+	}
+	job, err := database.GetJobByID(application.JobID)
+	if err != nil {
+		http.Error(w, "job not found", http.StatusNotFound)
+		return
+	}
+	if company.ID != job.CompanyID {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	if application.Status != "pending" {
+		http.Error(w, "application not pending", http.StatusBadRequest)
+		return
+	}
+	err = database.UpdateApplicationStatus(application.ID, status)
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/applications/%d", application.ID), http.StatusSeeOther)
+}
+
+func AcceptApplicationHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	updateApplicationStatusHandler(w, r, "accepted")
+}
+
+func RejectApplicationHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	updateApplicationStatusHandler(w, r, "rejected")
 }
