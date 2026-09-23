@@ -29,4 +29,5 @@ type JobsPageData struct {
 type JobDetailsData struct {
 	Job
 	CanEdit bool
+	UserRole string
 }

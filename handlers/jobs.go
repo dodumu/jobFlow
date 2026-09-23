@@ -97,12 +97,19 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get authenticated user's ID.
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	user, err := database.GetUserByID(userID)
+	if err != nil {
+		http.Error(w, "failed to fecth user", http.StatusInternalServerError)
+		return
+	}
 
-	if ok {
-		// Check whether this user owns a company.
+	if user.Role == "company" {
 		company, err := database.GetCompanyByUserID(userID)
 
-		// If they own a company, check whether that company owns this job.
 		if err == nil && company.ID == job.CompanyID {
 			canEdit = true
 		}
@@ -110,8 +117,9 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Combine the Job model with page-specific information.
 	data := models.JobDetailsData{
-		Job:     job,
-		CanEdit: canEdit,
+		Job:      job,
+		CanEdit:  canEdit,
+		UserRole: user.Role,
 	}
 
 	// Parse template.
@@ -299,7 +307,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if job.CompanyID != company.ID {
-		http.Error(w, "forbiddent", http.StatusForbidden)
+		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
 	if r.Method == http.MethodGet {
@@ -327,50 +335,49 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	title := r.FormValue("title")
-	description := r.FormValue("description")
-	location := r.FormValue("location")
-	employmentType := r.FormValue("employment_type")
-	salaryMin := r.FormValue("salary_min")
-	salaryMax := r.FormValue("salary_max")
-	deadlineStr := r.FormValue("deadline")
+	if r.Method == http.MethodPost {
+		title := r.FormValue("title")
+		description := r.FormValue("description")
+		location := r.FormValue("location")
+		employmentType := r.FormValue("employment_type")
+		salaryMin := r.FormValue("salary_min")
+		salaryMax := r.FormValue("salary_max")
+		deadlineStr := r.FormValue("deadline")
 
-	if title == "" || description == "" || location == "" || employmentType == "" || salaryMin == "" || salaryMax == "" || deadlineStr == "" {
-		http.Error(w, "required feilds can not be empty", http.StatusBadRequest)
-		return
-	}
-	minSalary, err := strconv.Atoi(salaryMin)
-	if err != nil {
-		http.Error(w, "invalid minimum salary", http.StatusBadRequest)
-		return
-	}
-	maxSalary, err := strconv.Atoi(salaryMax)
-	if err != nil {
-		http.Error(w, "invalid maximum salary", http.StatusBadRequest)
-		return
-	}
-	deadline, err := time.Parse("2006-01-02", deadlineStr)
-	if err != nil {
-		http.Error(w, "invalid deadline", http.StatusBadRequest)
-		return
-	}
-	job.Title = title
-	job.Description = description
-	job.Location = location
-	job.EmploymentType = employmentType
-	job.SalaryMin = minSalary
-	job.SalaryMax = maxSalary
-	job.Deadline = deadline
+		if title == "" || description == "" || location == "" || employmentType == "" || salaryMin == "" || salaryMax == "" || deadlineStr == "" {
+			http.Error(w, "required feilds can not be empty", http.StatusBadRequest)
+			return
+		}
+		minSalary, err := strconv.Atoi(salaryMin)
+		if err != nil {
+			http.Error(w, "invalid minimum salary", http.StatusBadRequest)
+			return
+		}
+		maxSalary, err := strconv.Atoi(salaryMax)
+		if err != nil {
+			http.Error(w, "invalid maximum salary", http.StatusBadRequest)
+			return
+		}
+		deadline, err := time.Parse("2006-01-02", deadlineStr)
+		if err != nil {
+			http.Error(w, "invalid deadline", http.StatusBadRequest)
+			return
+		}
+		job.Title = title
+		job.Description = description
+		job.Location = location
+		job.EmploymentType = employmentType
+		job.SalaryMin = minSalary
+		job.SalaryMax = maxSalary
+		job.Deadline = deadline
 
-	err = database.UpdateJob(job.ID, job)
-	if err != nil {
-		http.Error(w, "unable to update job", http.StatusInternalServerError)
-		return
+		err = database.UpdateJob(job.ID, job)
+		if err != nil {
+			http.Error(w, "unable to update job", http.StatusInternalServerError)
+			return
+		}
 	}
+
 	http.Redirect(w, r, fmt.Sprintf("/jobs/%d", job.ID), http.StatusSeeOther)
 }
 
