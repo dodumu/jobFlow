@@ -6,26 +6,42 @@ import (
 )
 
 func CreateApplication(application models.Application) (int, error) {
-	query := `INSERT INTO applications (job_id, user_id, cover_letter, resume, status) VALUES (?, ?, ?, ?, ?)`
-	res, err := DB.Exec(query, application.JobID, application.UserID, application.CoverLetter, application.Resume, application.Status)
+	query := `
+		INSERT INTO applications (
+			job_id,
+			user_id,
+			cover_letter,
+			status
+		)
+		VALUES (?, ?, ?, ?)
+	`
+
+	res, err := DB.Exec(
+		query,
+		application.JobID,
+		application.UserID,
+		application.CoverLetter,
+		application.Status,
+	)
 	if err != nil {
 		return 0, err
 	}
+
 	id, err := res.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
+
 	return int(id), nil
 }
 
 func GetApplicationByID(id int) (models.Application, error) {
-	query := `SELECT id, job_id, user_id, cover_letter, resume, status, applied_at, updated_at FROM applications WHERE id = ?`
+	query := `SELECT id, job_id, user_id, cover_letter, status, applied_at, updated_at FROM applications WHERE id = ?`
 	var application models.Application
 	err := DB.QueryRow(query, id).Scan(&application.ID,
 		&application.JobID,
 		&application.UserID,
 		&application.CoverLetter,
-		&application.Resume,
 		&application.Status,
 		&application.AppliedAt,
 		&application.UpdatedAt)
@@ -36,7 +52,7 @@ func GetApplicationByID(id int) (models.Application, error) {
 }
 
 func GetApplicationByUserID(UserID int) ([]models.Application, error) {
-	query := `SELECT id, job_id, user_id, cover_letter, resume, status, applied_at, updated_at FROM applications WHERE user_id = ?`
+	query := `SELECT id, job_id, user_id, cover_letter, status, applied_at, updated_at FROM applications WHERE user_id = ?`
 
 	res, err := DB.Query(query, UserID)
 	if err != nil {
@@ -50,7 +66,6 @@ func GetApplicationByUserID(UserID int) ([]models.Application, error) {
 			&application.JobID,
 			&application.UserID,
 			&application.CoverLetter,
-			&application.Resume,
 			&application.Status,
 			&application.AppliedAt,
 			&application.UpdatedAt)
@@ -67,7 +82,7 @@ func GetApplicationByUserID(UserID int) ([]models.Application, error) {
 }
 
 func GetApplicationsByJobID(JobID int) ([]models.Application, error) {
-	query := `SELECT id, job_id, user_id, cover_letter, resume, status, applied_at, updated_at FROM applications WHERE job_id = ?`
+	query := `SELECT id, job_id, user_id, cover_letter, status, applied_at, updated_at FROM applications WHERE job_id = ?`
 
 	res, err := DB.Query(query, JobID)
 	if err != nil {
@@ -81,7 +96,6 @@ func GetApplicationsByJobID(JobID int) ([]models.Application, error) {
 			&application.JobID,
 			&application.UserID,
 			&application.CoverLetter,
-			&application.Resume,
 			&application.Status,
 			&application.AppliedAt,
 			&application.UpdatedAt)

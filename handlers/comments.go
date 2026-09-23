@@ -1,16 +1,16 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
+	"log"
 	"net/http"
 	"strconv"
-	"database/sql"
 	"strings"
 )
 

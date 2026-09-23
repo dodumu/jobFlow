@@ -210,7 +210,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		return
 	}
 	if application.Status != "pending" {
-		http.Error(w, "application not pending", http.StatusBadRequest)
+		http.Error(w, "application has already been reviewed", http.StatusBadRequest)
 		return
 	}
 	err = database.UpdateApplicationStatus(application.ID, status)

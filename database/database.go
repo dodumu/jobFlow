@@ -42,7 +42,8 @@ func CreateTables() error {
 		password_hash TEXT NOT NULL,
 		email TEXT NOT NULL UNIQUE,
 		date_of_birth TEXT NOT NULL,
-		role TEXT NOT NULL,
+		role TEXT NOT NULL
+			CHECK (role IN ('individual', 'company')),
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 	);
 
@@ -60,7 +61,7 @@ func CreateTables() error {
 		verification_status TEXT NOT NULL DEFAULT 'unverified',
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-		FOREIGN KEY (user_id) REFERENCES users(id)
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);
 
 	CREATE TABLE IF NOT EXISTS jobs (
@@ -74,11 +75,17 @@ func CreateTables() error {
 		salary_min INTEGER NOT NULL,
 		salary_max INTEGER NOT NULL,
 		deadline DATETIME NOT NULL,
-		status TEXT NOT NULL,
+		status TEXT NOT NULL DEFAULT 'open'
+			CHECK (status IN ('open', 'closed')),
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME,
 
-		FOREIGN KEY (company_id) REFERENCES companies(id)
+		CHECK (salary_min >= 0),
+		CHECK (salary_max >= salary_min),
+
+		FOREIGN KEY (company_id)
+			REFERENCES companies(id)
+			ON DELETE CASCADE
 	);
 
 	CREATE TABLE IF NOT EXISTS applications (
@@ -86,14 +93,20 @@ func CreateTables() error {
 		job_id INTEGER NOT NULL,
 		user_id INTEGER NOT NULL,
 		cover_letter TEXT NOT NULL,
-		resume TEXT NOT NULL,
-		status TEXT NOT NULL,
+		status TEXT NOT NULL DEFAULT 'pending'
+			CHECK (status IN ('pending', 'accepted', 'rejected')),
 		applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME,
 
-		FOREIGN KEY (job_id) REFERENCES jobs(id),
-		FOREIGN KEY (user_id) REFERENCES users(id),
-		UNIQUE (user_id, job_id)
+		FOREIGN KEY (job_id)
+			REFERENCES jobs(id)
+			ON DELETE CASCADE,
+
+		FOREIGN KEY (user_id)
+			REFERENCES users(id)
+			ON DELETE CASCADE,
+
+			UNIQUE (user_id, job_id)
 	);
 
 	CREATE TABLE IF NOT EXISTS sessions (
@@ -103,7 +116,7 @@ func CreateTables() error {
 		expires_at DATETIME NOT NULL,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-		FOREIGN KEY (user_id) REFERENCES users(id)
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);
 
 	CREATE TABLE IF NOT EXISTS user_profiles (
