@@ -528,49 +528,49 @@
       <div class="job-actions">
 
         <!--
-          The company that owns this job sees Edit Job.
+  The company that owns this job can edit or close it.
+  Individual users can apply while the job is open.
+  Other companies can only view the job.
+-->
+        {{if .CanEdit}}
 
-          Everyone else sees Apply Now when the job is open.
-        -->
-{{if .CanEdit}}
-
-    <a href="/jobs/{{.ID}}/edit" class="edit-job-button">
-        Edit Job
-    </a>
-
-    {{if eq .Status "open"}}
-
-        <form action="/jobs/{{.ID}}/close" method="POST" class="close-job-form">
-            <button type="submit" class="close-job-button">
-                Close Job
-            </button>
-        </form>
-
-    {{else}}
-
-        <p class="closed-message">
-            This job has been closed.
-        </p>
-
-    {{end}}
-
-{{else if eq .UserRole "individual"}}
-
-    {{if eq .Status "open"}}
-
-        <a href="/jobs/{{.ID}}/apply" class="apply-button">
-            Apply Now
+        <a href="/jobs/{{.ID}}/edit" class="edit-job-button">
+          Edit Job
         </a>
 
-    {{else}}
+        {{if eq .Status "open"}}
+
+        <form action="/jobs/{{.ID}}/close" method="POST" class="close-job-form">
+          <button type="submit" class="close-job-button">
+            Close Job
+          </button>
+        </form>
+
+        {{else}}
 
         <p class="closed-message">
-            This job is no longer accepting applications.
+          This job has been closed.
         </p>
 
-    {{end}}
+        {{end}}
 
-{{end}}
+        {{else if eq .UserRole "individual"}}
+
+        {{if eq .Status "open"}}
+
+        <a href="/jobs/{{.ID}}/apply" class="apply-button">
+          Apply Now
+        </a>
+
+        {{else}}
+
+        <p class="closed-message">
+          This job is no longer accepting applications.
+        </p>
+
+        {{end}}
+
+        {{end}}
 
       </div>
 

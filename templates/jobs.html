@@ -225,6 +225,10 @@
     font-weight: 600;
   }
 
+  .job-status.closed {
+    color: #dc2626;
+  }
+
   .view-job-button {
     display: inline-flex;
     align-items: center;
@@ -335,9 +339,9 @@
 
     {{if .IsCompany}}
 
-      <a href="/jobs/create" class="create-job-button">
-        + Create Job
-      </a>
+    <a href="/jobs/create" class="create-job-button">
+      + Create Job
+    </a>
 
     {{end}}
 
@@ -350,126 +354,120 @@
 
   {{if .Jobs}}
 
-    <div class="jobs-list">
+  <div class="jobs-list">
 
-      {{range .Jobs}}
+    {{range .Jobs}}
 
-        <article class="job-card">
+    <article class="job-card">
 
-          <!-- JOB TITLE -->
+      <!-- JOB TITLE -->
 
-          <h2>
-            {{.Title}}
-          </h2>
-
-
-          <!-- DESCRIPTION -->
-
-          <p class="job-description">
-            {{.Description}}
-          </p>
+      <h2>
+        {{.Title}}
+      </h2>
 
 
-          <!-- JOB DETAILS -->
+      <!-- DESCRIPTION -->
 
-          <div class="job-details">
-
-            <span class="job-detail">
-              📍 {{.Location}}
-            </span>
-
-            <span class="job-detail">
-              💼 {{.EmploymentType}}
-            </span>
-
-          </div>
+      <p class="job-description">
+        {{.Description}}
+      </p>
 
 
-          <!-- SALARY -->
+      <!-- JOB DETAILS -->
 
-          {{if or .SalaryMin .SalaryMax}}
+      <div class="job-details">
 
-            <div class="job-salary">
+        <span class="job-detail">
+          📍 {{.Location}}
+        </span>
 
-              <span class="job-salary-label">
-                Salary Range
-              </span>
+        <span class="job-detail">
+          💼 {{.EmploymentType}}
+        </span>
 
-              <span class="job-salary-value">
-                ₦{{.SalaryMin}} - ₦{{.SalaryMax}}
-              </span>
-
-            </div>
-
-          {{end}}
+      </div>
 
 
-          <!-- CARD FOOTER -->
+      <!-- SALARY -->
 
-          <div class="job-card-footer">
+      {{if or .SalaryMin .SalaryMax}}
 
-            {{if eq .Status "open"}}
+      <div class="job-salary">
 
-              <span class="job-status">
-                ● Open
-              </span>
+        <span class="job-salary-label">
+          Salary Range
+        </span>
 
-            {{else}}
+        <span class="job-salary-value">
+          ₦{{.SalaryMin}} - ₦{{.SalaryMax}}
+        </span>
 
-              <span class="job-status">
-                ● {{.Status}}
-              </span>
-
-            {{end}}
-
-
-            <a
-              href="/jobs/{{.ID}}"
-              class="view-job-button"
-            >
-              View Job →
-            </a>
-
-          </div>
-
-        </article>
+      </div>
 
       {{end}}
 
-    </div>
+
+      <!-- CARD FOOTER -->
+
+      <div class="job-card-footer">
+
+        {{if eq .Status "open"}}
+
+        <span class="job-status">
+          ● Open
+        </span>
+
+        {{else}}
+
+        <span class="job-status closed">
+          ● Closed
+        </span>
+
+        {{end}}
+
+
+        <a href="/jobs/{{.ID}}" class="view-job-button">
+          View Job →
+        </a>
+
+      </div>
+
+    </article>
+
+    {{end}}
+
+  </div>
 
 
   {{else}}
 
-    <!-- =========================
+  <!-- =========================
          EMPTY STATE
          ========================= -->
 
-    <div class="empty-jobs">
+  <div class="empty-jobs">
 
-      <h2>No jobs available</h2>
+    <h2>No jobs available</h2>
 
-      <p>
-        There are currently no job opportunities available on JobFlow.
-      </p>
+    <p>
+      There are currently no job opportunities available on JobFlow.
+    </p>
 
 
-      {{if .IsCompany}}
+    {{if .IsCompany}}
 
-        <p>
-          Create your first job opportunity and start finding candidates.
-        </p>
+    <p>
+      Create your first job opportunity and start finding candidates.
+    </p>
 
-        <a
-          href="/jobs/create"
-          class="create-job-button"
-        >
-          + Create Job
-        </a>
+    <a href="/jobs/create" class="create-job-button">
+      + Create Job
+    </a>
 
-      {{end}}
+    {{end}}
 
-    </div>
+  </div>
 
   {{end}}
 

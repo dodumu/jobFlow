@@ -76,6 +76,12 @@ func main() {
 		),
 	)
 	http.Handle(
+		"/logout",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.LogoutHandler),
+		),
+	)
+	http.Handle(
 		"/posts/comments/delete",
 		middleware.AuthMiddleware(
 			http.HandlerFunc(handlers.DeleteCommentHandler),
