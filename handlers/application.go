@@ -19,19 +19,19 @@ type ApplicationDetailsData struct {
 
 func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(w, http.StatusMethodNotAllowed, "wronng method", "method not allowed")
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(w, http.StatusUnauthorized, "unauthorized user", "unauthorized")
 		return
 	}
 
 	user, err := database.GetUserByID(userID)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
+		RenderError(w, http.StatusNotFound, "Invalid User", "The user ID provided is invalid")
 		return
 	}
 
