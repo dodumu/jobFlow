@@ -10,23 +10,48 @@ import (
 )
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.",
+		)
+		return
+	}
+
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to view your home feed.",
+		)
 		return
 	}
 
 	user, err := database.GetUserByID(userID)
 	if err != nil {
-		log.Printf("HOME ERROR - GetUserByID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("HomeHandler GetUserByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your account information.",
+		)
 		return
 	}
 
 	posts, err := database.GetFeedPosts(userID)
 	if err != nil {
-		log.Printf("HOME ERROR - GetFeedPosts: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("HomeHandler GetFeedPosts error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your feed right now.",
+		)
 		return
 	}
 
@@ -41,7 +66,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := utils.RenderTemplate(w, "home.html", data); err != nil {
-		log.Printf("HOME ERROR - RenderTemplate: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("HomeHandler RenderTemplate error: %v", err)
+		return
 	}
 }

@@ -15,18 +15,25 @@ var validRoles = map[string]bool{
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-
 	if r.Method == http.MethodGet {
 		err := utils.RenderTemplate(w, "register.html", nil)
 		if err != nil {
+			log.Printf("RegisterHandler template error: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 		}
 		return
 	}
+
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.",
+		)
 		return
 	}
+
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	firstName := r.FormValue("first_name")
@@ -35,19 +42,45 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	dob := r.FormValue("date_of_birth")
 	role := r.FormValue("role")
 
-	if role == "" || username == "" || password == "" || firstName == "" || lastName == "" || email == "" || dob == "" {
-		http.Error(w, "bad request", http.StatusBadRequest)
+	if role == "" ||
+		username == "" ||
+		password == "" ||
+		firstName == "" ||
+		lastName == "" ||
+		email == "" ||
+		dob == "" {
+
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Missing Information",
+			"Please complete all required registration fields.",
+		)
 		return
 	}
-	if ok := validRoles[role]; !ok {
-		http.Error(w, "bad request", http.StatusBadRequest)
+
+	if !validRoles[role] {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Account Type",
+			"Please select a valid account type.",
+		)
 		return
 	}
+
 	hashPassword, err := utils.HashPassword(password)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("RegisterHandler HashPassword error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't create your account right now.",
+		)
 		return
 	}
+
 	user := models.User{
 		Username:     username,
 		PasswordHash: hashPassword,
@@ -57,34 +90,60 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		DOB:          dob,
 		Role:         role,
 	}
+
 	id, err := database.CreateUser(user)
 	if err != nil {
-		http.Error(w, "create user: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("RegisterHandler CreateUser error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Registration Failed",
+			"We couldn't create your account right now.",
+		)
 		return
 	}
+
 	profile := models.UserProfile{
 		UserID: id,
 	}
 
 	_, err = database.CreateUserProfile(profile)
 	if err != nil {
-		log.Printf("ERROR: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("RegisterHandler CreateUserProfile error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't finish setting up your profile.",
+		)
 		return
 	}
+
 	if role == "company" {
 		industry := r.FormValue("industry")
 		companySize := r.FormValue("company_size")
-		// foundedYear := r.FormValue("founded_year")
 		companyName := r.FormValue("company_name")
 		description := r.FormValue("description")
 		website := r.FormValue("website")
 		location := r.FormValue("location")
 		logo := r.FormValue("logo")
-		if companyName == "" || description == "" || website == "" || location == "" || industry == "" {
-			http.Error(w, "bad request", http.StatusBadRequest)
+
+		if companyName == "" ||
+			description == "" ||
+			website == "" ||
+			location == "" ||
+			industry == "" ||
+			companySize == "" {
+
+			RenderError(
+				w,
+				http.StatusBadRequest,
+				"Missing Company Information",
+				"Please complete all required company fields.",
+			)
 			return
 		}
+
 		company := models.Company{
 			UserID:      id,
 			CompanyName: companyName,
@@ -96,13 +155,20 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			FoundedYear: 0,
 			CompanySize: companySize,
 		}
+
 		_, err := database.CreateCompany(company)
 		if err != nil {
-			log.Printf("ERROR: %v\n", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Printf("RegisterHandler CreateCompany error: %v", err)
+			RenderError(
+				w,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't finish setting up your company account.",
+			)
 			return
 		}
 	}
+
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
@@ -110,47 +176,88 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		err := utils.RenderTemplate(w, "login.html", nil)
 		if err != nil {
+			log.Printf("LoginHandler template error: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 		}
 		return
 	}
+
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.",
+		)
 		return
 	}
+
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
 	if username == "" || password == "" {
-		http.Error(w, "password or username cannot be empty", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Missing Credentials",
+			"Username and password are required.",
+		)
 		return
 	}
+
 	user, err := database.GetUserByUsername(username)
 	if err != nil {
-		http.Error(w, "invalid username or password", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Login Failed",
+			"Invalid username or password.",
+		)
 		return
 	}
-	ok := utils.CheckPassword(user.PasswordHash, password)
-	if !ok {
-		http.Error(w, "invalid username or password", http.StatusUnauthorized)
+
+	if !utils.CheckPassword(user.PasswordHash, password) {
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Login Failed",
+			"Invalid username or password.",
+		)
 		return
 	}
+
 	token, err := utils.GenerateToken()
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("LoginHandler GenerateToken error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't log you in right now.",
+		)
 		return
 	}
+
 	expires := time.Now().Add(24 * time.Hour)
+
 	session := models.Session{
 		UserID:    user.ID,
 		Token:     token,
 		ExpiresAt: expires,
 	}
+
 	err = database.CreateSession(session)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("LoginHandler CreateSession error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't create your login session.",
+		)
 		return
 	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    token,
@@ -159,5 +266,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		SameSite: http.SameSiteLaxMode,
 	})
+
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }

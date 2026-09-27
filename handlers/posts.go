@@ -23,13 +23,23 @@ var validPostTypes = map[string]bool{
 
 func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed for this action.",
+		)
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to create a post.",
+		)
 		return
 	}
 
@@ -37,12 +47,22 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	postType := strings.TrimSpace(r.FormValue("type"))
 
 	if content == "" {
-		http.Error(w, "post content cannot be empty", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Empty Post",
+			"Post content cannot be empty.",
+		)
 		return
 	}
 
 	if !validPostTypes[postType] {
-		http.Error(w, "invalid post type", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Post Type",
+			"Please select a valid post type.",
+		)
 		return
 	}
 
@@ -54,7 +74,14 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := database.CreatePost(post)
 	if err != nil {
-		http.Error(w, "failed to create post", http.StatusInternalServerError)
+		log.Printf("CreatePostHandler CreatePost error: %v", err)
+
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't create your post right now.",
+		)
 		return
 	}
 
@@ -63,26 +90,46 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed for this action.",
+		)
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to like a post.",
+		)
 		return
 	}
 
-	postID := r.FormValue("post_id")
+	postID := strings.TrimSpace(r.FormValue("post_id"))
 
 	if postID == "" {
-		http.Error(w, "post ID is required", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Missing Post",
+			"A post ID is required.",
+		)
 		return
 	}
 
 	id, err := strconv.Atoi(postID)
-	if err != nil {
-		http.Error(w, "invalid post ID", http.StatusBadRequest)
+	if err != nil || id <= 0 {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Post",
+			"The post ID provided is invalid.",
+		)
 		return
 	}
 
@@ -91,51 +138,85 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 		UserID: userID,
 	}
 
-	err = database.LikePost(like)
-	if err != nil {
+	if err := database.LikePost(like); err != nil {
 		log.Printf(
-			"LIKE POST ERROR - postID=%d userID=%d: %v\n",
+			"LikePostHandler LikePost error - postID=%d userID=%d: %v",
 			id,
 			userID,
 			err,
 		)
 
-		http.Error(w, "failed to like post", http.StatusInternalServerError)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't like this post right now.",
+		)
 		return
 	}
 
 	utils.RedirectBack(w, r, "/home")
-
 }
 
 func UnlikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed for this action.",
+		)
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to unlike a post.",
+		)
 		return
 	}
 
-	postID := r.FormValue("post_id")
+	postID := strings.TrimSpace(r.FormValue("post_id"))
 
 	if postID == "" {
-		http.Error(w, "post ID is required", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Missing Post",
+			"A post ID is required.",
+		)
 		return
 	}
 
 	id, err := strconv.Atoi(postID)
-	if err != nil {
-		http.Error(w, "invalid post ID", http.StatusBadRequest)
+	if err != nil || id <= 0 {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Post",
+			"The post ID provided is invalid.",
+		)
 		return
 	}
 
-	err = database.UnlikePost(id, userID)
-	if err != nil {
-		http.Error(w, "failed to unlike post", http.StatusInternalServerError)
+	if err := database.UnlikePost(id, userID); err != nil {
+		log.Printf(
+			"UnlikePostHandler UnlikePost error - postID=%d userID=%d: %v",
+			id,
+			userID,
+			err,
+		)
+
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't unlike this post right now.",
+		)
 		return
 	}
 
@@ -144,52 +225,91 @@ func UnlikePostHandler(w http.ResponseWriter, r *http.Request) {
 
 func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed for this action.",
+		)
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to delete a post.",
+		)
 		return
 	}
 
-	postID, err := strconv.Atoi(r.FormValue("post_id"))
-	if err != nil {
-		http.Error(w, "invalid post ID", http.StatusBadRequest)
+	postID, err := strconv.Atoi(
+		strings.TrimSpace(r.FormValue("post_id")),
+	)
+	if err != nil || postID <= 0 {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Post",
+			"The post ID provided is invalid.",
+		)
 		return
 	}
 
 	post, err := database.GetPostByID(postID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			http.Error(w, "post not found", http.StatusNotFound)
+			RenderError(
+				w,
+				http.StatusNotFound,
+				"Post Not Found",
+				"The post you're trying to delete could not be found.",
+			)
 			return
 		}
 
-		log.Printf("DELETE POST ERROR - GetPostByID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("DeletePostHandler GetPostByID error: %v", err)
+
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load this post right now.",
+		)
 		return
 	}
 
-	// A post must have a user owner for this version.
 	if post.UserID == nil {
-		log.Printf("DELETE POST ERROR: post %d has no user owner", postID)
-		http.Error(w, "forbidden", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"You don't have permission to delete this post.",
+		)
 		return
 	}
-
-	// Compare the VALUES, not the pointer addresses.
-	log.Printf("Post owner: %d, Current user: %d\n", *post.UserID, userID)
 
 	if *post.UserID != userID {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"You don't have permission to delete this post.",
+		)
 		return
 	}
 
 	if err := database.DeletePost(postID); err != nil {
-		log.Printf("DELETE POST ERROR - DeletePost: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("DeletePostHandler DeletePost error: %v", err)
+
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't delete this post right now.",
+		)
 		return
 	}
 

@@ -10,22 +10,48 @@ import (
 )
 
 func DashboardHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.",
+		)
+		return
+	}
+
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to view your dashboard.",
+		)
 		return
 	}
 
 	user, err := database.GetUserByID(userID)
 	if err != nil {
-		http.Error(w, "INTERNAL server error", http.StatusInternalServerError)
+		log.Printf("DashboardHandler GetUserByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your account information.",
+		)
 		return
 	}
 
 	posts, err := database.GetPostsByUserID(userID)
 	if err != nil {
-		log.Printf("DASHBOARD ERROR - GetFeedPosts: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("DashboardHandler GetPostsByUserID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your posts right now.",
+		)
 		return
 	}
 
@@ -44,14 +70,18 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/dashboard.html",
 	)
 	if err != nil {
-		http.Error(w, " server error", http.StatusInternalServerError)
+		log.Printf("DashboardHandler template parse error: %v", err)
+		http.Error(
+			w,
+			"internal server error",
+			http.StatusInternalServerError,
+		)
 		return
 	}
-	err = tmpl.ExecuteTemplate(w, "base", data)
 
+	err = tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
-		log.Printf("TEMPLATE ERROR: %v\n", err)
-		http.Error(w, "KINI server error", http.StatusInternalServerError)
+		log.Printf("DashboardHandler template execution error: %v", err)
 		return
 	}
 }

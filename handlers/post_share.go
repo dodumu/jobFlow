@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"database/sql"
+	"errors"
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,33 +14,70 @@ import (
 
 func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed for this action.",
+		)
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to share a post.",
+		)
 		return
 	}
 
 	postID := strings.TrimSpace(r.FormValue("post_id"))
 
 	if postID == "" {
-		http.Error(w, "post ID is required", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Missing Post",
+			"A post ID is required to share a post.",
+		)
 		return
 	}
 
 	id, err := strconv.Atoi(postID)
-	if err != nil {
-		http.Error(w, "invalid post ID", http.StatusBadRequest)
+	if err != nil || id <= 0 {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Post",
+			"The post ID provided is invalid.",
+		)
 		return
 	}
 
 	// Make sure the original post exists.
 	originalPost, err := database.GetPostByID(id)
 	if err != nil {
-		http.Error(w, "post not found", http.StatusNotFound)
+		if errors.Is(err, sql.ErrNoRows) {
+			RenderError(
+				w,
+				http.StatusNotFound,
+				"Post Not Found",
+				"The post you're trying to share could not be found.",
+			)
+			return
+		}
+
+		log.Printf("SharePostHandler GetPostByID error: %v", err)
+
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load this post right now.",
+		)
 		return
 	}
 
@@ -49,7 +89,14 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = database.CreatePostShare(share)
 	if err != nil {
-		http.Error(w, "failed to record share", http.StatusInternalServerError)
+		log.Printf("SharePostHandler CreatePostShare error: %v", err)
+
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't share this post right now.",
+		)
 		return
 	}
 
@@ -63,7 +110,14 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = database.CreatePost(sharedPost)
 	if err != nil {
-		http.Error(w, "failed to create shared post", http.StatusInternalServerError)
+		log.Printf("SharePostHandler CreatePost error: %v", err)
+
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't create the shared post right now.",
+		)
 		return
 	}
 

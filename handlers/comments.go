@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
@@ -16,13 +15,23 @@ import (
 
 func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed for this action.",
+		)
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to create a comment.",
+		)
 		return
 	}
 
@@ -30,18 +39,33 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	content := strings.TrimSpace(r.FormValue("content"))
 
 	if postID == "" {
-		http.Error(w, "post ID is required", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Missing Post",
+			"A post ID is required to create a comment.",
+		)
 		return
 	}
 
 	if content == "" {
-		http.Error(w, "comment cannot be empty", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Empty Comment",
+			"Your comment cannot be empty.",
+		)
 		return
 	}
 
 	id, err := strconv.Atoi(postID)
-	if err != nil {
-		http.Error(w, "invalid post ID", http.StatusBadRequest)
+	if err != nil || id <= 0 {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Post",
+			"The post ID provided is invalid.",
+		)
 		return
 	}
 
@@ -53,8 +77,13 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = database.CreateComment(comment)
 	if err != nil {
-		log.Printf("ERROR: %v", err)
-		http.Error(w, "failed to create comment", http.StatusInternalServerError)
+		log.Printf("CreateCommentHandler CreateComment error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't create your comment right now.",
+		)
 		return
 	}
 
@@ -63,82 +92,133 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetCommentsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		writeJSONError(
+			w,
+			http.StatusMethodNotAllowed,
+			"method not allowed",
+		)
 		return
 	}
 
 	_, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		writeJSONError(
+			w,
+			http.StatusUnauthorized,
+			"unauthorized",
+		)
 		return
 	}
 
-	postID := r.URL.Query().Get("post_id")
+	postID := strings.TrimSpace(r.URL.Query().Get("post_id"))
 
 	if postID == "" {
-		http.Error(w, "post ID is required", http.StatusBadRequest)
+		writeJSONError(
+			w,
+			http.StatusBadRequest,
+			"post ID is required",
+		)
 		return
 	}
 
 	id, err := strconv.Atoi(postID)
-	if err != nil {
-		http.Error(w, "invalid post ID", http.StatusBadRequest)
+	if err != nil || id <= 0 {
+		writeJSONError(
+			w,
+			http.StatusBadRequest,
+			"invalid post ID",
+		)
 		return
 	}
 
 	comments, err := database.GetCommentsByPostID(id)
 	if err != nil {
-		http.Error(w, "failed to get comments", http.StatusInternalServerError)
+		log.Printf("GetCommentsHandler GetCommentsByPostID error: %v", err)
+		writeJSONError(
+			w,
+			http.StatusInternalServerError,
+			"failed to load comments",
+		)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(comments); err != nil {
-		http.Error(w, fmt.Sprintf("failed to encode comments: %v", err), http.StatusInternalServerError)
+		log.Printf("GetCommentsHandler JSON encoding error: %v", err)
 		return
 	}
 }
 
 func DeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		writeJSONError(
+			w,
+			http.StatusMethodNotAllowed,
+			"method not allowed",
+		)
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		writeJSONError(
+			w,
+			http.StatusUnauthorized,
+			"unauthorized",
+		)
 		return
 	}
 
-	commentID, err := strconv.Atoi(r.FormValue("comment_id"))
-	if err != nil {
-		http.Error(w, "invalid comment ID", http.StatusBadRequest)
+	commentID, err := strconv.Atoi(
+		strings.TrimSpace(r.FormValue("comment_id")),
+	)
+	if err != nil || commentID <= 0 {
+		writeJSONError(
+			w,
+			http.StatusBadRequest,
+			"invalid comment ID",
+		)
 		return
 	}
 
 	comment, err := database.GetCommentByID(commentID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			http.Error(w, "comment not found", http.StatusNotFound)
+			writeJSONError(
+				w,
+				http.StatusNotFound,
+				"comment not found",
+			)
 			return
 		}
 
-		log.Printf("DELETE COMMENT ERROR - GetCommentByID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("DeleteCommentHandler GetCommentByID error: %v", err)
+		writeJSONError(
+			w,
+			http.StatusInternalServerError,
+			"internal server error",
+		)
 		return
 	}
 
 	post, err := database.GetPostByID(comment.PostID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			http.Error(w, "post not found", http.StatusNotFound)
+			writeJSONError(
+				w,
+				http.StatusNotFound,
+				"post not found",
+			)
 			return
 		}
 
-		log.Printf("DELETE COMMENT ERROR - GetPostByID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("DeleteCommentHandler GetPostByID error: %v", err)
+		writeJSONError(
+			w,
+			http.StatusInternalServerError,
+			"internal server error",
+		)
 		return
 	}
 
@@ -146,14 +226,22 @@ func DeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
 	// The post owner can delete any comment on their post.
 	if comment.UserID != userID {
 		if post.UserID == nil || *post.UserID != userID {
-			http.Error(w, "forbidden", http.StatusForbidden)
+			writeJSONError(
+				w,
+				http.StatusForbidden,
+				"you don't have permission to delete this comment",
+			)
 			return
 		}
 	}
 
 	if err := database.DeleteComment(commentID); err != nil {
-		log.Printf("DELETE COMMENT ERROR - DeleteComment: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("DeleteCommentHandler DeleteComment error: %v", err)
+		writeJSONError(
+			w,
+			http.StatusInternalServerError,
+			"internal server error",
+		)
 		return
 	}
 

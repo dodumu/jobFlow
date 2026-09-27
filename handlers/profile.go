@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 
 	"jobFlow/database"
 	"jobFlow/middleware"
@@ -14,104 +15,170 @@ import (
 
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.",
+		)
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		log.Println("PROFILE ERROR: user ID missing from context")
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to view your profile.",
+		)
 		return
 	}
 
-	log.Printf("Loading profile for user ID: %d\n", userID)
-
 	user, err := database.GetUserByID(userID)
 	if err != nil {
-		log.Printf("PROFILE ERROR - GetUserByID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler GetUserByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your account information.",
+		)
 		return
 	}
 
 	profile, err := database.GetUserProfileByUserID(userID)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		log.Printf("PROFILE ERROR - GetUserProfileByUserID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler GetUserProfileByUserID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your profile information.",
+		)
 		return
 	}
 
 	experiences, err := database.GetExperiencesByUserID(userID)
 	if err != nil {
-		log.Printf("PROFILE ERROR - GetExperiencesByUserID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler GetExperiencesByUserID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your work experience.",
+		)
 		return
 	}
 
 	education, err := database.GetEducationByUserID(userID)
 	if err != nil {
-		log.Printf("PROFILE ERROR - GetEducationByUserID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler GetEducationByUserID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your education information.",
+		)
 		return
 	}
 
 	skills, err := database.GetSkillsByUserID(userID)
 	if err != nil {
-		log.Printf("PROFILE ERROR - GetSkillsByUserID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler GetSkillsByUserID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your skills.",
+		)
 		return
 	}
 
 	preferences, err := database.GetUserPreferenceByUserID(userID)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		log.Printf("PROFILE ERROR - GetUserPreferenceByUserID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler GetUserPreferenceByUserID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your job preferences.",
+		)
 		return
 	}
 
 	employmentTypes, err := database.GetEmploymentTypesByUserID(userID)
 	if err != nil {
-		log.Printf("PROFILE ERROR - GetEmploymentTypesByUserID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler GetEmploymentTypesByUserID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your employment preferences.",
+		)
 		return
 	}
 
 	workArrangements, err := database.GetWorkArrangementsByUserID(userID)
 	if err != nil {
-		log.Printf("PROFILE ERROR - GetWorkArrangementsByUserID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler GetWorkArrangementsByUserID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your work preferences.",
+		)
 		return
 	}
 
 	posts, err := database.GetPostsByUserID(userID)
 	if err != nil {
-		log.Printf("PROFILE ERROR - GetPostsByUserID: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler GetPostsByUserID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your posts.",
+		)
 		return
 	}
 
 	followerCount, err := database.GetFollowerCount(userID)
 	if err != nil {
-		log.Printf("PROFILE ERROR - GetFollowerCount: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler GetFollowerCount error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your follower information.",
+		)
 		return
 	}
 
 	followingCount, err := database.GetFollowingCount(userID)
 	if err != nil {
-		log.Printf("PROFILE ERROR - GetFollowingCount: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler GetFollowingCount error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your following information.",
+		)
 		return
 	}
 
-	// A user does not have to own a company.
 	var company *models.Company
 
 	companyData, err := database.GetCompanyByUserID(userID)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
-			log.Printf("PROFILE ERROR - GetCompanyByUserID: %v\n", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Printf("ProfileHandler GetCompanyByUserID error: %v", err)
+			RenderError(
+				w,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't load your company information.",
+			)
 			return
 		}
 	} else {
@@ -138,29 +205,48 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/profile.html",
 	)
 	if err != nil {
-		log.Printf("PROFILE ERROR - ParseFiles: %v\n", err)
+		log.Printf("ProfileHandler template parse error: %v", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
-		log.Printf("PROFILE ERROR - ExecuteTemplate: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ProfileHandler template execution error: %v", err)
 		return
 	}
 }
 func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		userID, ok := r.Context().Value(middleware.UserIDKey).(int)
-		if !ok {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
+	if r.Method != http.MethodGet && r.Method != http.MethodPost {
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.",
+		)
+		return
+	}
 
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to edit your profile.",
+		)
+		return
+	}
+
+	if r.Method == http.MethodGet {
 		profile, err := database.GetUserProfileByUserID(userID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			log.Printf("EDIT PROFILE ERROR - GetUserProfileByUserID: %v\n", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Printf("EditProfileHandler GetUserProfileByUserID error: %v", err)
+			RenderError(
+				w,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't load your profile information.",
+			)
 			return
 		}
 
@@ -174,45 +260,41 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 			"templates/base.html",
 			"templates/edit-profile.html",
 		)
-
 		if err != nil {
-			log.Printf("EDIT PROFILE ERROR - ParseFiles: %v\n", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Printf("EditProfileHandler template parse error: %v", err)
+			http.Error(
+				w,
+				"internal server error",
+				http.StatusInternalServerError,
+			)
 			return
 		}
 
 		if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
-			log.Printf("EDIT PROFILE ERROR - ExecuteTemplate: %v\n", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Printf("EditProfileHandler template execution error: %v", err)
 			return
 		}
 
-		return
-	}
-
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
-	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	profile := models.UserProfile{
 		UserID:         userID,
-		ProfilePicture: r.FormValue("profile_picture"),
-		Headline:       r.FormValue("headline"),
-		Bio:            r.FormValue("bio"),
-		Location:       r.FormValue("location"),
+		ProfilePicture: strings.TrimSpace(r.FormValue("profile_picture")),
+		Headline:       strings.TrimSpace(r.FormValue("headline")),
+		Bio:            strings.TrimSpace(r.FormValue("bio")),
+		Location:       strings.TrimSpace(r.FormValue("location")),
 	}
 
-	err := database.UpdateUserProfile(profile)
-	if err != nil {
-		log.Printf("EDIT PROFILE ERROR - UpdateUserProfile: %v\n", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+	if err := database.UpdateUserProfile(profile); err != nil {
+		log.Printf("EditProfileHandler UpdateUserProfile error: %v", err)
+
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't update your profile right now.",
+		)
 		return
 	}
 

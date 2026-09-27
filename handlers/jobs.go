@@ -8,6 +8,7 @@ import (
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -16,32 +17,56 @@ import (
 
 func JobsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.",
+		)
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to view jobs.",
+		)
+		return
+	}
+
+	user, err := database.GetUserByID(userID)
+	if err != nil {
+		log.Printf("JobsHandler GetUserByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your account information.",
+		)
 		return
 	}
 
 	jobs, err := database.GetJobs()
 	if err != nil {
-		http.Error(w, "failed to load jobs", http.StatusInternalServerError)
+		log.Printf("JobsHandler GetJobs error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load jobs right now.",
+		)
 		return
 	}
-
-	_, err = database.GetCompanyByUserID(userID)
-
-	isCompany := err == nil
 
 	data := struct {
 		Jobs      []models.Job
 		IsCompany bool
 	}{
 		Jobs:      jobs,
-		IsCompany: isCompany,
+		IsCompany: user.Role == "company",
 	}
 
 	tmpl, err := template.ParseFiles(
@@ -49,112 +74,157 @@ func JobsHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/jobs.html",
 	)
 	if err != nil {
-		http.Error(w, "failed to load template", http.StatusInternalServerError)
+		log.Printf("JobsHandler template parse error: %v", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		http.Error(w, "failed to render jobs", http.StatusInternalServerError)
+	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
+		log.Printf("JobsHandler template execution error: %v", err)
 		return
 	}
 }
 
 func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.",
+		)
 		return
 	}
 
-	// Get job ID from URL: /jobs/{id}
 	idStr := strings.TrimPrefix(r.URL.Path, "/jobs/")
 
 	if idStr == "" {
-		http.NotFound(w, r)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Job",
+			"A valid job ID is required.",
+		)
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.NotFound(w, r)
+	if err != nil || id <= 0 {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Job",
+			"The job ID provided is invalid.",
+		)
 		return
 	}
 
-	// Get the job.
 	job, err := database.GetJobByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			http.NotFound(w, r)
+			RenderError(
+				w,
+				http.StatusNotFound,
+				"Job Not Found",
+				"The job you're looking for could not be found.",
+			)
 			return
 		}
 
-		http.Error(w, "failed to load job", http.StatusInternalServerError)
+		log.Printf("JobDetailsHandler GetJobByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load this job right now.",
+		)
 		return
 	}
 
-	// By default, the current user cannot edit this job.
-	canEdit := false
-
-	// Get authenticated user's ID.
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to view this job.",
+		)
 		return
 	}
+
 	user, err := database.GetUserByID(userID)
 	if err != nil {
-		http.Error(w, "failed to fecth user", http.StatusInternalServerError)
+		log.Printf("JobDetailsHandler GetUserByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your account information.",
+		)
 		return
 	}
+
+	canEdit := false
 
 	if user.Role == "company" {
 		company, err := database.GetCompanyByUserID(userID)
-
-		if err == nil && company.ID == job.CompanyID {
+		if err != nil {
+			log.Printf("JobDetailsHandler GetCompanyByUserID error: %v", err)
+		} else if company.ID == job.CompanyID {
 			canEdit = true
 		}
 	}
 
-	// Combine the Job model with page-specific information.
 	data := models.JobDetailsData{
 		Job:      job,
 		CanEdit:  canEdit,
 		UserRole: user.Role,
 	}
 
-	// Parse template.
 	tmpl, err := template.ParseFiles(
 		"templates/base.html",
 		"templates/job.html",
 	)
 	if err != nil {
-		http.Error(w, "failed to load template", http.StatusInternalServerError)
+		log.Printf("JobDetailsHandler template parse error: %v", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	// Render template using JobDetailsData instead of just Job.
-	err = tmpl.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		http.Error(w, "failed to render job", http.StatusInternalServerError)
+	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
+		log.Printf("JobDetailsHandler template execution error: %v", err)
 		return
 	}
 }
-
 func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to create a job.",
+		)
+		return
+	}
+
+	company, err := database.GetCompanyByUserID(userID)
+	if err != nil {
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"Only company accounts can create jobs.",
+		)
+		return
+	}
+
 	switch r.Method {
-
 	case http.MethodGet:
-		// Show the create-job form.
-		userID, ok := r.Context().Value(middleware.UserIDKey).(int)
-		if !ok {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		company, err := database.GetCompanyByUserID(userID)
-		if err != nil {
-			http.Error(w, "company not found", http.StatusForbidden)
-			return
+		data := struct {
+			CompanyID int
+		}{
+			CompanyID: company.ID,
 		}
 
 		tmpl, err := template.ParseFiles(
@@ -162,24 +232,17 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 			"templates/create-job.html",
 		)
 		if err != nil {
-			http.Error(w, "failed to load template", http.StatusInternalServerError)
+			log.Printf("CreateJobHandler template parse error: %v", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		data := struct {
-			CompanyID int
-		}{
-			CompanyID: company.ID,
-		}
-
-		err = tmpl.ExecuteTemplate(w, "base", data)
-		if err != nil {
-			http.Error(w, "failed to render template", http.StatusInternalServerError)
+		if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
+			log.Printf("CreateJobHandler template execution error: %v", err)
 			return
 		}
+
 	case http.MethodPost:
-		// Read form values.
-		companyID := strings.TrimSpace(r.FormValue("company_id"))
 		title := strings.TrimSpace(r.FormValue("title"))
 		description := strings.TrimSpace(r.FormValue("description"))
 		requirements := strings.TrimSpace(r.FormValue("requirements"))
@@ -189,9 +252,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 		salaryMax := strings.TrimSpace(r.FormValue("salary_max"))
 		deadlineStr := strings.TrimSpace(r.FormValue("deadline"))
 
-		// Validate required fields.
-		if companyID == "" ||
-			title == "" ||
+		if title == "" ||
 			description == "" ||
 			requirements == "" ||
 			location == "" ||
@@ -200,55 +261,60 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 			salaryMax == "" ||
 			deadlineStr == "" {
 
-			http.Error(
+			RenderError(
 				w,
-				"all required fields must be filled",
 				http.StatusBadRequest,
+				"Missing Information",
+				"Please complete all required job fields.",
 			)
 			return
 		}
 
-		// Convert company ID.
-		compID, err := strconv.Atoi(companyID)
-		if err != nil {
-			http.Error(w, "invalid company ID", http.StatusBadRequest)
-			return
-		}
-
-		// Convert minimum salary.
 		minSalary, err := strconv.Atoi(salaryMin)
-		if err != nil {
-			http.Error(w, "invalid minimum salary", http.StatusBadRequest)
-			return
-		}
-
-		// Convert maximum salary.
-		maxSalary, err := strconv.Atoi(salaryMax)
-		if err != nil {
-			http.Error(w, "invalid maximum salary", http.StatusBadRequest)
-			return
-		}
-
-		// Make sure minimum salary isn't greater than maximum salary.
-		if minSalary > maxSalary {
-			http.Error(
+		if err != nil || minSalary < 0 {
+			RenderError(
 				w,
-				"minimum salary cannot be greater than maximum salary",
 				http.StatusBadRequest,
+				"Invalid Salary",
+				"Minimum salary must be a valid non-negative number.",
 			)
 			return
 		}
 
-		// The HTML form uses <input type="date">,
-		// so the value comes as YYYY-MM-DD.
+		maxSalary, err := strconv.Atoi(salaryMax)
+		if err != nil || maxSalary < 0 {
+			RenderError(
+				w,
+				http.StatusBadRequest,
+				"Invalid Salary",
+				"Maximum salary must be a valid non-negative number.",
+			)
+			return
+		}
+
+		if minSalary > maxSalary {
+			RenderError(
+				w,
+				http.StatusBadRequest,
+				"Invalid Salary Range",
+				"Minimum salary cannot be greater than maximum salary.",
+			)
+			return
+		}
+
 		deadline, err := time.Parse("2006-01-02", deadlineStr)
 		if err != nil {
-			http.Error(w, "invalid deadline", http.StatusBadRequest)
+			RenderError(
+				w,
+				http.StatusBadRequest,
+				"Invalid Deadline",
+				"Please provide a valid application deadline.",
+			)
 			return
 		}
 
 		job := models.Job{
-			CompanyID:      compID,
+			CompanyID:      company.ID,
 			Title:          title,
 			Description:    description,
 			Requirements:   requirements,
@@ -262,15 +328,16 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 
 		newJob, err := database.CreateJob(job)
 		if err != nil {
-			http.Error(
+			log.Printf("CreateJobHandler CreateJob error: %v", err)
+			RenderError(
 				w,
-				"failed to create job",
 				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't create the job right now.",
 			)
 			return
 		}
 
-		// Redirect to the newly created job.
 		http.Redirect(
 			w,
 			r,
@@ -279,37 +346,94 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 	default:
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.",
+		)
 	}
 }
-
 func EditJobHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodPost {
+		log.Printf("Request Method: %v", r.Method)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.",
+		)
+		return
+	}
+
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to edit a job.",
+		)
 		return
 	}
+
 	jobID := strings.TrimPrefix(r.URL.Path, "/jobs/")
 	jobID = strings.TrimSuffix(jobID, "/edit")
+
 	jobIDInt, err := strconv.Atoi(jobID)
-	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+	if err != nil || jobIDInt <= 0 {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Job",
+			"The job ID provided is invalid.",
+		)
 		return
 	}
+
 	job, err := database.GetJobByID(jobIDInt)
 	if err != nil {
-		http.Error(w, "job not found", http.StatusNotFound)
+		if errors.Is(err, sql.ErrNoRows) {
+			RenderError(
+				w,
+				http.StatusNotFound,
+				"Job Not Found",
+				"The job you're looking for could not be found.",
+			)
+			return
+		}
+
+		log.Printf("EditJobHandler GetJobByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load this job right now.",
+		)
 		return
 	}
+
 	company, err := database.GetCompanyByUserID(userID)
 	if err != nil {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"Only company accounts can edit jobs.",
+		)
 		return
 	}
+
 	if job.CompanyID != company.ID {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"You don't have permission to edit this job.",
+		)
 		return
 	}
+
 	if r.Method == http.MethodGet {
 		funcMap := template.FuncMap{
 			"formatDate": func(t time.Time) string {
@@ -323,46 +447,90 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 				"templates/base.html",
 				"templates/edit-job.html",
 			)
+
 		if err != nil {
-			http.Error(w, "failed to load template", http.StatusInternalServerError)
-			return
-		}
-		err = tmpl.ExecuteTemplate(w, "base", job)
-		if err != nil {
+			log.Printf("EditJobHandler template parse error: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
+
+		if err := tmpl.ExecuteTemplate(w, "base", job); err != nil {
+			log.Printf("EditJobHandler template execution error: %v", err)
+			return
+		}
+
 		return
 	}
 
 	if r.Method == http.MethodPost {
-		title := r.FormValue("title")
-		description := r.FormValue("description")
-		location := r.FormValue("location")
-		employmentType := r.FormValue("employment_type")
-		salaryMin := r.FormValue("salary_min")
-		salaryMax := r.FormValue("salary_max")
-		deadlineStr := r.FormValue("deadline")
+		title := strings.TrimSpace(r.FormValue("title"))
+		description := strings.TrimSpace(r.FormValue("description"))
+		location := strings.TrimSpace(r.FormValue("location"))
+		employmentType := strings.TrimSpace(r.FormValue("employment_type"))
+		salaryMin := strings.TrimSpace(r.FormValue("salary_min"))
+		salaryMax := strings.TrimSpace(r.FormValue("salary_max"))
+		deadlineStr := strings.TrimSpace(r.FormValue("deadline"))
 
-		if title == "" || description == "" || location == "" || employmentType == "" || salaryMin == "" || salaryMax == "" || deadlineStr == "" {
-			http.Error(w, "required feilds can not be empty", http.StatusBadRequest)
+		if title == "" ||
+			description == "" ||
+			location == "" ||
+			employmentType == "" ||
+			salaryMin == "" ||
+			salaryMax == "" ||
+			deadlineStr == "" {
+
+			RenderError(
+				w,
+				http.StatusBadRequest,
+				"Missing Information",
+				"Please complete all required job fields.",
+			)
 			return
 		}
+
 		minSalary, err := strconv.Atoi(salaryMin)
-		if err != nil {
-			http.Error(w, "invalid minimum salary", http.StatusBadRequest)
+		if err != nil || minSalary < 0 {
+			RenderError(
+				w,
+				http.StatusBadRequest,
+				"Invalid Salary",
+				"Minimum salary must be a valid non-negative number.",
+			)
 			return
 		}
+
 		maxSalary, err := strconv.Atoi(salaryMax)
-		if err != nil {
-			http.Error(w, "invalid maximum salary", http.StatusBadRequest)
+		if err != nil || maxSalary < 0 {
+			RenderError(
+				w,
+				http.StatusBadRequest,
+				"Invalid Salary",
+				"Maximum salary must be a valid non-negative number.",
+			)
 			return
 		}
+
+		if minSalary > maxSalary {
+			RenderError(
+				w,
+				http.StatusBadRequest,
+				"Invalid Salary Range",
+				"Minimum salary cannot be greater than maximum salary.",
+			)
+			return
+		}
+
 		deadline, err := time.Parse("2006-01-02", deadlineStr)
 		if err != nil {
-			http.Error(w, "invalid deadline", http.StatusBadRequest)
+			RenderError(
+				w,
+				http.StatusBadRequest,
+				"Invalid Deadline",
+				"Please provide a valid application deadline.",
+			)
 			return
 		}
+
 		job.Title = title
 		job.Description = description
 		job.Location = location
@@ -371,65 +539,101 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 		job.SalaryMax = maxSalary
 		job.Deadline = deadline
 
-		err = database.UpdateJob(job.ID, job)
-		if err != nil {
-			http.Error(w, "unable to update job", http.StatusInternalServerError)
+		if err := database.UpdateJob(job.ID, job); err != nil {
+			log.Printf("EditJobHandler UpdateJob error: %v", err)
+			RenderError(
+				w,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't update this job right now.",
+			)
 			return
 		}
+
+		http.Redirect(
+			w,
+			r,
+			fmt.Sprintf("/jobs/%d", job.ID),
+			http.StatusSeeOther,
+		)
 	}
-
-	http.Redirect(w, r, fmt.Sprintf("/jobs/%d", job.ID), http.StatusSeeOther)
 }
-
 func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed for this action.",
+		)
 		return
 	}
 
-	// Get authenticated user.
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to close a job.",
+		)
 		return
 	}
 
-	// Get job ID from the route.
-	jobIDStr := r.PathValue("id")
-
-	jobID, err := strconv.Atoi(jobIDStr)
-	if err != nil {
-		http.Error(w, "invalid job ID", http.StatusBadRequest)
+	jobID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || jobID <= 0 {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Job",
+			"The job ID provided is invalid.",
+		)
 		return
 	}
 
-	// Get the job.
 	job, err := database.GetJobByID(jobID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			http.NotFound(w, r)
+			RenderError(
+				w,
+				http.StatusNotFound,
+				"Job Not Found",
+				"The job you're looking for could not be found.",
+			)
 			return
 		}
 
-		http.Error(w, "failed to load job", http.StatusInternalServerError)
+		log.Printf("CloseJobHandler GetJobByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load this job right now.",
+		)
 		return
 	}
 
-	// Get the company belonging to the logged-in user.
 	company, err := database.GetCompanyByUserID(userID)
 	if err != nil {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"Only company accounts can close jobs.",
+		)
 		return
 	}
 
-	// Security check:
-	// only the company that owns the job can close it.
 	if job.CompanyID != company.ID {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"You don't have permission to close this job.",
+		)
 		return
 	}
 
-	// Don't try to close an already closed job.
 	if job.Status == "closed" {
 		http.Redirect(
 			w,
@@ -440,14 +644,17 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Close the job.
-	err = database.CloseJob(job.ID)
-	if err != nil {
-		http.Error(w, "failed to close job", http.StatusInternalServerError)
+	if err := database.CloseJob(job.ID); err != nil {
+		log.Printf("CloseJobHandler CloseJob error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't close this job right now.",
+		)
 		return
 	}
 
-	// Return to job details.
 	http.Redirect(
 		w,
 		r,
@@ -455,92 +662,167 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 		http.StatusSeeOther,
 	)
 }
-
 func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
-	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+	if r.Method != http.MethodGet && r.Method != http.MethodPost {
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.",
+		)
 		return
 	}
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	if !ok {
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to apply for a job.",
+		)
+		return
+	}
+
 	jobID := strings.TrimPrefix(r.URL.Path, "/jobs/")
 	jobID = strings.TrimSuffix(jobID, "/apply")
 
 	jobIDInt, err := strconv.Atoi(jobID)
-	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+	if err != nil || jobIDInt <= 0 {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Job",
+			"The job ID provided is invalid.",
+		)
 		return
 	}
+
 	job, err := database.GetJobByID(jobIDInt)
 	if err != nil {
-		http.Error(w, "job does not exist", http.StatusNotFound)
+		if errors.Is(err, sql.ErrNoRows) {
+			RenderError(
+				w,
+				http.StatusNotFound,
+				"Job Not Found",
+				"The job you're looking for could not be found.",
+			)
+			return
+		}
+
+		log.Printf("ApplyJobHandler GetJobByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load this job right now.",
+		)
 		return
 	}
+
 	if job.Status != "open" {
-		http.Error(w, "job already closed", http.StatusNotAcceptable)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Applications Closed",
+			"This job is no longer accepting applications.",
+		)
 		return
 	}
+
 	user, err := database.GetUserByID(userID)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
+		log.Printf("ApplyJobHandler GetUserByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your account information.",
+		)
 		return
 	}
+
 	if user.Role != "individual" {
-		http.Error(w, "cannot apply for position", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"Only individual accounts can apply for jobs.",
+		)
 		return
 	}
+
 	hasApplied, err := database.HasUserApplied(jobIDInt, userID)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ApplyJobHandler HasUserApplied error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't check your application status.",
+		)
 		return
 	}
+
 	if hasApplied {
-		http.Error(w, "has applied already", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Already Applied",
+			"You have already applied for this job.",
+		)
 		return
 	}
-	switch r.Method {
-	case http.MethodGet:
+
+	if r.Method == http.MethodGet {
 		tmpl, err := template.ParseFiles(
 			"templates/base.html",
 			"templates/apply-job.html",
 		)
 		if err != nil {
+			log.Printf("ApplyJobHandler template parse error: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		err = tmpl.ExecuteTemplate(w, "base", job)
-		if err != nil {
-			http.Error(w, "internal server error", http.StatusInternalServerError)
-			return
-		}
-	case http.MethodPost:
-		coverLetter := strings.TrimSpace(r.FormValue("cover_letter"))
-
-		if coverLetter == "" {
-			http.Error(w, "cover letter is required", http.StatusBadRequest)
+		if err := tmpl.ExecuteTemplate(w, "base", job); err != nil {
+			log.Printf("ApplyJobHandler template execution error: %v", err)
 			return
 		}
 
-		application := models.Application{
-			JobID:       jobIDInt,
-			UserID:      userID,
-			CoverLetter: coverLetter,
-			Status:      "pending",
-		}
-
-		_, err := database.CreateApplication(application)
-		if err != nil {
-			http.Error(w, "failed to submit application", http.StatusInternalServerError)
-			return
-		}
-
-		http.Redirect(w, r, "/applications", http.StatusSeeOther)
 		return
-
-	default:
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-
 	}
 
+	coverLetter := strings.TrimSpace(r.FormValue("cover_letter"))
+
+	if coverLetter == "" {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Cover Letter Required",
+			"Please provide a cover letter before submitting your application.",
+		)
+		return
+	}
+
+	application := models.Application{
+		JobID:       jobIDInt,
+		UserID:      userID,
+		CoverLetter: coverLetter,
+		Status:      "pending",
+	}
+
+	_, err = database.CreateApplication(application)
+	if err != nil {
+		log.Printf("ApplyJobHandler CreateApplication error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't submit your application right now.",
+		)
+		return
+	}
+
+	http.Redirect(w, r, "/applications", http.StatusSeeOther)
 }

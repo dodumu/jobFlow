@@ -19,19 +19,35 @@ type ApplicationDetailsData struct {
 
 func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(w, http.StatusMethodNotAllowed, "wronng method", "method not allowed")
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed for this page.",
+		)
 		return
 	}
 
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		RenderError(w, http.StatusUnauthorized, "unauthorized user", "unauthorized")
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to view applications.",
+		)
 		return
 	}
 
 	user, err := database.GetUserByID(userID)
 	if err != nil {
-		RenderError(w, http.StatusNotFound, "Invalid User", "The user ID provided is invalid")
+		log.Printf("ApplicationHandler GetUserByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your account information.",
+		)
 		return
 	}
 
@@ -40,7 +56,13 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	case "individual":
 		applications, err := database.GetApplicationsByUserID(userID)
 		if err != nil {
-			http.Error(w, "failed to load applications", http.StatusInternalServerError)
+			log.Printf("ApplicationHandler GetApplicationsByUserID error: %v", err)
+			RenderError(
+				w,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't load your applications right now.",
+			)
 			return
 		}
 
@@ -49,27 +71,39 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			"templates/applications.html",
 		)
 		if err != nil {
+			log.Printf("ApplicationHandler template parse error: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		err = tmpl.ExecuteTemplate(w, "base", applications)
 		if err != nil {
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Printf("ApplicationHandler template execution error: %v", err)
 			return
 		}
 
 	case "company":
 		company, err := database.GetCompanyByUserID(userID)
 		if err != nil {
-			http.Error(w, "company not found", http.StatusNotFound)
+			log.Printf("ApplicationHandler GetCompanyByUserID error: %v", err)
+			RenderError(
+				w,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't load your company information.",
+			)
 			return
 		}
 
 		applications, err := database.GetApplicationsByCompanyID(company.ID)
 		if err != nil {
-			log.Printf("GetApplicationsByCompanyID error: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Printf("ApplicationHandler GetApplicationsByCompanyID error: %v", err)
+			RenderError(
+				w,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't load your company's applications right now.",
+			)
 			return
 		}
 
@@ -78,163 +112,297 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			"templates/company_applications.html",
 		)
 		if err != nil {
+			log.Printf("ApplicationHandler template parse error: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		err = tmpl.ExecuteTemplate(w, "base", applications)
 		if err != nil {
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Printf("ApplicationHandler template execution error: %v", err)
 			return
 		}
 
 	default:
-		http.Error(w, "forbidden", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"You don't have permission to view this page.",
+		)
 		return
 	}
 }
 
 func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed for this page.",
+		)
 		return
 	}
+
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to view this application.",
+		)
 		return
 	}
+
 	user, err := database.GetUserByID(userID)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
+		log.Printf("ViewApplicationHandler GetUserByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your account information.",
+		)
 		return
 	}
+
 	if user.Role != "company" {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"Only company accounts can review applications.",
+		)
 		return
 	}
+
 	company, err := database.GetCompanyByUserID(userID)
 	if err != nil {
-		http.Error(w, "company not found", http.StatusNotFound)
+		log.Printf("ViewApplicationHandler GetCompanyByUserID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your company information.",
+		)
 		return
 	}
-	applicationID := r.PathValue("id")
-	applicationIDInt, err := strconv.Atoi(applicationID)
+
+	applicationID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || applicationID <= 0 {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Application",
+			"The application ID provided is invalid.",
+		)
+		return
+	}
+
+	application, err := database.GetApplicationByID(applicationID)
 	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusNotFound,
+			"Application Not Found",
+			"The application you're looking for could not be found.",
+		)
 		return
 	}
-	application, err := database.GetApplicationByID(applicationIDInt)
-	if err != nil {
-		http.Error(w, "application not found", http.StatusNotFound)
-		return
-	}
+
 	job, err := database.GetJobByID(application.JobID)
 	if err != nil {
-		http.Error(w, "job not found", http.StatusNotFound)
+		log.Printf("ViewApplicationHandler GetJobByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusNotFound,
+			"Job Not Found",
+			"The job associated with this application could not be found.",
+		)
 		return
 	}
+
 	if job.CompanyID != company.ID {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"You don't have permission to view this application.",
+		)
 		return
 	}
+
 	applicant, err := database.GetUserByID(application.UserID)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
+		log.Printf("ViewApplicationHandler applicant GetUserByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusNotFound,
+			"Applicant Not Found",
+			"The applicant associated with this application could not be found.",
+		)
 		return
 	}
+
 	data := ApplicationDetailsData{
 		Application: application,
 		Job:         job,
 		Applicant:   applicant,
 	}
+
 	tmpl, err := template.ParseFiles(
 		"templates/base.html",
 		"templates/application.html",
 	)
 	if err != nil {
+		log.Printf("ViewApplicationHandler template parse error: %v", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+
 	err = tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
-		log.Printf("ViewApplicationHandler template error: %v", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("ViewApplicationHandler template execution error: %v", err)
 		return
 	}
 }
 
 func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, status string) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		RenderError(
+			w,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed for this action.",
+		)
 		return
 	}
+
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		RenderError(
+			w,
+			http.StatusUnauthorized,
+			"Unauthorized",
+			"You must be logged in to review applications.",
+		)
 		return
 	}
 
 	user, err := database.GetUserByID(userID)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
+		log.Printf("updateApplicationStatusHandler GetUserByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your account information.",
+		)
 		return
 	}
+
 	if user.Role != "company" {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"Only company accounts can review applications.",
+		)
 		return
 	}
+
 	company, err := database.GetCompanyByUserID(userID)
 	if err != nil {
-		http.Error(w, "company not found", http.StatusNotFound)
+		log.Printf("updateApplicationStatusHandler GetCompanyByUserID error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your company information.",
+		)
 		return
 	}
-	applicationID := r.PathValue("id")
-	applicationIDInt, err := strconv.Atoi(applicationID)
+
+	applicationID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || applicationID <= 0 {
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Invalid Application",
+			"The application ID provided is invalid.",
+		)
+		return
+	}
+
+	application, err := database.GetApplicationByID(applicationID)
 	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusNotFound,
+			"Application Not Found",
+			"The application you're looking for could not be found.",
+		)
 		return
 	}
-	application, err := database.GetApplicationByID(applicationIDInt)
-	if err != nil {
-		http.Error(w, "application not found", http.StatusNotFound)
-		return
-	}
+
 	job, err := database.GetJobByID(application.JobID)
 	if err != nil {
-		http.Error(w, "job not found", http.StatusNotFound)
+		log.Printf("updateApplicationStatusHandler GetJobByID error: %v", err)
+		RenderError(
+			w,
+			http.StatusNotFound,
+			"Job Not Found",
+			"The job associated with this application could not be found.",
+		)
 		return
 	}
+
 	if company.ID != job.CompanyID {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		RenderError(
+			w,
+			http.StatusForbidden,
+			"Access Denied",
+			"You don't have permission to review this application.",
+		)
 		return
 	}
+
 	if application.Status != "pending" {
-		http.Error(w, "application has already been reviewed", http.StatusBadRequest)
+		RenderError(
+			w,
+			http.StatusBadRequest,
+			"Application Already Reviewed",
+			"This application has already been accepted or rejected.",
+		)
 		return
 	}
+
 	err = database.UpdateApplicationStatus(application.ID, status)
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("updateApplicationStatusHandler UpdateApplicationStatus error: %v", err)
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't update the application status.",
+		)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("/applications/%d", application.ID), http.StatusSeeOther)
+
+	http.Redirect(
+		w,
+		r,
+		fmt.Sprintf("/applications/%d", application.ID),
+		http.StatusSeeOther,
+	)
 }
 
 func AcceptApplicationHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	updateApplicationStatusHandler(w, r, "accepted")
 }
 
 func RejectApplicationHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	updateApplicationStatusHandler(w, r, "rejected")
 }

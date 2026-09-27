@@ -115,6 +115,12 @@ func main() {
 			http.HandlerFunc(handlers.CreateJobHandler),
 		),
 	)
+	http.Handle(
+		"GET /jobs/{id}/edit",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.EditJobHandler),
+		),
+	)
 
 	http.Handle(
 		"POST /jobs/{id}/edit",
