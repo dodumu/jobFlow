@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"jobFlow/constants"
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
@@ -166,7 +167,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 
 	canEdit := false
 
-	if user.Role == "company" {
+	if user.Role == constants.RoleCompany {
 		company, err := database.GetCompanyByUserID(userID)
 		if err != nil {
 			log.Printf("JobDetailsHandler GetCompanyByUserID error: %v", err)
@@ -634,7 +635,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if job.Status == "closed" {
+	if job.Status == constants.JobStatusClosed {
 		http.Redirect(
 			w,
 			r,
@@ -720,7 +721,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if job.Status != "open" {
+	if job.Status != constants.JobStatusOpen {
 		RenderError(
 			w,
 			http.StatusBadRequest,
@@ -742,7 +743,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Role != "individual" {
+	if user.Role != constants.RoleIndividual {
 		RenderError(
 			w,
 			http.StatusForbidden,

@@ -15,3 +15,7 @@ type ProfilePageData struct {
 	FollowerCount  int
 	FollowingCount int
 }
+
+type EditProfilePageData struct {
+	Profile UserProfile
+}

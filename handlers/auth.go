@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"jobFlow/constants"
 	"jobFlow/database"
 	"jobFlow/models"
 	"jobFlow/utils"
@@ -119,7 +120,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if role == "company" {
+	if role == constants.RoleCompany {
 		industry := r.FormValue("industry")
 		companySize := r.FormValue("company_size")
 		companyName := r.FormValue("company_name")

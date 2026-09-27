@@ -7,6 +7,7 @@ import (
 
 	"jobFlow/database"
 	"jobFlow/middleware"
+	"jobFlow/models"
 )
 
 func DashboardHandler(w http.ResponseWriter, r *http.Request) {
@@ -55,11 +56,7 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := struct {
-		User          any
-		CurrentUserID int
-		Posts         any
-	}{
+	data := models.DashboardPageData{
 		User:          user,
 		CurrentUserID: userID,
 		Posts:         posts,

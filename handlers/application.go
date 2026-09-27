@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"html/template"
+	"jobFlow/constants"
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
@@ -53,7 +54,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch user.Role {
 
-	case "individual":
+	case constants.RoleIndividual:
 		applications, err := database.GetApplicationsByUserID(userID)
 		if err != nil {
 			log.Printf("ApplicationHandler GetApplicationsByUserID error: %v", err)
@@ -82,7 +83,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-	case "company":
+	case constants.RoleCompany:
 		company, err := database.GetCompanyByUserID(userID)
 		if err != nil {
 			log.Printf("ApplicationHandler GetCompanyByUserID error: %v", err)
@@ -303,7 +304,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		return
 	}
 
-	if user.Role != "company" {
+	if user.Role != constants.RoleCompany {
 		RenderError(
 			w,
 			http.StatusForbidden,
@@ -369,7 +370,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		return
 	}
 
-	if application.Status != "pending" {
+	if application.Status != constants.JobStatusPending {
 		RenderError(
 			w,
 			http.StatusBadRequest,

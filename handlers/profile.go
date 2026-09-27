@@ -250,12 +250,9 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		data := struct {
-			Profile any
-		}{
+		data := models.EditProfilePageData{
 			Profile: profile,
 		}
-
 		tmpl, err := template.ParseFiles(
 			"templates/base.html",
 			"templates/edit-profile.html",
