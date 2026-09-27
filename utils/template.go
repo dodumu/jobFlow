@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"time"
@@ -20,8 +21,12 @@ func RenderTemplate(w http.ResponseWriter, page string, data any) error {
 			"templates/"+page,
 		)
 	if err != nil {
-		return err
+		return fmt.Errorf("parsing template %s: %w", page, err)
 	}
 
-	return tmpl.ExecuteTemplate(w, "base", data)
+	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
+		return fmt.Errorf("executing template %s: %w", page, err)
+	}
+
+	return nil
 }

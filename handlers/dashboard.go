@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
+	"jobFlow/utils"
 )
 
 func DashboardHandler(w http.ResponseWriter, r *http.Request) {
@@ -62,23 +62,9 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		Posts:         posts,
 	}
 
-	tmpl, err := template.ParseFiles(
-		"templates/base.html",
-		"templates/dashboard.html",
+	err = utils.RenderTemplate(w, "dashboard.html", data)
+	log.Printf(
+		"DashboardHandler RenderTemplate dashboard.html error: %v",
+		err,
 	)
-	if err != nil {
-		log.Printf("DashboardHandler template parse error: %v", err)
-		http.Error(
-			w,
-			"internal server error",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-
-	err = tmpl.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		log.Printf("DashboardHandler template execution error: %v", err)
-		return
-	}
 }

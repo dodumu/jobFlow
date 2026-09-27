@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"fmt"
-	"html/template"
 	"jobFlow/constants"
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
+	"jobFlow/utils"
 	"log"
 	"net/http"
 	"strconv"
@@ -67,19 +67,12 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tmpl, err := template.ParseFiles(
-			"templates/base.html",
-			"templates/applications.html",
-		)
+		err = utils.RenderTemplate(w, "applications.html", applications)
 		if err != nil {
-			log.Printf("ApplicationHandler template parse error: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
-			return
-		}
-
-		err = tmpl.ExecuteTemplate(w, "base", applications)
-		if err != nil {
-			log.Printf("ApplicationHandler template execution error: %v", err)
+			log.Printf(
+				"ApplicationHandler RenderTemplate applications.html error: %v",
+				err,
+			)
 			return
 		}
 
@@ -108,19 +101,12 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tmpl, err := template.ParseFiles(
-			"templates/base.html",
-			"templates/company_applications.html",
-		)
+		err = utils.RenderTemplate(w, "company_applications.html", applications)
 		if err != nil {
-			log.Printf("ApplicationHandler template parse error: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
-			return
-		}
-
-		err = tmpl.ExecuteTemplate(w, "base", applications)
-		if err != nil {
-			log.Printf("ApplicationHandler template execution error: %v", err)
+			log.Printf(
+				"ApplicationHandler RenderTemplate company_applications.html error: %v",
+				err,
+			)
 			return
 		}
 
@@ -169,7 +155,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Role != "company" {
+	if user.Role != constants.RoleCompany {
 		RenderError(
 			w,
 			http.StatusForbidden,
@@ -253,19 +239,12 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		Applicant:   applicant,
 	}
 
-	tmpl, err := template.ParseFiles(
-		"templates/base.html",
-		"templates/application.html",
-	)
+	err = utils.RenderTemplate(w, "application.html", data)
 	if err != nil {
-		log.Printf("ViewApplicationHandler template parse error: %v", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	err = tmpl.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		log.Printf("ViewApplicationHandler template execution error: %v", err)
+		log.Printf(
+			"ApplicationHandler RenderTemplate application.html error: %v",
+			err,
+		)
 		return
 	}
 }
@@ -370,7 +349,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		return
 	}
 
-	if application.Status != constants.JobStatusPending {
+	if application.Status != constants.ApplicationStatusPending {
 		RenderError(
 			w,
 			http.StatusBadRequest,

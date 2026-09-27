@@ -12,4 +12,8 @@ const (
 	JobStatusOpen    = "open"
 	JobStatusClosed  = "closed"
 	JobStatusPending = "pending"
+
+	ApplicationStatusPending  = "pending"
+	ApplicationStatusAccepted = "accepted"
+	ApplicationStatusRejected = "rejected"
 )

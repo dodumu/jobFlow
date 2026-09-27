@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"html/template"
 	"jobFlow/constants"
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
+	"jobFlow/utils"
 	"log"
 	"net/http"
 	"strconv"
@@ -62,26 +62,13 @@ func JobsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := struct {
-		Jobs      []models.Job
-		IsCompany bool
-	}{
+	data := models.JobsPageData{
 		Jobs:      jobs,
-		IsCompany: user.Role == "company",
+		IsCompany: user.Role == constants.RoleCompany,
 	}
 
-	tmpl, err := template.ParseFiles(
-		"templates/base.html",
-		"templates/jobs.html",
-	)
-	if err != nil {
-		log.Printf("JobsHandler template parse error: %v", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
-		log.Printf("JobsHandler template execution error: %v", err)
+	if err := utils.RenderTemplate(w, "jobs.html", data); err != nil {
+		log.Printf("JobsHandler RenderTemplate jobs.html error: %v", err)
 		return
 	}
 }
@@ -182,18 +169,11 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		UserRole: user.Role,
 	}
 
-	tmpl, err := template.ParseFiles(
-		"templates/base.html",
-		"templates/job.html",
-	)
-	if err != nil {
-		log.Printf("JobDetailsHandler template parse error: %v", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
-		log.Printf("JobDetailsHandler template execution error: %v", err)
+	if err := utils.RenderTemplate(w, "job.html", data); err != nil {
+		log.Printf(
+			"JobDetailsHandler RenderTemplate job.html error: %v",
+			err,
+		)
 		return
 	}
 }
@@ -228,18 +208,15 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 			CompanyID: company.ID,
 		}
 
-		tmpl, err := template.ParseFiles(
-			"templates/base.html",
-			"templates/create-job.html",
-		)
-		if err != nil {
-			log.Printf("CreateJobHandler template parse error: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
-			return
-		}
-
-		if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
-			log.Printf("CreateJobHandler template execution error: %v", err)
+		if err := utils.RenderTemplate(
+			w,
+			"create-job.html",
+			data,
+		); err != nil {
+			log.Printf(
+				"CreateJobHandler RenderTemplate create-job.html error: %v",
+				err,
+			)
 			return
 		}
 
@@ -436,30 +413,18 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodGet {
-		funcMap := template.FuncMap{
-			"formatDate": func(t time.Time) string {
-				return t.Format("2006-01-02")
-			},
-		}
+		// funcMap := template.FuncMap{
+		// 	"formatDate": func(t time.Time) string {
+		// 		return t.Format("2006-01-02")
+		// 	},
+		// }
 
-		tmpl, err := template.New("base.html").
-			Funcs(funcMap).
-			ParseFiles(
-				"templates/base.html",
-				"templates/edit-job.html",
-			)
-
+		err = utils.RenderTemplate(w, "edit-job.html", job)
 		if err != nil {
-			log.Printf("EditJobHandler template parse error: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
-			return
+			log.Printf(
+				"ApplicationHandler RenderTemplate edit-job.html error: %v",
+				err)
 		}
-
-		if err := tmpl.ExecuteTemplate(w, "base", job); err != nil {
-			log.Printf("EditJobHandler template execution error: %v", err)
-			return
-		}
-
 		return
 	}
 
@@ -776,19 +741,11 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodGet {
-		tmpl, err := template.ParseFiles(
-			"templates/base.html",
-			"templates/apply-job.html",
-		)
+		err = utils.RenderTemplate(w, "apply-job.html", job)
 		if err != nil {
-			log.Printf("ApplyJobHandler template parse error: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
-			return
-		}
-
-		if err := tmpl.ExecuteTemplate(w, "base", job); err != nil {
-			log.Printf("ApplyJobHandler template execution error: %v", err)
-			return
+			log.Printf(
+				"ApplicationHandler RenderTemplate applications.html error: %v",
+				err)
 		}
 
 		return

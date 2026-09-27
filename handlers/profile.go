@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"errors"
-	"html/template"
 	"log"
 	"net/http"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"jobFlow/database"
 	"jobFlow/middleware"
 	"jobFlow/models"
+	"jobFlow/utils"
 )
 
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
@@ -200,19 +200,11 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		FollowingCount:   followingCount,
 	}
 
-	tmpl, err := template.ParseFiles(
-		"templates/base.html",
-		"templates/profile.html",
-	)
+	err = utils.RenderTemplate(w, "profile.html", data)
 	if err != nil {
-		log.Printf("ProfileHandler template parse error: %v", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
-		log.Printf("ProfileHandler template execution error: %v", err)
-		return
+		log.Printf(
+			"ProfileHandler RenderTemplate profile.html error: %v",
+			err)
 	}
 }
 func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
@@ -253,25 +245,12 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 		data := models.EditProfilePageData{
 			Profile: profile,
 		}
-		tmpl, err := template.ParseFiles(
-			"templates/base.html",
-			"templates/edit-profile.html",
-		)
+		err = utils.RenderTemplate(w, "edit-profile.html", data)
 		if err != nil {
-			log.Printf("EditProfileHandler template parse error: %v", err)
-			http.Error(
-				w,
-				"internal server error",
-				http.StatusInternalServerError,
-			)
-			return
+			log.Printf(
+				"ProfileHandler RenderTemplate edit-profile.html error: %v",
+				err)
 		}
-
-		if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
-			log.Printf("EditProfileHandler template execution error: %v", err)
-			return
-		}
-
 		return
 	}
 
