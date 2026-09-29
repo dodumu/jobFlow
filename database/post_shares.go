@@ -6,8 +6,12 @@ import (
 	"jobFlow/models"
 )
 
-func CreatePostShare(share models.PostShare) (int, error) {
-	result, err := DB.Exec(`
+func createPostShare(
+	exec DBExecutor,
+	share models.PostShare,
+) (int, error) {
+
+	result, err := exec.Exec(`
 		INSERT INTO post_shares (
 			post_id,
 			user_id
@@ -30,6 +34,37 @@ func CreatePostShare(share models.PostShare) (int, error) {
 	return int(id), nil
 }
 
+func CreatePostShare(share models.PostShare) (int, error) {
+	return createPostShare(DB, share)
+}
+func SharePost(
+	share models.PostShare,
+	sharedPost models.Post,
+) error {
+
+	tx, err := DB.Begin()
+	if err != nil {
+		return fmt.Errorf("beginning share transaction: %w", err)
+	}
+
+	defer tx.Rollback()
+
+	_, err = createPostShare(tx, share)
+	if err != nil {
+		return fmt.Errorf("creating post share: %w", err)
+	}
+
+	_, err = createPost(tx, sharedPost)
+	if err != nil {
+		return fmt.Errorf("creating shared post: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("committing share transaction: %w", err)
+	}
+
+	return nil
+}
 func GetPostShareByID(id int) (models.PostShare, error) {
 	var share models.PostShare
 

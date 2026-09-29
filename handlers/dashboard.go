@@ -62,8 +62,10 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = utils.RenderTemplate(w, "dashboard.html", data)
-	log.Printf(
-		"DashboardHandler RenderTemplate dashboard.html error: %v",
-		err,
-	)
+	if err != nil {
+		log.Printf(
+			"DashboardHandler RenderTemplate dashboard.html error: %v",
+			err,
+		)
+	}
 }

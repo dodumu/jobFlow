@@ -5,18 +5,24 @@ import (
 	"jobFlow/models"
 )
 
-func CreatePost(post models.Post) (int, error) {
-	result, err := DB.Exec(`
+func createPost(
+	exec DBExecutor,
+	post models.Post,
+) (int, error) {
+
+	result, err := exec.Exec(`
 		INSERT INTO posts (
 			user_id,
 			content,
-			type
+			type,
+			shared_post_id
 		)
-		VALUES (?, ?, ?)
+		VALUES (?, ?, ?, ?)
 	`,
 		post.UserID,
 		post.Content,
 		post.Type,
+		post.SharedPostID,
 	)
 
 	if err != nil {
@@ -29,6 +35,10 @@ func CreatePost(post models.Post) (int, error) {
 	}
 
 	return int(id), nil
+}
+
+func CreatePost(post models.Post) (int, error) {
+	return createPost(DB, post)
 }
 
 func GetPostByID(id int) (models.Post, error) {

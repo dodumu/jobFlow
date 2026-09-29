@@ -70,7 +70,10 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Printf("SharePostHandler GetPostByID error: %v", err)
+		log.Printf(
+			"SharePostHandler GetPostByID error: %v",
+			err,
+		)
 
 		RenderError(
 			w,
@@ -81,15 +84,27 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Record the share.
+	// Record which user shared the original post.
 	share := models.PostShare{
 		PostID: id,
 		UserID: userID,
 	}
 
-	_, err = database.CreatePostShare(share)
+	// Create the feed post representing the share.
+	sharedPost := models.Post{
+		UserID:       &userID,
+		Content:      "",
+		Type:         "normal",
+		SharedPostID: &originalPost.ID,
+	}
+
+	// Both writes happen inside one database transaction.
+	err = database.SharePost(share, sharedPost)
 	if err != nil {
-		log.Printf("SharePostHandler CreatePostShare error: %v", err)
+		log.Printf(
+			"SharePostHandler SharePost error: %v",
+			err,
+		)
 
 		RenderError(
 			w,
@@ -100,26 +115,10 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create a new post representing the share.
-	sharedPost := models.Post{
-		UserID:       &userID,
-		Content:      originalPost.Content,
-		Type:         originalPost.Type,
-		SharedPostID: &originalPost.ID,
-	}
-
-	_, err = database.CreatePost(sharedPost)
-	if err != nil {
-		log.Printf("SharePostHandler CreatePost error: %v", err)
-
-		RenderError(
-			w,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't create the shared post right now.",
-		)
-		return
-	}
-
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	http.Redirect(
+		w,
+		r,
+		"/dashboard",
+		http.StatusSeeOther,
+	)
 }
