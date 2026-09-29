@@ -4,19 +4,44 @@ import (
 	"jobFlow/models"
 )
 
-func CreateUser(user models.User) (int, error) {
-	query := `INSERT INTO users (username, password_hash, first_name, last_name, email, date_of_birth, role)  VALUES(?, ?, ?, ?, ?, ?, ?)`
-	res, err := DB.Exec(query, user.Username, user.PasswordHash, user.FirstName, user.LastName, user.Email, user.DOB, user.Role)
+func createUser(exec DBExecutor, user models.User) (int, error) {
+	query := `
+		INSERT INTO users (
+			username,
+			password_hash,
+			first_name,
+			last_name,
+			email,
+			date_of_birth,
+			role
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+	`
+
+	res, err := exec.Exec(
+		query,
+		user.Username,
+		user.PasswordHash,
+		user.FirstName,
+		user.LastName,
+		user.Email,
+		user.DOB,
+		user.Role,
+	)
 	if err != nil {
 		return 0, err
 	}
+
 	id, err := res.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
+
 	return int(id), nil
 }
-
+func CreateUser(user models.User) (int, error) {
+	return createUser(DB, user)
+}
 func GetUserByID(id int) (models.User, error) {
 	query := `SELECT id, first_name, last_name, username, password_hash, email, date_of_birth, role, created_at
 	FROM users

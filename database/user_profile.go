@@ -5,8 +5,12 @@ import (
 	"jobFlow/models"
 )
 
-func CreateUserProfile(profile models.UserProfile) (int, error) {
-	result, err := DB.Exec(`
+func createUserProfile(
+	exec DBExecutor,
+	profile models.UserProfile,
+) (int, error) {
+
+	result, err := exec.Exec(`
 		INSERT INTO user_profiles (
 			user_id,
 			profile_picture,
@@ -34,7 +38,9 @@ func CreateUserProfile(profile models.UserProfile) (int, error) {
 
 	return int(id), nil
 }
-
+func CreateUserProfile(profile models.UserProfile) (int, error) {
+	return createUserProfile(DB, profile)
+}
 func GetUserProfileByUserID(userID int) (models.UserProfile, error) {
 	var profile models.UserProfile
 

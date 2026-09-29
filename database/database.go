@@ -7,6 +7,10 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+type DBExecutor interface {
+	Exec(query string, args ...any) (sql.Result, error)
+}
+
 var DB *sql.DB
 
 func InitDB(path string) error {

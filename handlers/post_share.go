@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"jobFlow/database"
-	"jobFlow/middleware"
 	"jobFlow/models"
+	"jobFlow/utils"
 	"log"
 	"net/http"
 	"strconv"
@@ -23,7 +23,7 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,

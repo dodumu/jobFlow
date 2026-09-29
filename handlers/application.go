@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"jobFlow/constants"
 	"jobFlow/database"
-	"jobFlow/middleware"
 	"jobFlow/models"
 	"jobFlow/utils"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 type ApplicationDetailsData struct {
@@ -29,7 +27,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,
@@ -132,7 +130,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,
@@ -177,7 +175,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	applicationID, err := strconv.Atoi(r.PathValue("id"))
+	applicationID, err := utils.GetPathID(r, "id")
 	if err != nil || applicationID <= 0 {
 		RenderError(
 			w,
@@ -260,7 +258,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,
@@ -305,7 +303,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		return
 	}
 
-	applicationID, err := strconv.Atoi(r.PathValue("id"))
+	applicationID, err := utils.GetPathID(r, "id")
 	if err != nil || applicationID <= 0 {
 		RenderError(
 			w,

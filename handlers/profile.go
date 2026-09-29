@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"jobFlow/database"
-	"jobFlow/middleware"
 	"jobFlow/models"
 	"jobFlow/utils"
 )
@@ -24,7 +23,7 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,
@@ -218,7 +217,7 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,

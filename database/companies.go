@@ -5,7 +5,11 @@ import (
 	"jobFlow/models"
 )
 
-func CreateCompany(company models.Company) (int, error) {
+func createCompany(
+	exec DBExecutor,
+	company models.Company,
+) (int, error) {
+
 	query := `
 		INSERT INTO companies (
 			user_id,
@@ -22,7 +26,7 @@ func CreateCompany(company models.Company) (int, error) {
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	res, err := DB.Exec(
+	res, err := exec.Exec(
 		query,
 		company.UserID,
 		company.CompanyName,
@@ -45,6 +49,10 @@ func CreateCompany(company models.Company) (int, error) {
 	}
 
 	return int(id), nil
+}
+
+func CreateCompany(company models.Company) (int, error) {
+	return createCompany(DB, company)
 }
 
 func GetCompanyByID(id int) (models.Company, error) {

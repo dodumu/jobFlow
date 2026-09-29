@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"jobFlow/database"
-	"jobFlow/middleware"
 	"jobFlow/models"
+	"jobFlow/utils"
 	"log"
 	"net/http"
 	"strconv"
@@ -23,8 +23,7 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,
@@ -100,7 +99,7 @@ func GetCommentsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, ok := r.Context().Value(middleware.UserIDKey).(int)
+	_, ok := utils.GetUserID(r)
 	if !ok {
 		writeJSONError(
 			w,
@@ -160,7 +159,7 @@ func DeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		writeJSONError(
 			w,

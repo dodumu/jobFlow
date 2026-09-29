@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"jobFlow/database"
-	"jobFlow/middleware"
 	"jobFlow/models"
 	"jobFlow/utils"
 )
@@ -21,7 +20,7 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,

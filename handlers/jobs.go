@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"jobFlow/constants"
 	"jobFlow/database"
-	"jobFlow/middleware"
 	"jobFlow/models"
 	"jobFlow/utils"
 	"log"
@@ -27,7 +26,7 @@ func JobsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,
@@ -129,7 +128,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,
@@ -178,7 +177,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,
@@ -344,7 +343,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,
@@ -534,8 +533,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,
@@ -546,7 +544,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jobID, err := strconv.Atoi(r.PathValue("id"))
+	jobID, err := utils.GetPathID(r, "id")
 	if err != nil || jobID <= 0 {
 		RenderError(
 			w,
@@ -639,7 +637,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value(middleware.UserIDKey).(int)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		RenderError(
 			w,

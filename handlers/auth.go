@@ -17,10 +17,9 @@ var validRoles = map[string]bool{
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		err := utils.RenderTemplate(w, "register.html", nil)
-		if err != nil {
+		if err := utils.RenderTemplate(w, "register.html", nil); err != nil {
 			log.Printf("RegisterHandler template error: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
 		}
 		return
 	}
@@ -35,6 +34,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get user registration fields.
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	firstName := r.FormValue("first_name")
@@ -43,6 +43,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	dob := r.FormValue("date_of_birth")
 	role := r.FormValue("role")
 
+	// Validate required user fields.
 	if role == "" ||
 		username == "" ||
 		password == "" ||
@@ -70,55 +71,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashPassword, err := utils.HashPassword(password)
-	if err != nil {
-		log.Printf("RegisterHandler HashPassword error: %v", err)
-		RenderError(
-			w,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't create your account right now.",
-		)
-		return
-	}
-
-	user := models.User{
-		Username:     username,
-		PasswordHash: hashPassword,
-		FirstName:    firstName,
-		LastName:     lastName,
-		Email:        email,
-		DOB:          dob,
-		Role:         role,
-	}
-
-	id, err := database.CreateUser(user)
-	if err != nil {
-		log.Printf("RegisterHandler CreateUser error: %v", err)
-		RenderError(
-			w,
-			http.StatusInternalServerError,
-			"Registration Failed",
-			"We couldn't create your account right now.",
-		)
-		return
-	}
-
-	profile := models.UserProfile{
-		UserID: id,
-	}
-
-	_, err = database.CreateUserProfile(profile)
-	if err != nil {
-		log.Printf("RegisterHandler CreateUserProfile error: %v", err)
-		RenderError(
-			w,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't finish setting up your profile.",
-		)
-		return
-	}
+	// Validate company information BEFORE writing anything to the database.
+	var company *models.Company
 
 	if role == constants.RoleCompany {
 		industry := r.FormValue("industry")
@@ -145,8 +99,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		company := models.Company{
-			UserID:      id,
+		company = &models.Company{
 			CompanyName: companyName,
 			Description: description,
 			Website:     website,
@@ -156,18 +109,51 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			FoundedYear: 0,
 			CompanySize: companySize,
 		}
+	}
 
-		_, err := database.CreateCompany(company)
-		if err != nil {
-			log.Printf("RegisterHandler CreateCompany error: %v", err)
-			RenderError(
-				w,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't finish setting up your company account.",
-			)
-			return
-		}
+	// Hash the password only after validation succeeds.
+	hashPassword, err := utils.HashPassword(password)
+	if err != nil {
+		log.Printf("RegisterHandler HashPassword error: %v", err)
+
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't create your account right now.",
+		)
+		return
+	}
+
+	user := models.User{
+		Username:     username,
+		PasswordHash: hashPassword,
+		FirstName:    firstName,
+		LastName:     lastName,
+		Email:        email,
+		DOB:          dob,
+		Role:         role,
+	}
+
+	// UserID will be assigned inside CreateAccount after the user is created.
+	profile := models.UserProfile{}
+
+	// Create the complete account in a single database transaction.
+	_, err = database.CreateAccount(
+		user,
+		profile,
+		company,
+	)
+	if err != nil {
+		log.Printf("RegisterHandler CreateAccount error: %v", err)
+
+		RenderError(
+			w,
+			http.StatusInternalServerError,
+			"Registration Failed",
+			"We couldn't create your account right now.",
+		)
+		return
 	}
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
