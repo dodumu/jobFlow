@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"jobFlow/models"
 )
@@ -69,7 +70,6 @@ func GetPostByID(id int) (models.Post, error) {
 
 	return post, nil
 }
-
 func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 	rows, err := DB.Query(`
 		SELECT
@@ -78,47 +78,85 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 			p.company_id,
 			p.content,
 			p.type,
+			p.shared_post_id,
 			p.created_at,
 			p.updated_at,
 
-			u.first_name,
-			u.last_name,
-			u.username,
+			-- Current post author
+			COALESCE(u.first_name, '') AS author_first_name,
+			COALESCE(u.last_name, '') AS author_last_name,
+			COALESCE(u.username, '') AS author_username,
 
-			COUNT(DISTINCT pl.user_id) AS like_count,
-			COUNT(DISTINCT c.id) AS comment_count,
-			COUNT(DISTINCT ps.id) AS share_count,
+			-- Engagement
+			(
+				SELECT COUNT(*)
+				FROM post_likes pl
+				WHERE pl.post_id = p.id
+			) AS like_count,
+
+			(
+				SELECT COUNT(*)
+				FROM comments c
+				WHERE c.post_id = p.id
+			) AS comment_count,
+
+			(
+				SELECT COUNT(*)
+				FROM post_shares ps
+				WHERE ps.post_id = p.id
+			) AS share_count,
 
 			EXISTS (
 				SELECT 1
 				FROM post_likes ul
 				WHERE ul.post_id = p.id
 				AND ul.user_id = ?
-			) AS has_liked
+			) AS has_liked,
+
+			-- Original post author type
+			CASE
+				WHEN original_post.company_id IS NOT NULL THEN 'company'
+				WHEN original_post.user_id IS NOT NULL THEN 'user'
+				ELSE ''
+			END AS original_author_type,
+
+			-- Original individual author
+			COALESCE(original_user.first_name, '') AS original_first_name,
+			COALESCE(original_user.last_name, '') AS original_last_name,
+			COALESCE(original_user.username, '') AS original_username,
+
+			-- Original company author
+			COALESCE(original_company.company_name, '') AS original_company_name,
+			COALESCE(original_company.logo, '') AS original_company_logo,
+
+			-- Original post
+			COALESCE(original_post.content, '') AS original_content,
+			COALESCE(original_post.type, '') AS original_type
 
 		FROM posts p
 
 		LEFT JOIN users u
 			ON u.id = p.user_id
 
-		LEFT JOIN post_likes pl
-			ON pl.post_id = p.id
+		LEFT JOIN posts original_post
+			ON original_post.id = p.shared_post_id
 
-		LEFT JOIN comments c
-			ON c.post_id = p.id
+		LEFT JOIN users original_user
+			ON original_user.id = original_post.user_id
 
-		LEFT JOIN post_shares ps
-			ON ps.post_id = p.id
+		LEFT JOIN companies original_company
+			ON original_company.id = original_post.company_id
 
 		WHERE p.user_id = ?
-
-		GROUP BY p.id
 
 		ORDER BY p.created_at DESC
 	`, userID, userID)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(
+			"getting posts by user ID: %w",
+			err,
+		)
 	}
 	defer rows.Close()
 
@@ -126,6 +164,7 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 
 	for rows.Next() {
 		var post models.FeedPost
+		var sharedPostID sql.NullInt64
 
 		err := rows.Scan(
 			&post.ID,
@@ -133,6 +172,7 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 			&post.CompanyID,
 			&post.Content,
 			&post.Type,
+			&sharedPostID,
 			&post.CreatedAt,
 			&post.UpdatedAt,
 
@@ -143,12 +183,31 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 			&post.LikeCount,
 			&post.CommentCount,
 			&post.ShareCount,
-
 			&post.HasLiked,
+
+			&post.OriginalAuthorType,
+
+			&post.OriginalAuthorFirstName,
+			&post.OriginalAuthorLastName,
+			&post.OriginalAuthorUsername,
+
+			&post.OriginalCompanyName,
+			&post.OriginalCompanyLogo,
+
+			&post.OriginalContent,
+			&post.OriginalType,
 		)
 
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf(
+				"scanning user post: %w",
+				err,
+			)
+		}
+
+		if sharedPostID.Valid {
+			id := int(sharedPostID.Int64)
+			post.SharedPostID = &id
 		}
 
 		post.AuthorType = "user"
@@ -158,7 +217,10 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf(
+			"iterating user posts: %w",
+			err,
+		)
 	}
 
 	return posts, nil

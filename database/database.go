@@ -14,28 +14,28 @@ type DBExecutor interface {
 var DB *sql.DB
 
 func InitDB(path string) error {
-	db, err := sql.Open("sqlite", path)
+	dsn := path + "?_pragma=foreign_keys(1)"
+
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return fmt.Errorf("opening database: %w", err)
 	}
 
-	err = db.Ping()
-	if err != nil {
+	if err := db.Ping(); err != nil {
 		db.Close()
 		return fmt.Errorf("pinging database: %w", err)
 	}
 
-	_, err = db.Exec("PRAGMA foreign_keys = ON")
-	if err != nil {
-		db.Close()
-		return fmt.Errorf("enabling foreign keys: %w", err)
-	}
-
 	DB = db
 
-	return CreateTables()
-}
+	if err := CreateTables(); err != nil {
+		db.Close()
+		DB = nil
+		return fmt.Errorf("initializing database: %w", err)
+	}
 
+	return nil
+}
 func CreateTables() error {
 	query := `
 	CREATE TABLE IF NOT EXISTS users (
@@ -98,7 +98,7 @@ func CreateTables() error {
 		user_id INTEGER NOT NULL,
 		cover_letter TEXT NOT NULL,
 		status TEXT NOT NULL DEFAULT 'pending'
-			CHECK (status IN ('pending', 'accepted', 'rejected')),
+			CHECK (status IN ('pending', 'accepted', 'rejected', 'withrawn')),
 		applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME,
 

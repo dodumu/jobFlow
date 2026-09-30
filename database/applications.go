@@ -24,14 +24,13 @@ func CreateApplication(application models.Application) (int, error) {
 		application.Status,
 	)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("creating application: %w", err)
 	}
 
 	id, err := res.LastInsertId()
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("getting application ID: %w", err)
 	}
-
 	return int(id), nil
 }
 
@@ -46,7 +45,10 @@ func GetApplicationByID(id int) (models.Application, error) {
 		&application.AppliedAt,
 		&application.UpdatedAt)
 	if err != nil {
-		return models.Application{}, err
+		return models.Application{}, fmt.Errorf(
+			"getting application by ID: %w",
+			err,
+		)
 	}
 	return application, nil
 }
@@ -56,7 +58,7 @@ func GetApplicationByUserID(UserID int) ([]models.Application, error) {
 
 	res, err := DB.Query(query, UserID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting user applications: %w", err)
 	}
 	defer res.Close()
 	var applications []models.Application
@@ -70,13 +72,12 @@ func GetApplicationByUserID(UserID int) ([]models.Application, error) {
 			&application.AppliedAt,
 			&application.UpdatedAt)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("scanning application: %w", err)
 		}
 		applications = append(applications, application)
 	}
-	err = res.Err()
-	if err != nil {
-		return nil, err
+	if err := res.Err(); err != nil {
+		return nil, fmt.Errorf("iterating applications: %w", err)
 	}
 	return applications, nil
 }
@@ -86,7 +87,7 @@ func GetApplicationsByJobID(JobID int) ([]models.Application, error) {
 
 	res, err := DB.Query(query, JobID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting user applications: %w", err)
 	}
 	defer res.Close()
 	var applications []models.Application
@@ -100,13 +101,12 @@ func GetApplicationsByJobID(JobID int) ([]models.Application, error) {
 			&application.AppliedAt,
 			&application.UpdatedAt)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("scanning application: %w", err)
 		}
 		applications = append(applications, application)
 	}
-	err = res.Err()
-	if err != nil {
-		return nil, err
+	if err := res.Err(); err != nil {
+		return nil, fmt.Errorf("iterating applications: %w", err)
 	}
 	return applications, nil
 }
@@ -118,7 +118,7 @@ func UpdateApplicationStatus(id int, status string) error {
 
 	res, err := DB.Exec(query, status, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("updating application status: %w", err)
 	}
 
 	rows, err := res.RowsAffected()
@@ -164,7 +164,7 @@ func HasUserApplied(jobID int, userID int) (bool, error) {
 
 	err := DB.QueryRow(query, jobID, userID).Scan(&exists)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("checking whether user applied: %w", err)
 	}
 
 	return exists, nil
