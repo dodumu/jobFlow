@@ -18,10 +18,10 @@ func CreateAccount(
 			err,
 		)
 	}
-
+	defer tx.Rollback()
 	userID, err := createUser(tx, user)
 	if err != nil {
-		tx.Rollback()
+
 		return 0, fmt.Errorf("creating user: %w", err)
 	}
 
@@ -29,7 +29,7 @@ func CreateAccount(
 
 	_, err = createUserProfile(tx, profile)
 	if err != nil {
-		tx.Rollback()
+
 		return 0, fmt.Errorf("creating user profile: %w", err)
 	}
 
@@ -38,7 +38,7 @@ func CreateAccount(
 
 		_, err = createCompany(tx, *company)
 		if err != nil {
-			tx.Rollback()
+
 			return 0, fmt.Errorf("creating company: %w", err)
 		}
 	}

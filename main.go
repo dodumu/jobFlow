@@ -6,10 +6,15 @@ import (
 	"jobFlow/middleware"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
-	err := database.InitDB("database.db")
+	databasePath := os.Getenv("DATABASE_PATH")
+	if databasePath == "" {
+		databasePath = "database.db"
+	}
+	err := database.InitDB(databasePath)
 	if err != nil {
 		log.Println(err)
 	}
@@ -167,7 +172,14 @@ func main() {
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 
-	log.Println("server is running on :8081")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8081"
+	}
+	address := ":" + port
+	log.Printf("server is running on %s", address)
 
-	http.ListenAndServe(":8081", nil)
+	if err := http.ListenAndServe(address, nil); err != nil {
+		log.Fatal("server failed %v", err)
+	}
 }

@@ -38,9 +38,10 @@ func createUserProfile(
 
 	return int(id), nil
 }
-func CreateUserProfile(profile models.UserProfile) (int, error) {
-	return createUserProfile(DB, profile)
-}
+
+//	func CreateUserProfile(profile models.UserProfile) (int, error) {
+//		return createUserProfile(DB, profile)
+//	}
 func GetUserProfileByUserID(userID int) (models.UserProfile, error) {
 	var profile models.UserProfile
 

@@ -98,7 +98,7 @@ func CreateTables() error {
 		user_id INTEGER NOT NULL,
 		cover_letter TEXT NOT NULL,
 		status TEXT NOT NULL DEFAULT 'pending'
-			CHECK (status IN ('pending', 'accepted', 'rejected', 'withrawn')),
+			CHECK (status IN ('pending', 'accepted', 'rejected', 'withdrawn')),
 		applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME,
 

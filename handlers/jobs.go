@@ -300,7 +300,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 			SalaryMin:      minSalary,
 			SalaryMax:      maxSalary,
 			Deadline:       deadline,
-			Status:         "open",
+			Status:         constants.JobStatusOpen,
 		}
 
 		newJob, err := database.CreateJob(job)
@@ -333,7 +333,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 }
 func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
-		log.Printf("Request Method: %v", r.Method)
+
 		RenderError(
 			w,
 			http.StatusMethodNotAllowed,

@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"jobFlow/constants"
 	"jobFlow/models"
 )
 
@@ -141,8 +142,8 @@ func UpdateJob(id int, job models.Job) error {
 }
 
 func CloseJob(id int) error {
-	query := `UPDATE jobs SET status = 'closed', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'open'`
-	res, err := DB.Exec(query, id)
+	query := `UPDATE jobs SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = ?`
+	res, err := DB.Exec(query, constants.JobStatusClosed, id, constants.JobStatusOpen)
 	if err != nil {
 		return err
 	}

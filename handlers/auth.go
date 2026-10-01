@@ -246,7 +246,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
+		Name:     constants.SessionCookieName,
 		Value:    token,
 		Expires:  expires,
 		HttpOnly: true,

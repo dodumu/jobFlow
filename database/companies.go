@@ -51,9 +51,9 @@ func createCompany(
 	return int(id), nil
 }
 
-func CreateCompany(company models.Company) (int, error) {
-	return createCompany(DB, company)
-}
+// func CreateCompany(company models.Company) (int, error) {
+// 	return createCompany(DB, company)
+// }
 
 func GetCompanyByID(id int) (models.Company, error) {
 	query := `SELECT id, user_id, company_name, description, website, location, logo, created_at  FROM companies  WHERE id = ?`

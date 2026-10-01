@@ -42,3 +42,9 @@ type FeedPost struct {
 	OriginalContent         string
 	OriginalType            string
 }
+
+type HomePageData struct {
+	User          User
+	CurrentUserID int
+	Posts         []FeedPost
+}

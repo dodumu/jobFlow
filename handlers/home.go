@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"jobFlow/database"
+	"jobFlow/models"
 	"jobFlow/utils"
 )
 
@@ -54,11 +55,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := struct {
-		User          any
-		CurrentUserID int
-		Posts         any
-	}{
+	data := models.HomePageData{
 		User:          user,
 		CurrentUserID: userID,
 		Posts:         posts,

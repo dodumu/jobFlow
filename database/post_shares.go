@@ -34,9 +34,9 @@ func createPostShare(
 	return int(id), nil
 }
 
-func CreatePostShare(share models.PostShare) (int, error) {
-	return createPostShare(DB, share)
-}
+//	func CreatePostShare(share models.PostShare) (int, error) {
+//		return createPostShare(DB, share)
+//	}
 func SharePost(
 	share models.PostShare,
 	sharedPost models.Post,

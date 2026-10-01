@@ -39,9 +39,10 @@ func createUser(exec DBExecutor, user models.User) (int, error) {
 
 	return int(id), nil
 }
-func CreateUser(user models.User) (int, error) {
-	return createUser(DB, user)
-}
+
+//	func CreateUser(user models.User) (int, error) {
+//		return createUser(DB, user)
+//	}
 func GetUserByID(id int) (models.User, error) {
 	query := `SELECT id, first_name, last_name, username, password_hash, email, date_of_birth, role, created_at
 	FROM users
