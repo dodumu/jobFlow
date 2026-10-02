@@ -164,9 +164,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		err := utils.RenderTemplate(w, "login.html", nil)
 		if err != nil {
 			log.Printf("LoginHandler template error: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
 		}
-		return
+
 	}
 
 	if r.Method != http.MethodPost {
@@ -250,7 +250,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    token,
 		Expires:  expires,
 		HttpOnly: true,
+		Secure:   utils.IsProduction(),
 		Path:     "/",
+		MaxAge:   -1,
 		SameSite: http.SameSiteLaxMode,
 	})
 

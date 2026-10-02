@@ -169,6 +169,9 @@ func main() {
 			http.HandlerFunc(handlers.RejectApplicationHandler),
 		),
 	)
+	http.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	})
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
 
@@ -180,6 +183,6 @@ func main() {
 	log.Printf("server is running on %s", address)
 
 	if err := http.ListenAndServe(address, nil); err != nil {
-		log.Fatal("server failed %v", err)
+		log.Fatal("server failed: ", err)
 	}
 }
