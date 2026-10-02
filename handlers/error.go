@@ -16,8 +16,10 @@ func RenderError(w http.ResponseWriter, statusCode int, title string, message st
 
 	w.WriteHeader(statusCode)
 	err := utils.RenderTemplate(w, "error.html", pageError)
-	log.Printf(
-		"ApplicationHandler RenderTemplate error.html error: %v",
-		err,
-	)
+	if err != nil {
+		log.Printf(
+			"ApplicationHandler RenderTemplate error.html error: %v",
+			err,
+		)
+	}
 }
