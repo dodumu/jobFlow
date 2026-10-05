@@ -184,19 +184,72 @@
          ========================= */
 
     @media (max-width: 768px) {
-      .navbar-inner {
-        width: 92%;
-      }
+  .navbar {
+    height: auto;
+    min-height: 64px;
+  }
 
-      .container {
-        width: 92%;
-        padding-top: 20px;
-      }
+  .navbar-inner {
+    width: 92%;
+    min-height: 64px;
+    position: relative;
+  }
 
-      .nav-link {
-        padding: 8px 9px;
-      }
-    }
+  .container {
+    width: 92%;
+    padding: 20px 0 40px;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .nav-links {
+    display: none;
+
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+
+    flex-direction: column;
+    align-items: stretch;
+
+    padding: 12px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0 0 10px 10px;
+
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .nav-link {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .nav-links form {
+    width: 100%;
+  }
+
+  .logout-button {
+    text-align: left;
+  }
+
+  .public-nav {
+    display: flex;
+  }
+
+  .public-nav .nav-link {
+    width: auto;
+    padding: 8px 9px;
+  }
+}
 
     .logout-button {
       background: transparent;
@@ -208,6 +261,19 @@
       color: var(--danger);
       background: #fef2f2;
     }
+    .menu-toggle {
+  display: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 26px;
+  padding: 6px 10px;
+}
+
+.public-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
   </style>
 </head>
 
@@ -218,7 +284,9 @@
       {{if isAuthenticated}}
 
       <a href="/dashboard" class="brand">JobFlow</a>
-
+      <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false">
+        ☰
+      </button>
       <div class="nav-links">
         <a href="/home" class="nav-link">Home</a>
         <a href="/dashboard" class="nav-link">Dashboard</a>
