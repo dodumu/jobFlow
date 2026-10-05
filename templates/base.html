@@ -59,8 +59,8 @@
     }
 
     /* =========================
-         NAVBAR
-         ========================= */
+       NAVBAR
+       ========================= */
 
     .navbar {
       position: sticky;
@@ -98,7 +98,6 @@
     .nav-links {
       display: flex;
       align-items: center;
-
       gap: 8px;
     }
 
@@ -127,9 +126,46 @@
       background: #eff6ff;
     }
 
+    .logout-button {
+      background: transparent;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .logout-button:hover {
+      color: var(--danger);
+      background: #fef2f2;
+    }
+
+    /* Hidden on desktop */
+    .menu-toggle {
+      display: none;
+
+      background: transparent;
+      color: var(--text);
+
+      font-size: 26px;
+      line-height: 1;
+
+      padding: 6px 10px;
+
+      border-radius: 8px;
+    }
+
+    .menu-toggle:hover {
+      background: var(--soft);
+    }
+
+    /* Navigation shown when logged out */
+    .public-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     /* =========================
-         MAIN CONTAINER
-         ========================= */
+       MAIN CONTAINER
+       ========================= */
 
     .container {
       width: min(1200px, 94%);
@@ -140,8 +176,8 @@
     }
 
     /* =========================
-         BUTTONS
-         ========================= */
+       BUTTONS
+       ========================= */
 
     .btn-primary {
       background: var(--primary);
@@ -179,25 +215,12 @@
       background: var(--soft);
     }
 
-    .menu-toggle {
-      display: none;
-      background: transparent;
-      color: var(--text);
-      font-size: 26px;
-      padding: 6px 10px;
-    }
-
-    .public-nav {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
     /* =========================
-         RESPONSIVE
-         ========================= */
+       MOBILE
+       ========================= */
 
     @media (max-width: 768px) {
+
       .navbar {
         height: auto;
         min-height: 64px;
@@ -206,6 +229,7 @@
       .navbar-inner {
         width: 92%;
         min-height: 64px;
+
         position: relative;
       }
 
@@ -214,14 +238,18 @@
         padding: 20px 0 40px;
       }
 
+      /* Show hamburger on mobile */
       .menu-toggle {
         display: block;
       }
 
+      /* Hide authenticated links until
+         hamburger is opened */
       .nav-links {
         display: none;
 
         position: absolute;
+
         top: 64px;
         left: 0;
         right: 0;
@@ -232,12 +260,14 @@
         padding: 12px;
 
         background: var(--surface);
+
         border: 1px solid var(--border);
         border-radius: 0 0 10px 10px;
 
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
       }
 
+      /* JavaScript adds this class */
       .nav-links.open {
         display: flex;
       }
@@ -252,9 +282,11 @@
       }
 
       .logout-button {
+        width: 100%;
         text-align: left;
       }
 
+      /* Public navigation stays visible */
       .public-nav {
         display: flex;
       }
@@ -264,64 +296,80 @@
         padding: 8px 9px;
       }
     }
-
-    .logout-button {
-      background: transparent;
-      font-family: inherit;
-      cursor: pointer;
-    }
-
-    .logout-button:hover {
-      color: var(--danger);
-      background: #fef2f2;
-    }
   </style>
 </head>
-<script>
-  const menuToggle = document.querySelector(".menu-toggle");
-  const navLinks = document.querySelector(".nav-links");
-
-  if (menuToggle && navLinks) {
-    menuToggle.addEventListener("click", function () {
-      const isOpen = navLinks.classList.toggle("open");
-
-      menuToggle.setAttribute("aria-expanded", isOpen);
-      menuToggle.textContent = isOpen ? "✕" : "☰";
-    });
-  }
-</script>
 
 <body>
+
   <nav class="navbar">
     <div class="navbar-inner">
 
       {{if isAuthenticated}}
 
-      <a href="/dashboard" class="brand">JobFlow</a>
-      <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false">
+      <!-- Authenticated navigation -->
+
+      <a href="/dashboard" class="brand">
+        JobFlow
+      </a>
+
+      <button
+        class="menu-toggle"
+        type="button"
+        aria-label="Open navigation menu"
+        aria-expanded="false">
         ☰
       </button>
+
       <div class="nav-links">
-        <a href="/home" class="nav-link">Home</a>
-        <a href="/dashboard" class="nav-link">Dashboard</a>
-        <a href="/profile" class="nav-link">Profile</a>
-        <a href="/jobs" class="nav-link">Jobs</a>
-        <a href="/applications" class="nav-link">Applications</a>
+
+        <a href="/home" class="nav-link">
+          Home
+        </a>
+
+        <a href="/dashboard" class="nav-link">
+          Dashboard
+        </a>
+
+        <a href="/profile" class="nav-link">
+          Profile
+        </a>
+
+        <a href="/jobs" class="nav-link">
+          Jobs
+        </a>
+
+        <a href="/applications" class="nav-link">
+          Applications
+        </a>
 
         <form action="/logout" method="POST">
-          <button type="submit" class="nav-link logout-button">
+          <button
+            type="submit"
+            class="nav-link logout-button">
             Logout
           </button>
         </form>
+
       </div>
 
       {{else}}
 
-      <a href="/" class="brand">JobFlow</a>
+      <!-- Public navigation -->
 
-      <div class="nav-links">
-        <a href="/login" class="nav-link">Login</a>
-        <a href="/register" class="nav-link">Register</a>
+      <a href="/" class="brand">
+        JobFlow
+      </a>
+
+      <div class="public-nav">
+
+        <a href="/login" class="nav-link">
+          Login
+        </a>
+
+        <a href="/register" class="nav-link">
+          Register
+        </a>
+
       </div>
 
       {{end}}
@@ -329,7 +377,33 @@
     </div>
   </nav>
 
-  <main class="container">{{template "content" .}}</main>
+
+  <main class="container">
+    {{template "content" .}}
+  </main>
+
+
+  <script>
+    const menuToggle = document.querySelector(".menu-toggle");
+    const navLinks = document.querySelector(".nav-links");
+
+    if (menuToggle && navLinks) {
+
+      menuToggle.addEventListener("click", function () {
+
+        const isOpen = navLinks.classList.toggle("open");
+
+        menuToggle.setAttribute(
+          "aria-expanded",
+          isOpen
+        );
+
+        menuToggle.textContent = isOpen ? "✕" : "☰";
+      });
+
+    }
+  </script>
+
 </body>
 
 </html>
