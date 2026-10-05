@@ -17,9 +17,9 @@ var validRoles = map[string]bool{
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		err := utils.RenderTemplate(w, r, "login.html", nil)
-		if err != nil {
-			log.Printf("LoginHandler template error: %v", err)
+		if err := utils.RenderTemplate(w, r, "register.html", nil); err != nil {
+			log.Printf("RegisterHandler template error: %v", err)
+			return
 		}
 		return
 	}
@@ -172,6 +172,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("LoginHandler template error: %v", err)
 			return
 		}
+		return
 
 	}
 
