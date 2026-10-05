@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -24,8 +25,20 @@ func RenderTemplate(
 
 	funcs := template.FuncMap{
 		"formatDate": templateFuncs["formatDate"],
+
 		"isAuthenticated": func() bool {
 			return isAuthenticated
+		},
+
+		"isActive": func(path string) bool {
+			currentPath := r.URL.Path
+
+			if path == "/" {
+				return currentPath == "/"
+			}
+
+			return currentPath == path ||
+				strings.HasPrefix(currentPath, path+"/")
 		},
 	}
 

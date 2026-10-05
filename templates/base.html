@@ -113,12 +113,24 @@
 
       border-radius: 8px;
 
-      transition: 0.2s ease;
+      transition:
+        color 0.2s ease,
+        background-color 0.2s ease,
+        transform 0.15s ease;
     }
 
     .nav-link:hover {
       color: var(--primary);
       background: #eff6ff;
+    }
+
+    .nav-link:active {
+      transform: scale(0.96);
+    }
+
+    .nav-link:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
     }
 
     .nav-link.active {
@@ -238,7 +250,7 @@
         padding: 20px 0 40px;
       }
 
-      /* Show hamburger on mobile */
+      /* Show hamburger */
       .menu-toggle {
         display: block;
       }
@@ -267,7 +279,6 @@
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
       }
 
-      /* JavaScript adds this class */
       .nav-links.open {
         display: flex;
       }
@@ -286,7 +297,7 @@
         text-align: left;
       }
 
-      /* Public navigation stays visible */
+      /* Public navigation remains visible */
       .public-nav {
         display: flex;
       }
@@ -312,40 +323,34 @@
         JobFlow
       </a>
 
-      <button
-        class="menu-toggle"
-        type="button"
-        aria-label="Open navigation menu"
-        aria-expanded="false">
+      <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false">
         ☰
       </button>
 
       <div class="nav-links">
 
-        <a href="/home" class="nav-link">
+        <a href="/home" class="nav-link {{if isActive " /home"}}active{{end}}">
           Home
         </a>
 
-        <a href="/dashboard" class="nav-link">
+        <a href="/dashboard" class="nav-link {{if isActive " /dashboard"}}active{{end}}">
           Dashboard
         </a>
 
-        <a href="/profile" class="nav-link">
+        <a href="/profile" class="nav-link {{if isActive " /profile"}}active{{end}}">
           Profile
         </a>
 
-        <a href="/jobs" class="nav-link">
+        <a href="/jobs" class="nav-link {{if isActive " /jobs"}}active{{end}}">
           Jobs
         </a>
 
-        <a href="/applications" class="nav-link">
+        <a href="/applications" class="nav-link {{if isActive " /applications"}}active{{end}}">
           Applications
         </a>
 
         <form action="/logout" method="POST">
-          <button
-            type="submit"
-            class="nav-link logout-button">
+          <button type="submit" class="nav-link logout-button">
             Logout
           </button>
         </form>
@@ -377,11 +382,9 @@
     </div>
   </nav>
 
-
   <main class="container">
     {{template "content" .}}
   </main>
-
 
   <script>
     const menuToggle = document.querySelector(".menu-toggle");
