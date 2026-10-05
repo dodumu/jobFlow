@@ -252,7 +252,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   utils.IsProduction(),
 		Path:     "/",
-		MaxAge:   -1,
+
 		SameSite: http.SameSiteLaxMode,
 	})
 
