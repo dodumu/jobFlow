@@ -13,13 +13,29 @@ var templateFuncs = template.FuncMap{
 	},
 }
 
-func RenderTemplate(w http.ResponseWriter, page string, data any) error {
+func RenderTemplate(
+	w http.ResponseWriter,
+	r *http.Request,
+	page string,
+	data any,
+) error {
+
+	_, isAuthenticated := GetUserID(r)
+
+	funcs := template.FuncMap{
+		"formatDate": templateFuncs["formatDate"],
+		"isAuthenticated": func() bool {
+			return isAuthenticated
+		},
+	}
+
 	tmpl, err := template.New("base.html").
-		Funcs(templateFuncs).
+		Funcs(funcs).
 		ParseFiles(
 			"templates/base.html",
 			"templates/"+page,
 		)
+
 	if err != nil {
 		return fmt.Errorf("parsing template %s: %w", page, err)
 	}

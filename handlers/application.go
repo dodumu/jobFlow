@@ -20,6 +20,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed for this page.",
@@ -31,6 +32,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to view applications.",
@@ -43,6 +45,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ApplicationHandler GetUserByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load your account information.",
@@ -58,6 +61,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("ApplicationHandler GetApplicationsByUserID error: %v", err)
 			RenderError(
 				w,
+				r,
 				http.StatusInternalServerError,
 				"Something Went Wrong",
 				"We couldn't load your applications right now.",
@@ -65,7 +69,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = utils.RenderTemplate(w, "applications.html", applications)
+		err = utils.RenderTemplate(w, r, "applications.html", applications)
 		if err != nil {
 			log.Printf(
 				"ApplicationHandler RenderTemplate applications.html error: %v",
@@ -80,6 +84,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("ApplicationHandler GetCompanyByUserID error: %v", err)
 			RenderError(
 				w,
+				r,
 				http.StatusInternalServerError,
 				"Something Went Wrong",
 				"We couldn't load your company information.",
@@ -92,6 +97,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("ApplicationHandler GetApplicationsByCompanyID error: %v", err)
 			RenderError(
 				w,
+				r,
 				http.StatusInternalServerError,
 				"Something Went Wrong",
 				"We couldn't load your company's applications right now.",
@@ -99,7 +105,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = utils.RenderTemplate(w, "company_applications.html", applications)
+		err = utils.RenderTemplate(w, r, "company_applications.html", applications)
 		if err != nil {
 			log.Printf(
 				"ApplicationHandler RenderTemplate company_applications.html error: %v",
@@ -111,6 +117,7 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"You don't have permission to view this page.",
@@ -123,6 +130,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed for this page.",
@@ -134,6 +142,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to view this application.",
@@ -146,6 +155,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ViewApplicationHandler GetUserByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load your account information.",
@@ -156,6 +166,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if user.Role != constants.RoleCompany {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"Only company accounts can review applications.",
@@ -168,6 +179,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ViewApplicationHandler GetCompanyByUserID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load your company information.",
@@ -179,6 +191,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil || applicationID <= 0 {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Application",
 			"The application ID provided is invalid.",
@@ -190,6 +203,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		RenderError(
 			w,
+			r,
 			http.StatusNotFound,
 			"Application Not Found",
 			"The application you're looking for could not be found.",
@@ -202,6 +216,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ViewApplicationHandler GetJobByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusNotFound,
 			"Job Not Found",
 			"The job associated with this application could not be found.",
@@ -212,6 +227,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if job.CompanyID != company.ID {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"You don't have permission to view this application.",
@@ -224,6 +240,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ViewApplicationHandler applicant GetUserByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusNotFound,
 			"Applicant Not Found",
 			"The applicant associated with this application could not be found.",
@@ -237,7 +254,7 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		Applicant:   applicant,
 	}
 
-	err = utils.RenderTemplate(w, "application.html", data)
+	err = utils.RenderTemplate(w, r, "application.html", data)
 	if err != nil {
 		log.Printf(
 			"ApplicationHandler RenderTemplate application.html error: %v",
@@ -251,6 +268,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 	if r.Method != http.MethodPost {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed for this action.",
@@ -262,6 +280,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to review applications.",
@@ -274,6 +293,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		log.Printf("updateApplicationStatusHandler GetUserByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load your account information.",
@@ -284,6 +304,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 	if user.Role != constants.RoleCompany {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"Only company accounts can review applications.",
@@ -296,6 +317,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		log.Printf("updateApplicationStatusHandler GetCompanyByUserID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load your company information.",
@@ -307,6 +329,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 	if err != nil || applicationID <= 0 {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Application",
 			"The application ID provided is invalid.",
@@ -318,6 +341,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 	if err != nil {
 		RenderError(
 			w,
+			r,
 			http.StatusNotFound,
 			"Application Not Found",
 			"The application you're looking for could not be found.",
@@ -330,6 +354,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		log.Printf("updateApplicationStatusHandler GetJobByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusNotFound,
 			"Job Not Found",
 			"The job associated with this application could not be found.",
@@ -340,6 +365,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 	if company.ID != job.CompanyID {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"You don't have permission to review this application.",
@@ -350,6 +376,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 	if application.Status != constants.ApplicationStatusPending {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Application Already Reviewed",
 			"This application has already been accepted or rejected.",
@@ -362,6 +389,7 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		log.Printf("updateApplicationStatusHandler UpdateApplicationStatus error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't update the application status.",

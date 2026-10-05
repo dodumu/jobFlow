@@ -214,7 +214,10 @@
 <body>
   <nav class="navbar">
     <div class="navbar-inner">
-      <a href="/dashboard" class="brand"> JobFlow </a>
+
+      {{if isAuthenticated}}
+
+      <a href="/dashboard" class="brand">JobFlow</a>
 
       <div class="nav-links">
         <a href="/home" class="nav-link">Home</a>
@@ -222,12 +225,25 @@
         <a href="/profile" class="nav-link">Profile</a>
         <a href="/jobs" class="nav-link">Jobs</a>
         <a href="/applications" class="nav-link">Applications</a>
+
+        <form action="/logout" method="POST">
+          <button type="submit" class="nav-link logout-button">
+            Logout
+          </button>
+        </form>
       </div>
-      <form action="/logout" method="POST">
-        <button type="submit" class="nav-link logout-button">
-          Logout
-        </button>
-      </form>
+
+      {{else}}
+
+      <a href="/" class="brand">JobFlow</a>
+
+      <div class="nav-links">
+        <a href="/login" class="nav-link">Login</a>
+        <a href="/register" class="nav-link">Register</a>
+      </div>
+
+      {{end}}
+
     </div>
   </nav>
 

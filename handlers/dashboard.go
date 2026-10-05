@@ -13,6 +13,7 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed on this page.",
@@ -24,6 +25,7 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to view your dashboard.",
@@ -36,6 +38,7 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("DashboardHandler GetUserByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load your account information.",
@@ -48,6 +51,7 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("DashboardHandler GetPostsByUserID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load your posts right now.",
@@ -61,7 +65,7 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		Posts:         posts,
 	}
 
-	err = utils.RenderTemplate(w, "dashboard.html", data)
+	err = utils.RenderTemplate(w, r, "dashboard.html", data)
 	if err != nil {
 		log.Printf(
 			"DashboardHandler RenderTemplate dashboard.html error: %v",

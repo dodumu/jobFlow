@@ -24,6 +24,7 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed for this action.",
@@ -35,6 +36,7 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to create a post.",
@@ -48,6 +50,7 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	if content == "" {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Empty Post",
 			"Post content cannot be empty.",
@@ -58,6 +61,7 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	if !validPostTypes[postType] {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Post Type",
 			"Please select a valid post type.",
@@ -77,6 +81,7 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't create your post right now.",
@@ -91,6 +96,7 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed for this action.",
@@ -101,6 +107,7 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to like a post.",
@@ -113,6 +120,7 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if postID == "" {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Missing Post",
 			"A post ID is required.",
@@ -124,6 +132,7 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil || id <= 0 {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Post",
 			"The post ID provided is invalid.",
@@ -140,12 +149,14 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf(
 			"LikePostHandler LikePost error - postID=%d userID=%d: %v",
 			id,
+			r,
 			userID,
 			err,
 		)
 
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't like this post right now.",
@@ -160,6 +171,7 @@ func UnlikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed for this action.",
@@ -171,6 +183,7 @@ func UnlikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to unlike a post.",
@@ -183,6 +196,7 @@ func UnlikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if postID == "" {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Missing Post",
 			"A post ID is required.",
@@ -194,6 +208,7 @@ func UnlikePostHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil || id <= 0 {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Post",
 			"The post ID provided is invalid.",
@@ -211,6 +226,7 @@ func UnlikePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't unlike this post right now.",
@@ -225,6 +241,7 @@ func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed for this action.",
@@ -236,6 +253,7 @@ func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to delete a post.",
@@ -249,6 +267,7 @@ func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil || postID <= 0 {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Post",
 			"The post ID provided is invalid.",
@@ -261,6 +280,7 @@ func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, sql.ErrNoRows) {
 			RenderError(
 				w,
+				r,
 				http.StatusNotFound,
 				"Post Not Found",
 				"The post you're trying to delete could not be found.",
@@ -272,6 +292,7 @@ func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load this post right now.",
@@ -282,6 +303,7 @@ func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 	if post.UserID == nil {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"You don't have permission to delete this post.",
@@ -292,6 +314,7 @@ func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 	if *post.UserID != userID {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"You don't have permission to delete this post.",
@@ -304,6 +327,7 @@ func DeletePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't delete this post right now.",

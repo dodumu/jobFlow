@@ -10,6 +10,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed for this action.",
@@ -32,6 +33,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't log you out right now.",

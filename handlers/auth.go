@@ -17,7 +17,7 @@ var validRoles = map[string]bool{
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		if err := utils.RenderTemplate(w, "register.html", nil); err != nil {
+		if err := utils.RenderTemplate(w, r, "register.html", nil); err != nil {
 			log.Printf("RegisterHandler template error: %v", err)
 			return
 		}
@@ -27,6 +27,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed on this page.",
@@ -54,6 +55,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Missing Information",
 			"Please complete all required registration fields.",
@@ -64,6 +66,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if !validRoles[role] {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Account Type",
 			"Please select a valid account type.",
@@ -92,6 +95,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 			RenderError(
 				w,
+				r,
 				http.StatusBadRequest,
 				"Missing Company Information",
 				"Please complete all required company fields.",
@@ -118,6 +122,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't create your account right now.",
@@ -149,6 +154,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Registration Failed",
 			"We couldn't create your account right now.",
@@ -161,7 +167,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		err := utils.RenderTemplate(w, "login.html", nil)
+		err := utils.RenderTemplate(w, r, "login.html", nil)
 		if err != nil {
 			log.Printf("LoginHandler template error: %v", err)
 			return
@@ -172,6 +178,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed on this page.",
@@ -185,6 +192,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if username == "" || password == "" {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Missing Credentials",
 			"Username and password are required.",
@@ -196,6 +204,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Login Failed",
 			"Invalid username or password.",
@@ -206,6 +215,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if !utils.CheckPassword(user.PasswordHash, password) {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Login Failed",
 			"Invalid username or password.",
@@ -218,6 +228,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("LoginHandler GenerateToken error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't log you in right now.",
@@ -238,6 +249,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("LoginHandler CreateSession error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't create your login session.",

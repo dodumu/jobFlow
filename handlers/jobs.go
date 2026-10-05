@@ -19,6 +19,7 @@ func JobsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed on this page.",
@@ -30,6 +31,7 @@ func JobsHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to view jobs.",
@@ -42,7 +44,7 @@ func JobsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("JobsHandler GetUserByID error: %v", err)
 		RenderError(
 			w,
-			http.StatusInternalServerError,
+			r, http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load your account information.",
 		)
@@ -54,6 +56,7 @@ func JobsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("JobsHandler GetJobs error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load jobs right now.",
@@ -66,7 +69,7 @@ func JobsHandler(w http.ResponseWriter, r *http.Request) {
 		IsCompany: user.Role == constants.RoleCompany,
 	}
 
-	if err := utils.RenderTemplate(w, "jobs.html", data); err != nil {
+	if err := utils.RenderTemplate(w, r, "jobs.html", data); err != nil {
 		log.Printf("JobsHandler RenderTemplate jobs.html error: %v", err)
 		return
 	}
@@ -76,6 +79,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed on this page.",
@@ -88,6 +92,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	if idStr == "" {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Job",
 			"A valid job ID is required.",
@@ -99,6 +104,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil || id <= 0 {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Job",
 			"The job ID provided is invalid.",
@@ -111,6 +117,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, sql.ErrNoRows) {
 			RenderError(
 				w,
+				r,
 				http.StatusNotFound,
 				"Job Not Found",
 				"The job you're looking for could not be found.",
@@ -121,6 +128,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("JobDetailsHandler GetJobByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load this job right now.",
@@ -132,6 +140,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to view this job.",
@@ -144,6 +153,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("JobDetailsHandler GetUserByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load your account information.",
@@ -168,7 +178,7 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		UserRole: user.Role,
 	}
 
-	if err := utils.RenderTemplate(w, "job.html", data); err != nil {
+	if err := utils.RenderTemplate(w, r, "job.html", data); err != nil {
 		log.Printf(
 			"JobDetailsHandler RenderTemplate job.html error: %v",
 			err,
@@ -181,6 +191,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to create a job.",
@@ -192,6 +203,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"Only company accounts can create jobs.",
@@ -209,6 +221,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err := utils.RenderTemplate(
 			w,
+			r,
 			"create-job.html",
 			data,
 		); err != nil {
@@ -240,6 +253,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 
 			RenderError(
 				w,
+				r,
 				http.StatusBadRequest,
 				"Missing Information",
 				"Please complete all required job fields.",
@@ -251,6 +265,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil || minSalary < 0 {
 			RenderError(
 				w,
+				r,
 				http.StatusBadRequest,
 				"Invalid Salary",
 				"Minimum salary must be a valid non-negative number.",
@@ -262,6 +277,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil || maxSalary < 0 {
 			RenderError(
 				w,
+				r,
 				http.StatusBadRequest,
 				"Invalid Salary",
 				"Maximum salary must be a valid non-negative number.",
@@ -272,6 +288,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 		if minSalary > maxSalary {
 			RenderError(
 				w,
+				r,
 				http.StatusBadRequest,
 				"Invalid Salary Range",
 				"Minimum salary cannot be greater than maximum salary.",
@@ -283,6 +300,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			RenderError(
 				w,
+				r,
 				http.StatusBadRequest,
 				"Invalid Deadline",
 				"Please provide a valid application deadline.",
@@ -308,6 +326,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("CreateJobHandler CreateJob error: %v", err)
 			RenderError(
 				w,
+				r,
 				http.StatusInternalServerError,
 				"Something Went Wrong",
 				"We couldn't create the job right now.",
@@ -325,6 +344,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed on this page.",
@@ -336,6 +356,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed on this page.",
@@ -347,6 +368,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to edit a job.",
@@ -361,6 +383,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil || jobIDInt <= 0 {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Job",
 			"The job ID provided is invalid.",
@@ -373,6 +396,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, sql.ErrNoRows) {
 			RenderError(
 				w,
+				r,
 				http.StatusNotFound,
 				"Job Not Found",
 				"The job you're looking for could not be found.",
@@ -383,6 +407,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("EditJobHandler GetJobByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load this job right now.",
@@ -394,6 +419,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"Only company accounts can edit jobs.",
@@ -404,6 +430,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 	if job.CompanyID != company.ID {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"You don't have permission to edit this job.",
@@ -418,7 +445,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 		// 	},
 		// }
 
-		err = utils.RenderTemplate(w, "edit-job.html", job)
+		err = utils.RenderTemplate(w, r, "edit-job.html", job)
 		if err != nil {
 			log.Printf(
 				"ApplicationHandler RenderTemplate edit-job.html error: %v",
@@ -446,6 +473,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 
 			RenderError(
 				w,
+				r,
 				http.StatusBadRequest,
 				"Missing Information",
 				"Please complete all required job fields.",
@@ -457,6 +485,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil || minSalary < 0 {
 			RenderError(
 				w,
+				r,
 				http.StatusBadRequest,
 				"Invalid Salary",
 				"Minimum salary must be a valid non-negative number.",
@@ -468,6 +497,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil || maxSalary < 0 {
 			RenderError(
 				w,
+				r,
 				http.StatusBadRequest,
 				"Invalid Salary",
 				"Maximum salary must be a valid non-negative number.",
@@ -478,6 +508,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 		if minSalary > maxSalary {
 			RenderError(
 				w,
+				r,
 				http.StatusBadRequest,
 				"Invalid Salary Range",
 				"Minimum salary cannot be greater than maximum salary.",
@@ -489,6 +520,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			RenderError(
 				w,
+				r,
 				http.StatusBadRequest,
 				"Invalid Deadline",
 				"Please provide a valid application deadline.",
@@ -508,6 +540,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("EditJobHandler UpdateJob error: %v", err)
 			RenderError(
 				w,
+				r,
 				http.StatusInternalServerError,
 				"Something Went Wrong",
 				"We couldn't update this job right now.",
@@ -527,6 +560,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed for this action.",
@@ -537,6 +571,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to close a job.",
@@ -548,6 +583,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil || jobID <= 0 {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Job",
 			"The job ID provided is invalid.",
@@ -560,6 +596,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, sql.ErrNoRows) {
 			RenderError(
 				w,
+				r,
 				http.StatusNotFound,
 				"Job Not Found",
 				"The job you're looking for could not be found.",
@@ -570,6 +607,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("CloseJobHandler GetJobByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load this job right now.",
@@ -581,6 +619,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"Only company accounts can close jobs.",
@@ -591,6 +630,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 	if job.CompanyID != company.ID {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"You don't have permission to close this job.",
@@ -612,6 +652,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("CloseJobHandler CloseJob error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't close this job right now.",
@@ -630,6 +671,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed on this page.",
@@ -641,6 +683,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to apply for a job.",
@@ -655,6 +698,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil || jobIDInt <= 0 {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Job",
 			"The job ID provided is invalid.",
@@ -667,6 +711,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, sql.ErrNoRows) {
 			RenderError(
 				w,
+				r,
 				http.StatusNotFound,
 				"Job Not Found",
 				"The job you're looking for could not be found.",
@@ -677,6 +722,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ApplyJobHandler GetJobByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load this job right now.",
@@ -687,6 +733,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	if job.Status != constants.JobStatusOpen {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Applications Closed",
 			"This job is no longer accepting applications.",
@@ -699,6 +746,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ApplyJobHandler GetUserByID error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't load your account information.",
@@ -709,6 +757,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	if user.Role != constants.RoleIndividual {
 		RenderError(
 			w,
+			r,
 			http.StatusForbidden,
 			"Access Denied",
 			"Only individual accounts can apply for jobs.",
@@ -721,6 +770,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ApplyJobHandler HasUserApplied error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't check your application status.",
@@ -731,6 +781,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	if hasApplied {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Already Applied",
 			"You have already applied for this job.",
@@ -739,7 +790,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodGet {
-		err = utils.RenderTemplate(w, "apply-job.html", job)
+		err = utils.RenderTemplate(w, r, "apply-job.html", job)
 		if err != nil {
 			log.Printf(
 				"ApplicationHandler RenderTemplate applications.html error: %v",
@@ -754,6 +805,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	if coverLetter == "" {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Cover Letter Required",
 			"Please provide a cover letter before submitting your application.",
@@ -773,6 +825,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ApplyJobHandler CreateApplication error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't submit your application right now.",

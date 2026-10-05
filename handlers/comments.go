@@ -17,6 +17,7 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RenderError(
 			w,
+			r,
 			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
 			"The requested method is not allowed for this action.",
@@ -27,6 +28,7 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		RenderError(
 			w,
+			r,
 			http.StatusUnauthorized,
 			"Unauthorized",
 			"You must be logged in to create a comment.",
@@ -40,6 +42,7 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	if postID == "" {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Missing Post",
 			"A post ID is required to create a comment.",
@@ -50,6 +53,7 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	if content == "" {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Empty Comment",
 			"Your comment cannot be empty.",
@@ -61,6 +65,7 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil || id <= 0 {
 		RenderError(
 			w,
+			r,
 			http.StatusBadRequest,
 			"Invalid Post",
 			"The post ID provided is invalid.",
@@ -79,6 +84,7 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("CreateCommentHandler CreateComment error: %v", err)
 		RenderError(
 			w,
+			r,
 			http.StatusInternalServerError,
 			"Something Went Wrong",
 			"We couldn't create your comment right now.",

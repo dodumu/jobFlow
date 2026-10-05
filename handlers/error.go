@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func RenderError(w http.ResponseWriter, statusCode int, title string, message string) {
+func RenderError(w http.ResponseWriter, r *http.Request, statusCode int, title string, message string) {
 	pageError := models.ErrorPageData{
 		StatusCode: statusCode,
 		Title:      title,
@@ -15,7 +15,7 @@ func RenderError(w http.ResponseWriter, statusCode int, title string, message st
 	}
 
 	w.WriteHeader(statusCode)
-	err := utils.RenderTemplate(w, "error.html", pageError)
+	err := utils.RenderTemplate(w, r, "error.html", pageError)
 	if err != nil {
 		log.Printf(
 			"ApplicationHandler RenderTemplate error.html error: %v",
