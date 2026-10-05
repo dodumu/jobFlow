@@ -178,78 +178,90 @@
     .btn-secondary:hover {
       background: var(--soft);
     }
+    .menu-toggle {
+      display: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 26px;
+      padding: 6px 10px;
+    }
 
+    .public-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     /* =========================
          RESPONSIVE
          ========================= */
 
     @media (max-width: 768px) {
-  .navbar {
-    height: auto;
-    min-height: 64px;
-  }
+      .navbar {
+        height: auto;
+        min-height: 64px;
+      }
 
-  .navbar-inner {
-    width: 92%;
-    min-height: 64px;
-    position: relative;
-  }
+      .navbar-inner {
+        width: 92%;
+        min-height: 64px;
+        position: relative;
+      }
 
-  .container {
-    width: 92%;
-    padding: 20px 0 40px;
-  }
+      .container {
+        width: 92%;
+        padding: 20px 0 40px;
+      }
 
-  .menu-toggle {
-    display: block;
-  }
+      .menu-toggle {
+        display: block;
+      }
 
-  .nav-links {
-    display: none;
+      .nav-links {
+        display: none;
 
-    position: absolute;
-    top: 64px;
-    left: 0;
-    right: 0;
+        position: absolute;
+        top: 64px;
+        left: 0;
+        right: 0;
 
-    flex-direction: column;
-    align-items: stretch;
+        flex-direction: column;
+        align-items: stretch;
 
-    padding: 12px;
+        padding: 12px;
 
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0 0 10px 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 0 0 10px 10px;
 
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  }
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      }
 
-  .nav-links.open {
-    display: flex;
-  }
+      .nav-links.open {
+        display: flex;
+      }
 
-  .nav-link {
-    width: 100%;
-    padding: 12px;
-  }
+      .nav-link {
+        width: 100%;
+        padding: 12px;
+      }
 
-  .nav-links form {
-    width: 100%;
-  }
+      .nav-links form {
+        width: 100%;
+      }
 
-  .logout-button {
-    text-align: left;
-  }
+      .logout-button {
+        text-align: left;
+      }
 
-  .public-nav {
-    display: flex;
-  }
+      .public-nav {
+        display: flex;
+      }
 
-  .public-nav .nav-link {
-    width: auto;
-    padding: 8px 9px;
-  }
-}
+      .public-nav .nav-link {
+        width: auto;
+        padding: 8px 9px;
+      }
+    }
 
     .logout-button {
       background: transparent;
@@ -261,21 +273,23 @@
       color: var(--danger);
       background: #fef2f2;
     }
-    .menu-toggle {
-  display: none;
-  background: transparent;
-  color: var(--text);
-  font-size: 26px;
-  padding: 6px 10px;
-}
 
-.public-nav {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+    
   </style>
 </head>
+<script>
+  const menuToggle = document.querySelector(".menu-toggle");
+  const navLinks = document.querySelector(".nav-links");
+
+  if (menuToggle && navLinks) {
+    menuToggle.addEventListener("click", function () {
+      const isOpen = navLinks.classList.toggle("open");
+
+      menuToggle.setAttribute("aria-expanded", isOpen);
+      menuToggle.textContent = isOpen ? "✕" : "☰";
+    });
+  }
+</script>
 
 <body>
   <nav class="navbar">
