@@ -1,5 +1,7 @@
 package constants
 
+import "time"
+
 const (
 	// Session
 	SessionCookieName = "session_token"
@@ -16,4 +18,8 @@ const (
 	ApplicationStatusPending  = "pending"
 	ApplicationStatusAccepted = "accepted"
 	ApplicationStatusRejected = "rejected"
+
+	MaxLoginAttempts   = 5
+	LoginAttemptWindow = 15 * time.Minute
+	LoginBlockDuration = 15 * time.Minute
 )

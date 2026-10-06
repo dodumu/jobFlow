@@ -245,6 +245,23 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		attempt = nil
 	}
+	if attempt != nil && time.Since(attempt.LastAttemptAt) >= constants.LoginAttemptWindow {
+		err = database.ResetLoginAttempts(username, ipAddress)
+		if err != nil {
+			log.Printf("LoginHandler ResetLoginAttempts error: %v", err)
+
+			RenderError(
+				w,
+				r,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't process your login right now.",
+			)
+			return
+		}
+
+		attempt = nil
+	}
 	user, err := database.GetUserByUsername(username)
 	if err != nil {
 		handleFailedLogin(w, r, username, ipAddress)
@@ -351,8 +368,8 @@ func handleFailedLogin(
 
 	errorMessage := "Invalid username or password."
 
-	if attempt != nil && attempt.FailedAttempts >= 5 {
-		blockedUntil := time.Now().Add(15 * time.Minute)
+	if attempt != nil && attempt.FailedAttempts >= constants.MaxLoginAttempts {
+		blockedUntil := time.Now().Add(constants.LoginBlockDuration)
 
 		err = database.BlockLoginAttempts(
 			username,
