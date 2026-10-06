@@ -8,35 +8,32 @@
     </div>
 
     <form action="/login" method="POST">
+
+      {{if .Error}}
+      <div class="login-error" role="alert">
+        {{.Error}}
+      </div>
+      {{end}}
+
       <div class="form-group">
         <label for="username">Username</label>
 
-        <input
-          type="text"
-          id="username"
-          name="username"
-          placeholder="Enter your username"
-          required
-          autocomplete="username"
-        />
+        <input type="text" id="username" name="username" placeholder="Enter your username" required
+          autocomplete="username" />
       </div>
 
       <div class="form-group">
         <label for="password">Password</label>
 
-        <input
-          type="password"
-          id="password"
-          name="password"
-          placeholder="Enter your password"
-          required
-          autocomplete="current-password"
-        />
+        <input type="password" id="password" name="password" placeholder="Enter your password" required
+          autocomplete="current-password" />
       </div>
 
-      <button type="submit" class="submit-button">Sign In</button>
-    </form>
+      <button type="submit" class="submit-button">
+        Sign In
+      </button>
 
+    </form>
     <div class="auth-footer">
       <p>
         Don't have an account?
@@ -126,6 +123,22 @@
     color: #2563eb;
     text-decoration: none;
     font-weight: 600;
+  }
+
+  .login-error {
+    margin-bottom: 18px;
+    padding: 12px 14px;
+
+    color: #991b1b;
+    background: #fef2f2;
+
+    border: 1px solid #fecaca;
+    border-left: 4px solid #dc2626;
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
   }
 </style>
 

@@ -122,7 +122,19 @@ func CreateTables() error {
 
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);
+	CREATE TABLE IF NOT EXISTS login_attempts (
+    	id INTEGER PRIMARY KEY AUTOINCREMENT,
 
+    	username TEXT NOT NULL,
+    	ip_address TEXT NOT NULL,
+
+    	failed_attempts INTEGER NOT NULL DEFAULT 0,
+
+    	last_attempt_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    	blocked_until DATETIME,
+
+    	UNIQUE (username, ip_address)
+	);
 	CREATE TABLE IF NOT EXISTS user_profiles (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL UNIQUE,

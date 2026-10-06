@@ -167,7 +167,9 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		err := utils.RenderTemplate(w, r, "login.html", nil)
+		data := models.LoginPageData{}
+
+		err := utils.RenderTemplate(w, r, "login.html", data)
 		if err != nil {
 			log.Printf("LoginHandler template error: %v", err)
 			return
@@ -200,30 +202,71 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
+	ipAddress := utils.GetClientIP(r)
+	attempt, err := database.GetLoginAttempt(username, ipAddress)
+	if err != nil {
+		log.Printf("LoginHandler GetLoginAttempt error: %v", err)
 
+		RenderError(
+			w,
+			r,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't process your login right now.",
+		)
+		return
+	}
+	if attempt != nil && attempt.BlockedUntil.Valid {
+		if time.Now().Before(attempt.BlockedUntil.Time) {
+			data := models.LoginPageData{
+				Error: "Too many login attempts. Please try again later.",
+			}
+
+			if err := utils.RenderTemplate(w, r, "login.html", data); err != nil {
+				log.Printf("LoginHandler template error: %v", err)
+			}
+
+			return
+		}
+
+		err = database.ResetLoginAttempts(username, ipAddress)
+		if err != nil {
+			log.Printf("LoginHandler ResetLoginAttempts error: %v", err)
+
+			RenderError(
+				w,
+				r,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't process your login right now.",
+			)
+			return
+		}
+
+		attempt = nil
+	}
 	user, err := database.GetUserByUsername(username)
 	if err != nil {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Login Failed",
-			"Invalid username or password.",
-		)
+		handleFailedLogin(w, r, username, ipAddress)
 		return
 	}
-
 	if !utils.CheckPassword(user.PasswordHash, password) {
+		handleFailedLogin(w, r, username, ipAddress)
+		return
+	}
+	err = database.ResetLoginAttempts(username, ipAddress)
+	if err != nil {
+		log.Printf("LoginHandler ResetLoginAttempts error: %v", err)
+
 		RenderError(
 			w,
 			r,
-			http.StatusUnauthorized,
-			"Login Failed",
-			"Invalid username or password.",
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't complete your login right now.",
 		)
 		return
 	}
-
 	token, err := utils.GenerateToken()
 	if err != nil {
 		log.Printf("LoginHandler GenerateToken error: %v", err)
@@ -270,4 +313,73 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+}
+
+func handleFailedLogin(
+	w http.ResponseWriter,
+	r *http.Request,
+	username string,
+	ipAddress string,
+) {
+	err := database.RecordFailedLoginAttempt(username, ipAddress)
+	if err != nil {
+		log.Printf("handleFailedLogin RecordFailedLoginAttempt error: %v", err)
+
+		RenderError(
+			w,
+			r,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't process your login right now.",
+		)
+		return
+	}
+
+	attempt, err := database.GetLoginAttempt(username, ipAddress)
+	if err != nil {
+		log.Printf("handleFailedLogin GetLoginAttempt error: %v", err)
+
+		RenderError(
+			w,
+			r,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't process your login right now.",
+		)
+		return
+	}
+
+	errorMessage := "Invalid username or password."
+
+	if attempt != nil && attempt.FailedAttempts >= 5 {
+		blockedUntil := time.Now().Add(15 * time.Minute)
+
+		err = database.BlockLoginAttempts(
+			username,
+			ipAddress,
+			blockedUntil,
+		)
+		if err != nil {
+			log.Printf("handleFailedLogin BlockLoginAttempts error: %v", err)
+
+			RenderError(
+				w,
+				r,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't process your login right now.",
+			)
+			return
+		}
+
+		errorMessage = "Too many login attempts. Please try again in 15 minutes."
+	}
+
+	data := models.LoginPageData{
+		Error: errorMessage,
+	}
+
+	if err := utils.RenderTemplate(w, r, "login.html", data); err != nil {
+		log.Printf("handleFailedLogin template error: %v", err)
+	}
 }
