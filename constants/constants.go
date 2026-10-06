@@ -19,7 +19,8 @@ const (
 	ApplicationStatusAccepted = "accepted"
 	ApplicationStatusRejected = "rejected"
 
-	MaxLoginAttempts   = 5
-	LoginAttemptWindow = 15 * time.Minute
-	LoginBlockDuration = 15 * time.Minute
+	MaxLoginAttempts      = 5
+	LoginAttemptWindow    = 15 * time.Minute
+	LoginBlockDuration    = 15 * time.Minute
+	MaxProfilePictureSize = 5 << 20
 )

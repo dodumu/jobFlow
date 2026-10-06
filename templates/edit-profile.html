@@ -107,32 +107,24 @@
   </div>
 
   <section class="edit-card">
-    <form action="/profile/edit" method="POST">
+    <form action="/profile/edit" method="POST" enctype="multipart/form-data">
       <div class="form-group">
-        <label for="profile_picture"> Profile Picture URL </label>
+        <label for="profile_picture">Profile Picture</label>
 
-        <input
-          type="url"
-          id="profile_picture"
-          name="profile_picture"
-          value="{{.Profile.ProfilePicture}}"
-          placeholder="https://example.com/profile.jpg"
-        />
+        <input type="file" id="profile_picture" name="profile_picture" accept="image/jpeg,image/png,image/webp">
 
-        <p class="form-help">We'll support direct image uploads later.</p>
+        {{if .Error}}
+        <div class="profile-error" role="alert">
+          {{.Error}}
+        </div>
+        {{end}}
       </div>
 
       <div class="form-group">
         <label for="headline"> Professional Headline </label>
 
-        <input
-          type="text"
-          id="headline"
-          name="headline"
-          value="{{.Profile.Headline}}"
-          maxlength="150"
-          placeholder="e.g. Backend Developer | Go & SQL"
-        />
+        <input type="text" id="headline" name="headline" value="{{.Profile.Headline}}" maxlength="150"
+          placeholder="e.g. Backend Developer | Go & SQL" />
 
         <p class="form-help">
           A short description that appears beneath your name.
@@ -142,27 +134,16 @@
       <div class="form-group">
         <label for="bio"> About </label>
 
-        <textarea
-          id="bio"
-          name="bio"
-          maxlength="2000"
-          placeholder="Tell people about yourself, your experience, interests, and professional goals..."
-        >
-{{.Profile.Bio}}</textarea
-        >
+        <textarea id="bio" name="bio" maxlength="2000"
+          placeholder="Tell people about yourself, your experience, interests, and professional goals...">
+{{.Profile.Bio}}</textarea>
       </div>
 
       <div class="form-group">
         <label for="location"> Location </label>
 
-        <input
-          type="text"
-          id="location"
-          name="location"
-          value="{{.Profile.Location}}"
-          maxlength="150"
-          placeholder="e.g. Otukpo, Benue State, Nigeria"
-        />
+        <input type="text" id="location" name="location" value="{{.Profile.Location}}" maxlength="150"
+          placeholder="e.g. Otukpo, Benue State, Nigeria" />
       </div>
 
       <div class="form-actions">

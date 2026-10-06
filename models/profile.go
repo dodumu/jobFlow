@@ -18,4 +18,5 @@ type ProfilePageData struct {
 
 type EditProfilePageData struct {
 	Profile UserProfile
+	Error   string
 }

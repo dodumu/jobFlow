@@ -3,10 +3,12 @@ package handlers
 import (
 	"database/sql"
 	"errors"
+	"io"
 	"log"
 	"net/http"
 	"strings"
 
+	"jobFlow/constants"
 	"jobFlow/database"
 	"jobFlow/models"
 	"jobFlow/utils"
@@ -244,10 +246,12 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// GET: display the existing profile.
 	if r.Method == http.MethodGet {
 		profile, err := database.GetUserProfileByUserID(userID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			log.Printf("EditProfileHandler GetUserProfileByUserID error: %v", err)
+
 			RenderError(
 				w,
 				r,
@@ -261,21 +265,95 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 		data := models.EditProfilePageData{
 			Profile: profile,
 		}
-		err = utils.RenderTemplate(w, r, "edit-profile.html", data)
-		if err != nil {
+
+		if err := utils.RenderTemplate(w, r, "edit-profile.html", data); err != nil {
 			log.Printf(
 				"ProfileHandler RenderTemplate edit-profile.html error: %v",
-				err)
+				err,
+			)
 		}
+
 		return
 	}
 
+	// POST: collect the submitted text fields first.
+	// This lets us preserve them if file validation fails.
 	profile := models.UserProfile{
-		UserID:         userID,
-		ProfilePicture: strings.TrimSpace(r.FormValue("profile_picture")),
-		Headline:       strings.TrimSpace(r.FormValue("headline")),
-		Bio:            strings.TrimSpace(r.FormValue("bio")),
-		Location:       strings.TrimSpace(r.FormValue("location")),
+		UserID:   userID,
+		Headline: strings.TrimSpace(r.FormValue("headline")),
+		Bio:      strings.TrimSpace(r.FormValue("bio")),
+		Location: strings.TrimSpace(r.FormValue("location")),
+	}
+
+	// Retrieve the optional uploaded profile picture.
+	file, fileHeader, err := r.FormFile("profile_picture")
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		log.Printf("EditProfileHandler FormFile error: %v", err)
+
+		RenderError(
+			w,
+			r,
+			http.StatusBadRequest,
+			"Invalid File",
+			"We couldn't process the selected profile picture.",
+		)
+		return
+	}
+
+	if file != nil {
+		defer file.Close()
+
+		// Reject profile pictures larger than 5 MB.
+		if fileHeader.Size > constants.MaxProfilePictureSize {
+			data := models.EditProfilePageData{
+				Profile: profile,
+				Error:   "Profile picture must be 5 MB or smaller.",
+			}
+
+			if err := utils.RenderTemplate(w, r, "edit-profile.html", data); err != nil {
+				log.Printf("EditProfileHandler template error: %v", err)
+			}
+
+			return
+		}
+
+		// Read the first 512 bytes to detect the actual file type.
+		buffer := make([]byte, 512)
+
+		_, err = file.Read(buffer)
+		if err != nil && !errors.Is(err, io.EOF) {
+			log.Printf("EditProfileHandler file read error: %v", err)
+
+			RenderError(
+				w,
+				r,
+				http.StatusBadRequest,
+				"Invalid File",
+				"We couldn't read the selected profile picture.",
+			)
+			return
+		}
+
+		contentType := http.DetectContentType(buffer)
+
+		allowedTypes := map[string]bool{
+			"image/jpeg": true,
+			"image/png":  true,
+			"image/webp": true,
+		}
+
+		if !allowedTypes[contentType] {
+			data := models.EditProfilePageData{
+				Profile: profile,
+				Error:   "Profile picture must be a JPEG, PNG, or WebP image.",
+			}
+
+			if err := utils.RenderTemplate(w, r, "edit-profile.html", data); err != nil {
+				log.Printf("EditProfileHandler template error: %v", err)
+			}
+
+			return
+		}
 	}
 
 	if err := database.UpdateUserProfile(profile); err != nil {
