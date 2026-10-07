@@ -354,6 +354,42 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 			return
 		}
+
+		// Rewind the file after MIME detection.
+		_, err = file.Seek(0, io.SeekStart)
+		if err != nil {
+			log.Printf("EditProfileHandler file seek error: %v", err)
+
+			RenderError(
+				w,
+				r,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't process your profile picture.",
+			)
+			return
+		}
+
+		// Save the validated image.
+		filename, err := utils.SaveProfilePicture(
+			file,
+			userID,
+			contentType,
+		)
+		if err != nil {
+			log.Printf("EditProfileHandler SaveProfilePicture error: %v", err)
+
+			RenderError(
+				w,
+				r,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't save your profile picture.",
+			)
+			return
+		}
+
+		profile.ProfilePicture = filename
 	}
 
 	if err := database.UpdateUserProfile(profile); err != nil {

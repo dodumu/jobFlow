@@ -10,14 +10,32 @@ import (
 )
 
 func main() {
+	
 	databasePath := os.Getenv("DATABASE_PATH")
 	if databasePath == "" {
 		databasePath = "database.db"
 	}
+
 	err := database.InitDB(databasePath)
 	if err != nil {
 		log.Println(err)
 	}
+
+	uploadPath := os.Getenv("UPLOAD_PATH")
+	if uploadPath == "" {
+		uploadPath = "uploads"
+	}
+
+	profilePicturesPath := uploadPath + "/profile-pictures"
+
+	http.Handle(
+		"/uploads/profile-pictures/",
+		http.StripPrefix(
+			"/uploads/profile-pictures/",
+			http.FileServer(http.Dir(profilePicturesPath)),
+		),
+	)
+
 	http.Handle(
 		"/home",
 		middleware.AuthMiddleware(

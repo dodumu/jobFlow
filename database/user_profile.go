@@ -79,7 +79,7 @@ func UpdateUserProfile(profile models.UserProfile) error {
 	_, err := DB.Exec(`
 		UPDATE user_profiles
 		SET
-			profile_picture = ?,
+			profile_picture = COALESCE(NULLIF(?, ''), profile_picture),
 			headline = ?,
 			bio = ?,
 			location = ?,
