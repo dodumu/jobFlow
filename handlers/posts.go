@@ -149,7 +149,6 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf(
 			"LikePostHandler LikePost error - postID=%d userID=%d: %v",
 			id,
-			r,
 			userID,
 			err,
 		)

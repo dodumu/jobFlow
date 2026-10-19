@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -82,4 +83,28 @@ func SaveProfilePicture(
 	}
 
 	return filename, nil
+}
+
+func DeleteProfilePicture(filename string) error {
+	if filename == "" {
+		return nil
+	}
+	if filepath.Base(filename) != filename || filename == "." || filename == ".." {
+		return fmt.Errorf("invalid profile picture filename")
+	}
+
+	directory, err := ProfilePictureDirectory()
+	if err != nil {
+		return fmt.Errorf("locating profile picture directory: %w", err)
+	}
+	filePath := filepath.Join(directory, filename)
+
+	err = os.Remove(filePath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return fmt.Errorf("deleting profile picture: %w", err)
+	}
+	return nil
 }

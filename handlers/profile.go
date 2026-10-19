@@ -275,7 +275,55 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+	existingProfile, err := database.GetUserProfileByUserID(userID)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			log.Printf(
+				"EditProfileHandler GetUserProfileByUserID error: %v", err,
+			)
+			RenderError(
+				w,
+				r,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't load your existing profile",
+			)
+			return
+		}
+	}
+	oldProfilePicture := existingProfile.ProfilePicture
 
+	const MaxProfilePictureSize = 6 << 20
+
+	r.Body = http.MaxBytesReader(
+		w,
+		r.Body,
+		MaxProfilePictureSize,
+	)
+	if err := r.ParseMultipartForm(6 << 20); err != nil {
+		var MaxBytesErr *http.MaxBytesError
+
+		if errors.As(err, &MaxBytesErr) {
+			RenderError(
+				w,
+				r,
+				http.StatusRequestEntityTooLarge,
+				"Upload Too Large",
+				"Your request exceeds the MB limit. Please uplaod a smaller image.",
+			)
+			return
+		}
+		log.Printf("EditProfileHandler ParseMultipartForm error: %v", err)
+
+		RenderError(
+			w,
+			r,
+			http.StatusBadRequest,
+			"Invalid Form",
+			"We couldn't process your submitted form.",
+		)
+		return
+	}
 	// POST: collect the submitted text fields first.
 	// This lets us preserve them if file validation fails.
 	profile := models.UserProfile{
@@ -287,17 +335,42 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieve the optional uploaded profile picture.
 	file, fileHeader, err := r.FormFile("profile_picture")
-	if err != nil && !errors.Is(err, http.ErrMissingFile) {
-		log.Printf("EditProfileHandler FormFile error: %v", err)
+	if err != nil {
+		var MaxBytesErr *http.MaxBytesError
 
-		RenderError(
-			w,
-			r,
-			http.StatusBadRequest,
-			"Invalid File",
-			"We couldn't process the selected profile picture.",
-		)
-		return
+		if errors.As(err, &MaxBytesErr) {
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+
+			data := models.EditProfilePageData{
+				Profile: profile,
+				Error:   "Your upload is too large. Please select an image smaller than 5 MB.",
+			}
+
+			if renderErr := utils.RenderTemplate(
+				w,
+				r,
+				"edit-profile.html",
+				data,
+			); renderErr != nil {
+				log.Printf(
+					"EditProfileHandler render upload error: %v",
+					renderErr,
+				)
+			}
+			return
+		}
+		if !errors.Is(err, http.ErrMissingFile) {
+			log.Printf("EditProfileHandler FormFile error: %v", err)
+
+			RenderError(
+				w,
+				r,
+				http.StatusBadRequest,
+				"Bad Request",
+				"Unable to process your upload.",
+			)
+			return
+		}
 	}
 
 	if file != nil {
@@ -395,6 +468,14 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if err := database.UpdateUserProfile(profile); err != nil {
 		log.Printf("EditProfileHandler UpdateUserProfile error: %v", err)
 
+		if profile.ProfilePicture != "" {
+			if clearnupErr := utils.DeleteProfilePicture(profile.ProfilePicture); clearnupErr != nil {
+				log.Printf(
+					"EditProfileHandler new pciture cleanup error: %v",
+					clearnupErr,
+				)
+			}
+		}
 		RenderError(
 			w,
 			r,
@@ -404,6 +485,15 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-
+	if profile.ProfilePicture != "" &&
+		oldProfilePicture != "" &&
+		oldProfilePicture != profile.ProfilePicture {
+		if err := utils.DeleteProfilePicture(oldProfilePicture); err != nil {
+			log.Printf(
+				"EditProfileHandler old picture cleanup error: %v",
+				err,
+			)
+		}
+	}
 	http.Redirect(w, r, "/profile", http.StatusSeeOther)
 }
