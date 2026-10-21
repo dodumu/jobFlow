@@ -3,9 +3,10 @@ package models
 type FeedComment struct {
 	Comment
 
-	AuthorFirstName string
-	AuthorLastName  string
-	AuthorUsername  string
+	AuthorFirstName      string
+	AuthorLastName       string
+	AuthorUsername       string
+	AuthorProfilePicture string
 }
 
 type FeedPost struct {
@@ -15,9 +16,10 @@ type FeedPost struct {
 	AuthorType string
 
 	// Individual author.
-	AuthorFirstName string
-	AuthorLastName  string
-	AuthorUsername  string
+	AuthorFirstName      string
+	AuthorLastName       string
+	AuthorUsername       string
+	AuthorProfilePicture string
 
 	// Company author.
 	CompanyName string

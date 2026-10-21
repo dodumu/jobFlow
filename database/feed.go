@@ -34,6 +34,7 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 			COALESCE(u.first_name, '') AS author_first_name,
 			COALESCE(u.last_name, '') AS author_last_name,
 			COALESCE(u.username, '') AS author_username,
+			COALESCE(up.profile_picture, '') AS author_profile_picture,
 
 			-- Company author
 			COALESCE(company.company_name, '') AS company_name,
@@ -89,6 +90,9 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 		LEFT JOIN users u
 			ON u.id = p.user_id
 
+		LEFT JOIN user_profiles up
+    		ON up.user_id = p.user_id
+
 		LEFT JOIN companies company
 			ON company.id = p.company_id
 
@@ -131,6 +135,7 @@ func GetFeedPosts(userID int) ([]models.FeedPost, error) {
 			&post.AuthorFirstName,
 			&post.AuthorLastName,
 			&post.AuthorUsername,
+			&post.AuthorProfilePicture,
 
 			&post.CompanyName,
 			&post.CompanyLogo,

@@ -3,9 +3,12 @@ package utils
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"jobFlow/database"
 )
 
 var templateFuncs = template.FuncMap{
@@ -21,7 +24,18 @@ func RenderTemplate(
 	data any,
 ) error {
 
-	_, isAuthenticated := GetUserID(r)
+	UserID, isAuthenticated := GetUserID(r)
+
+	avatarURL := ""
+
+	if isAuthenticated {
+		profile, err := database.GetUserProfileByUserID(UserID)
+		if err != nil {
+			log.Printf("Unable to retrieve profile picture: %v", err)
+		} else {
+			avatarURL = "/uploads/profile-pictures/" + profile.ProfilePicture
+		}
+	}
 
 	funcs := template.FuncMap{
 		"formatDate": templateFuncs["formatDate"],
@@ -29,7 +43,9 @@ func RenderTemplate(
 		"isAuthenticated": func() bool {
 			return isAuthenticated
 		},
-
+		"currentUserAvatar": func() string {
+			return avatarURL
+		},
 		"isActive": func(path string) bool {
 			currentPath := r.URL.Path
 

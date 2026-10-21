@@ -22,8 +22,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		log.Printf("AuthMiddleware session cookie received")
-
 		session, err := database.GetSessionByToken(cookie.Value)
 		if err != nil {
 			log.Printf("AuthMiddleware session lookup error: %v", err)
