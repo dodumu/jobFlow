@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	
+
 	databasePath := os.Getenv("DATABASE_PATH")
 	if databasePath == "" {
 		databasePath = "database.db"
@@ -18,7 +18,7 @@ func main() {
 
 	err := database.InitDB(databasePath)
 	if err != nil {
-		log.Println(err)
+		log.Fatalf("failed to initialize database: %v", err)
 	}
 
 	uploadPath := os.Getenv("UPLOAD_PATH")
