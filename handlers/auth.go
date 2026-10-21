@@ -38,6 +38,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Get user registration fields.
 	username := r.FormValue("username")
 	password := r.FormValue("password")
+	confirmPassword := r.FormValue("confirm-password")
 	firstName := r.FormValue("first_name")
 	lastName := r.FormValue("last_name")
 	email := r.FormValue("email")
@@ -48,6 +49,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if role == "" ||
 		username == "" ||
 		password == "" ||
+		confirmPassword == "" ||
 		firstName == "" ||
 		lastName == "" ||
 		email == "" ||
@@ -62,7 +64,22 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
+	if password != confirmPassword {
+		w.WriteHeader(http.StatusBadRequest)
 
+		err := utils.RenderTemplate(
+			w,
+			r,
+			"register.html",
+			map[string]interface{}{
+				"Error": "Passwords do not match",
+			},
+		)
+		if err != nil {
+			log.Printf("RegisterHandler template error: %v", err)
+		}
+		return
+	}
 	if !validRoles[role] {
 		RenderError(
 			w,

@@ -25,9 +25,14 @@
       <div class="form-group">
         <label for="password">Password</label>
 
-        <input type="password" id="password" name="password" placeholder="Enter your password" required
-          autocomplete="current-password" />
+        <div class="password-field">
+          <input type="password" id="password" name="password" placeholder="Enter your password" required
+            autocomplete="current-password" />
+          <button type="button" class="password-toggle" data-toggle-password="password" aria-label="Show password" aria-pressed="false">Show</button>
+        </div>
       </div>
+
+      <div class="auth-help"><a href="/forgot-password">Forgot password?</a></div>
 
       <button type="submit" class="submit-button">
         Sign In
@@ -140,6 +145,24 @@
     font-weight: 500;
     line-height: 1.4;
   }
+
+  .password-field { position: relative; }
+  .password-field input { box-sizing: border-box; padding-right: 76px; }
+  .password-toggle { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: #2563eb; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 7px; }
+  .auth-help { text-align: right; margin: -6px 0 20px; font-size: 13px; }
+  .auth-help a { color: red; text-decoration: none; font-weight: 600; }
 </style>
 
+<script>
+  document.querySelectorAll('[data-toggle-password]').forEach(button => {
+    button.addEventListener('click', () => {
+      const input = document.getElementById(button.dataset.togglePassword);
+      const visible = input.type === 'password';
+      input.type = visible ? 'text' : 'password';
+      button.textContent = visible ? 'Hide' : 'Show';
+      button.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
+      button.setAttribute('aria-pressed', String(visible));
+    });
+  });
+</script>
 {{end}}
