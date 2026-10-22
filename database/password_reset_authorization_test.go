@@ -1,9 +1,12 @@
 package database
 
 import (
+	"database/sql"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"jobFlow/utils"
 )
 
 func TestSavePasswordResetAuthorization(t *testing.T) {
@@ -123,4 +126,78 @@ func TestSavePasswordResetAuthorization(t *testing.T) {
 		t.Errorf("expected new authorization hash, got %q", currentHash)
 	}
 
+}
+
+
+func createTestAuthorization(t *testing.T, userID int) string {
+	t.Helper()
+
+	token, err := utils.GenerateResetAuthorizationToken()
+	if err != nil {
+		t.Fatalf("generating reset token: %v", err)
+	}
+
+	tokenHash := HashResetAuthorizationToken(token)
+
+	err = SavePasswordResetAuthorization(userID, tokenHash)
+	if err != nil {
+		t.Fatalf("saving reset authorization: %v", err)
+	}
+
+	return token
+}
+
+
+
+func TestValidatePasswordResetAuthorization_Valid(t *testing.T) {
+	userID := setupTestUser(t) // Reuse your existing test-user setup.
+
+	token := createTestAuthorization(t, userID)
+
+	err := ValidatePasswordResetAuthorization(token)
+	if err != nil {
+		t.Fatalf("expected valid authorization, got error: %v", err)
+	}
+}
+
+func TestValidatePasswordResetAuthorization_Expired(t *testing.T) {
+	userID := setupTestUser(t)
+
+	token := createTestAuthorization(t, userID)
+	tokenHash := HashResetAuthorizationToken(token)
+
+	_, err := DB.Exec(`
+		UPDATE password_reset_authorizations
+		SET expires_at = ?
+		WHERE token_hash = ?
+	`, time.Now().UTC().Add(-1*time.Minute), tokenHash)
+	if err != nil {
+		t.Fatalf("making authorization expire: %v", err)
+	}
+
+	err = ValidatePasswordResetAuthorization(token)
+	if err == nil {
+		t.Fatal("expected expired authorization to fail")
+	}
+}
+
+func TestValidatePasswordResetAuthorization_Used(t *testing.T) {
+	userID := setupTestUser(t)
+
+	token := createTestAuthorization(t, userID)
+	tokenHash := HashResetAuthorizationToken(token)
+
+	_, err := DB.Exec(`
+		UPDATE password_reset_authorizations
+		SET used_at = ?
+		WHERE token_hash = ?
+	`, time.Now().UTC(), tokenHash)
+	if err != nil {
+		t.Fatalf("marking authorization as used: %v", err)
+	}
+
+	err = ValidatePasswordResetAuthorization(token)
+	if err == nil {
+		t.Fatal("expected used authorization to fail")
+	}
 }
