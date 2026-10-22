@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"time"
-	
+
 	"crypto/sha256"
 	"encoding/hex"
 )
@@ -19,6 +19,10 @@ type PasswordResetAuthorization struct {
 	CreatedAt time.Time
 }
 
+func hashResetAuthorizationToken(token string) string {
+	hash := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(hash[:])
+}
 func GetPasswordResetAuthorization(
 	userID int,
 ) (PasswordResetAuthorization, error) {
@@ -83,14 +87,12 @@ func SavePasswordResetAuthorization(
 	return nil
 }
 
-
-
 func ValidatePasswordResetAuthorization(token string) error {
 	if token == "" {
 		return errors.New("invalid reset authorization")
 	}
 
-	tokenHash := HashResetAuthorizationToken(token)
+	tokenHash := hashResetAuthorizationToken(token)
 
 	var authorization PasswordResetAuthorization
 
@@ -123,13 +125,12 @@ func ValidatePasswordResetAuthorization(token string) error {
 	return nil
 }
 
-
 func ConsumePasswordResetAuthorization(token string) error {
 	if token == "" {
 		return errors.New("invalid reset authorization")
 	}
 
-	tokenHash := HashResetAuthorizationToken(token)
+	tokenHash := hashResetAuthorizationToken(token)
 
 	result, err := DB.Exec(`
 		UPDATE password_reset_authorizations
@@ -156,9 +157,4 @@ func ConsumePasswordResetAuthorization(token string) error {
 	}
 
 	return nil
-}
-
-func hashResetAuthorizationToken(token string) string {
-	hash := sha256.Sum256([]byte(token))
-	return hex.EncodeToString(hash[:])
 }

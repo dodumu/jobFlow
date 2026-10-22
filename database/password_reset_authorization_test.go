@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"path/filepath"
 	"testing"
 	"time"
@@ -128,7 +127,6 @@ func TestSavePasswordResetAuthorization(t *testing.T) {
 
 }
 
-
 func createTestAuthorization(t *testing.T, userID int) string {
 	t.Helper()
 
@@ -137,7 +135,7 @@ func createTestAuthorization(t *testing.T, userID int) string {
 		t.Fatalf("generating reset token: %v", err)
 	}
 
-	tokenHash := HashResetAuthorizationToken(token)
+	tokenHash := hashResetAuthorizationToken(token)
 
 	err = SavePasswordResetAuthorization(userID, tokenHash)
 	if err != nil {
@@ -146,8 +144,6 @@ func createTestAuthorization(t *testing.T, userID int) string {
 
 	return token
 }
-
-
 
 func TestValidatePasswordResetAuthorization_Valid(t *testing.T) {
 	userID := setupTestUser(t) // Reuse your existing test-user setup.
@@ -164,7 +160,7 @@ func TestValidatePasswordResetAuthorization_Expired(t *testing.T) {
 	userID := setupTestUser(t)
 
 	token := createTestAuthorization(t, userID)
-	tokenHash := HashResetAuthorizationToken(token)
+	tokenHash := hashResetAuthorizationToken(token)
 
 	_, err := DB.Exec(`
 		UPDATE password_reset_authorizations
@@ -185,7 +181,7 @@ func TestValidatePasswordResetAuthorization_Used(t *testing.T) {
 	userID := setupTestUser(t)
 
 	token := createTestAuthorization(t, userID)
-	tokenHash := HashResetAuthorizationToken(token)
+	tokenHash := hashResetAuthorizationToken(token)
 
 	_, err := DB.Exec(`
 		UPDATE password_reset_authorizations

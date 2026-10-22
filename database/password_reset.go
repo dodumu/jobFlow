@@ -1,4 +1,3 @@
-
 package database
 
 import (
@@ -6,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	
 )
 
 func ResetPassword(token, newPasswordHash string) error {
@@ -19,7 +16,7 @@ func ResetPassword(token, newPasswordHash string) error {
 		return errors.New("password hash cannot be empty")
 	}
 
-	tokenHash := HashResetAuthorizationToken(token)
+	tokenHash := hashResetAuthorizationToken(token)
 
 	tx, err := DB.Begin()
 	if err != nil {
@@ -135,7 +132,6 @@ func ResetPassword(token, newPasswordHash string) error {
 	}
 	return nil
 }
-
 
 type PasswordResetCode struct {
 	ID         int
