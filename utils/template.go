@@ -56,6 +56,11 @@ func RenderTemplate(
 			return currentPath == path ||
 				strings.HasPrefix(currentPath, path+"/")
 		},
+		"showNavbar": func() bool {
+    		return page != "forgot_password.html" &&
+        		page != "verify_reset.html" &&
+        		page != "reset_password.html"
+		},
 	}
 
 	tmpl, err := template.New("base.html").

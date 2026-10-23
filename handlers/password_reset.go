@@ -12,6 +12,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		data := map[string]any{
 			"Title": "Forgot Password",
+			"Sent":  false,
 		}
 
 		if err := utils.RenderTemplate(w, r, "forgot_password.html", data); err != nil {
@@ -57,6 +58,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 			RenderError(w, r, http.StatusInternalServerError, "internal server error", "Unable to process request")
 			return
 		}
+		http.Redirect(w, r, "/verify-reset", http.StatusSeeOther)
 	}
 
 }

@@ -4,4 +4,5 @@ type ErrorPageData struct {
 	StatusCode int
 	Title      string
 	Message    string
+	HideNavbar bool
 }

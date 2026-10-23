@@ -1,0 +1,207 @@
+
+{{define "content"}}
+<style>
+    .verify-reset-wrapper {
+        min-height: calc(100vh - 114px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px;
+    }
+
+    .verify-reset-card {
+        width: 100%;
+        max-width: 440px;
+        padding: 40px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 12px 35px rgba(15, 23, 42, 0.07);
+    }
+
+    .verify-reset-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        border-radius: 16px;
+        background: #eff6ff;
+        color: var(--primary);
+        font-size: 28px;
+    }
+
+    .verify-reset-card h1 {
+        margin-bottom: 10px;
+        font-size: 26px;
+        letter-spacing: -0.6px;
+        text-align: center;
+    }
+
+    .verify-reset-description {
+        margin-bottom: 26px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+        text-align: center;
+    }
+
+    .verify-reset-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .verify-reset-form label {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .verify-reset-form input {
+        width: 100%;
+        padding: 13px 14px;
+        margin-bottom: 8px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        background: white;
+        color: var(--text);
+        font-size: 15px;
+        outline: none;
+    }
+
+    .verify-reset-form input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .verify-reset-form .verification-code {
+        text-align: center;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 8px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .verify-reset-submit {
+        width: 100%;
+        padding: 13px 18px;
+        border-radius: 9px;
+        background: var(--primary);
+        color: white;
+        font-size: 15px;
+        font-weight: 650;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .verify-reset-submit:hover {
+        background: var(--primary-dark);
+    }
+
+    .verify-reset-back {
+        display: block;
+        margin-top: 24px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    .verify-reset-back:hover {
+        color: var(--primary);
+    }
+
+    .verify-reset-notice {
+        margin-bottom: 20px;
+        padding: 12px;
+        border-radius: 9px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 480px) {
+        .verify-reset-card {
+            padding: 28px 22px;
+        }
+
+        .verify-reset-card h1 {
+            font-size: 23px;
+        }
+    }
+</style>
+
+<section class="verify-reset-wrapper">
+    <div class="verify-reset-card">
+
+        <div class="verify-reset-icon" aria-hidden="true">
+            &#9993;
+        </div>
+
+        <h1>Verify your email</h1>
+
+        <p class="verify-reset-description">
+            Enter the email address associated with your JobFlow
+            account and the eight-digit verification code we sent you.
+        </p>
+
+        {{if .Sent}}
+        <div class="verify-reset-notice" role="status">
+            If an account exists for that email address, a verification
+            code has been sent. Check your inbox and spam folder.
+        </div>
+        {{end}}
+
+        {{if .Error}}
+        <div class="verify-reset-notice" role="alert">
+            {{.Error}}
+        </div>
+        {{end}}
+
+        <form
+            class="verify-reset-form"
+            action="/verify-reset"
+            method="POST"
+        >
+            <label for="email">Email address</label>
+
+            <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+            >
+
+            <label for="code">Verification code</label>
+
+            <input
+                type="text"
+                id="code"
+                name="code"
+                class="verification-code"
+                placeholder="00000000"
+                inputmode="numeric"
+                pattern="[0-9]{8}"
+                minlength="8"
+                maxlength="8"
+                autocomplete="one-time-code"
+                required
+            >
+
+            <button type="submit" class="verify-reset-submit">
+                Verify code
+            </button>
+        </form>
+
+        <a href="/forgot-password" class="verify-reset-back">
+            &#8592; Back
+        </a>
+
+    </div>
+</section>
+{{end}}

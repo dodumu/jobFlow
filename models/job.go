@@ -22,8 +22,9 @@ type Job struct {
 }
 
 type JobsPageData struct {
-	Jobs      []Job
-	IsCompany bool
+	Jobs       []Job
+	IsCompany  bool
+	HideNavbar bool
 }
 
 type JobDetailsData struct {

@@ -28,3 +28,8 @@ func HashVerificationCode(userID int, code string) (string, error) {
 
 	return hex.EncodeToString(hash), nil
 }
+
+func HashResetAuthorizationToken(token string) string {
+	hash := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(hash[:])
+}

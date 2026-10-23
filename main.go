@@ -192,7 +192,9 @@ func main() {
 	})
 	http.HandleFunc("/register", handlers.RegisterHandler)
 	http.HandleFunc("/login", handlers.LoginHandler)
-
+	http.HandleFunc("/forgot-password", handlers.ForgotPasswordHandler)
+	http.HandleFunc("/verify-reset", handlers.VerifyResetHandler)
+	http.HandleFunc("/reset-password", handlers.ResetPasswordHandler)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8081"

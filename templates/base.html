@@ -370,6 +370,7 @@
 
 <body>
 
+  {{if showNavbar}}
   <nav class="navbar">
     <div class="navbar-inner">
 
@@ -447,6 +448,7 @@
 
     </div>
   </nav>
+  {{end}}
 
   <main class="container">
     {{template "content" .}}

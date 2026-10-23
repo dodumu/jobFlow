@@ -68,8 +68,11 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			return
 		}
-
-		err = utils.RenderTemplate(w, r, "applications.html", applications)
+		pageData := models.UserApplicationsPageData{
+			Applications: applications,
+			HideNavbar:   false,
+		}
+		err = utils.RenderTemplate(w, r, "applications.html", pageData)
 		if err != nil {
 			log.Printf(
 				"ApplicationHandler RenderTemplate applications.html error: %v",
@@ -104,8 +107,11 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			return
 		}
-
-		err = utils.RenderTemplate(w, r, "company_applications.html", applications)
+		pageData := models.CompanyApplicationsPageData{
+			Applications: applications,
+			HideNavbar:   false,
+		}
+		err = utils.RenderTemplate(w, r, "company_applications.html", pageData)
 		if err != nil {
 			log.Printf(
 				"ApplicationHandler RenderTemplate company_applications.html error: %v",

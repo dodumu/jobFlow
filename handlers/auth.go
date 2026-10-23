@@ -38,7 +38,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Get user registration fields.
 	username := r.FormValue("username")
 	password := r.FormValue("password")
-	confirmPassword := r.FormValue("confirm-password")
+	confirmPassword := r.FormValue("confirm_password")
 	firstName := r.FormValue("first_name")
 	lastName := r.FormValue("last_name")
 	email := r.FormValue("email")
@@ -54,7 +54,17 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		lastName == "" ||
 		email == "" ||
 		dob == "" {
-
+		log.Printf(
+			"Registration fields received: username=%t, password=%t, confirmPassword=%t, firstName=%t, lastName=%t, email=%t, dob=%t, role=%t",
+			username != "",
+			password != "",
+			confirmPassword != "",
+			firstName != "",
+			lastName != "",
+			email != "",
+			dob != "",
+			role != "",
+		)
 		RenderError(
 			w,
 			r,

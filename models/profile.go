@@ -14,9 +14,11 @@ type ProfilePageData struct {
 
 	FollowerCount  int
 	FollowingCount int
+	HideNavbar     bool
 }
 
 type EditProfilePageData struct {
-	Profile UserProfile
-	Error   string
+	Profile    UserProfile
+	Error      string
+	HideNavbar bool
 }

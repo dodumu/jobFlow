@@ -24,6 +24,7 @@ type UserApplication struct {
 	EmploymentType string
 	Status         string
 	AppliedAt      time.Time
+	HideNavbar     bool
 }
 type CompanyApplication struct {
 	ApplicationID int
@@ -33,4 +34,15 @@ type CompanyApplication struct {
 	ApplicantName string
 	Status        string
 	AppliedAt     time.Time
+	HideNavbar    bool
+}
+
+type CompanyApplicationsPageData struct {
+	Applications []CompanyApplication
+	HideNavbar   bool
+}
+
+type UserApplicationsPageData struct {
+	Applications []UserApplication
+	HideNavbar   bool
 }

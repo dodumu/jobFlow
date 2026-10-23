@@ -1,5 +1,6 @@
 package models
 
 type LoginPageData struct {
-	Error string
+	Error      string
+	HideNavbar bool
 }
