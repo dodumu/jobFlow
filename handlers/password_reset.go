@@ -31,8 +31,9 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 			RenderError(w, r, http.StatusBadRequest, "Bad request", "Email is requred")
 			return
 		}
-		UserID, err := database.GetUserByEmail(email)
+		User, err := database.GetUserByEmail(email)
 		if err != nil {
+			log.Printf("Password reset: user lookup failed: %v", err)
 			http.Redirect(w, r, "/forgot-password?sent=1", http.StatusSeeOther)
 			return
 		}
@@ -42,15 +43,21 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 			RenderError(w, r, http.StatusInternalServerError, "Internal sever error", "Unable to process request")
 			return
 		}
-		codeHash, err := utils.HashVerificationCode(UserID.ID, code)
+		codeHash, err := utils.HashVerificationCode(User.ID, code)
 		if err != nil {
 			log.Printf("Hashing reset code: %v", err)
 			RenderError(w, r, http.StatusInternalServerError, "internal server error", "Unable to process request")
 			return
 		}
-		if err := database.SavePasswordResetAuthorization(UserID.ID, codeHash); err != nil {
+		if err := database.SavePasswordResetCode(User.ID, codeHash); err != nil {
 			log.Printf("Saving reset code: %v", err)
-			RenderError(w, r, http.StatusInternalServerError, "internal server error", "Unable to process request")
+			RenderError(
+				w,
+				r,
+				http.StatusInternalServerError,
+				"Internal server error",
+				"Unable to process request",
+			)
 			return
 		}
 		if err := utils.SendVerificationEmail(email, code); err != nil {

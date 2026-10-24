@@ -66,14 +66,8 @@ func VerifyResetHandler(w http.ResponseWriter, r *http.Request) {
 		showError("The verification code is invalid or has expired.", http.StatusBadRequest)
 		return
 	}
-	submittedHash, err := utils.HashVerificationCode(user.ID, code)
-	if err != nil {
-		log.Printf("Hashing verification code: %v", err)
-		showError("We couldn't verify your code right now. Please try again later.", http.StatusInternalServerError)
-		return
 
-	}
-	if err := database.VerifyPasswordResetCode(user.ID, submittedHash); err != nil {
+	if err := database.VerifyPasswordResetCode(user.ID, code); err != nil {
 		showError("The verification code is invalid or has expired.", http.StatusBadRequest)
 		return
 	}

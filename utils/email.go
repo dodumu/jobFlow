@@ -37,6 +37,7 @@ func SendVerificationEmail(toEmail, code string) error {
 			"Subject: " + subject + "\r\n" +
 			"MIME-Version: 1.0\r\n" +
 			"Content-Type: text/plain; charset=UTF-8\r\n" +
+			"\r\n" +
 			body + "\r\n",
 	)
 	if err := smtp.SendMail(address, auth, from, []string{toEmail}, message); err != nil {
