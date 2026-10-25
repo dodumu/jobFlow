@@ -1,481 +1,445 @@
+
 {{define "base"}}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>JobFlow</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-
-      --background: #f3f6f9;
-      --surface: #ffffff;
-
-      --border: #e5e7eb;
-
-      --text: #111827;
-      --muted: #6b7280;
-
-      --soft: #f8fafc;
-
-      --danger: #dc2626;
-    }
-
-    body {
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        Roboto, Arial, sans-serif;
-
-      background: var(--background);
-      color: var(--text);
-
-      line-height: 1.5;
-    }
-
-    a {
-      color: inherit;
-    }
-
-    button,
-    input,
-    textarea,
-    select {
-      font-family: inherit;
-    }
-
-    button {
-      border: none;
-      cursor: pointer;
-    }
-
-    /* =========================
-       NAVBAR
-       ========================= */
-
-    .navbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-
-      height: 64px;
-
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .navbar-inner {
-      width: min(1200px, 94%);
-      height: 100%;
-
-      margin: 0 auto;
-
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .brand {
-      text-decoration: none;
-
-      font-size: 23px;
-      font-weight: 800;
-
-      letter-spacing: -0.5px;
-
-      color: var(--primary);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nav-link {
-      text-decoration: none;
-
-      color: var(--muted);
-
-      font-size: 14px;
-      font-weight: 600;
-
-      padding: 9px 14px;
-
-      border-radius: 8px;
-
-      transition:
-        color 0.2s ease,
-        background-color 0.2s ease,
-        transform 0.15s ease;
-    }
-
-    .nav-link:hover {
-      color: var(--primary);
-      background: #eff6ff;
-    }
-
-    .nav-link:active {
-      transform: scale(0.96);
-    }
-
-    .nav-link:focus-visible {
-      outline: 2px solid var(--primary);
-      outline-offset: 2px;
-    }
-
-    .nav-link.active {
-      color: var(--primary);
-      background: #eff6ff;
-    }
-
-    .logout-button {
-      background: transparent;
-      font-family: inherit;
-      cursor: pointer;
-    }
-
-    .logout-button:hover {
-      color: var(--danger);
-      background: #fef2f2;
-    }
-
-    /* Hidden on desktop */
-    .menu-toggle {
-      display: none;
-
-      background: transparent;
-      color: var(--text);
-
-      font-size: 26px;
-      line-height: 1;
-
-      padding: 6px 10px;
-
-      border-radius: 8px;
-    }
-
-    .menu-toggle:hover {
-      background: var(--soft);
-    }
-
-    /* Navigation shown when logged out */
-    .public-nav {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* =========================
-       MAIN CONTAINER
-       ========================= */
-
-    .container {
-      width: min(1200px, 94%);
-
-      margin: 0 auto;
-
-      padding: 30px 0 50px;
-    }
-
-    /* =========================
-       BUTTONS
-       ========================= */
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-
-      padding: 10px 18px;
-
-      border-radius: 8px;
-
-      font-weight: 600;
-
-      transition: 0.2s ease;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-    }
-
-    .btn-secondary {
-      background: white;
-      color: var(--text);
-
-      border: 1px solid var(--border);
-
-      padding: 9px 16px;
-
-      border-radius: 8px;
-
-      font-weight: 600;
-
-      transition: 0.2s ease;
-    }
-
-    .btn-secondary:hover {
-      background: var(--soft);
-    }
-
-    /* =========================
-   NAVBAR PROFILE AVATAR
-   ========================= */
-
-    /* =========================
-   PROFILE AVATAR
-   ========================= */
-
-    .nav-avatar-link {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      width: 42px;
-      height: 42px;
-
-      border-radius: 50%;
-      text-decoration: none;
-
-      flex-shrink: 0;
-
-      transition: transform 0.2s ease;
-    }
-
-    .nav-avatar-link:hover {
-      transform: scale(1.08);
-    }
-
-    .nav-avatar {
-      width: 40px;
-      height: 40px;
-
-      border-radius: 50%;
-      object-fit: cover;
-
-      border: 2px solid var(--border);
-    }
-
-    .nav-avatar-placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      width: 40px;
-      height: 40px;
-
-      border-radius: 50%;
-
-      background: #e5e7eb;
-      color: var(--muted);
-
-      font-size: 22px;
-    }
-
-    .nav-avatar-link:hover .nav-avatar {
-      border-color: var(--primary);
-    }
-
-    /* =========================
-       MOBILE
-       ========================= */
-
-    @media (max-width: 768px) {
-
-      .navbar {
-        height: auto;
-        min-height: 64px;
-      }
-
-      .navbar-inner {
-        width: 92%;
-        min-height: 64px;
-
-        position: relative;
-      }
-
-      .container {
-        width: 92%;
-        padding: 20px 0 40px;
-      }
-
-      /* Show hamburger */
-      .menu-toggle {
-        display: block;
-      }
-
-      /* Hide authenticated links until
-         hamburger is opened */
-      .nav-links {
-        display: none;
-
-        position: absolute;
-
-        top: 64px;
-        left: 0;
-        right: 0;
-
-        flex-direction: column;
-        align-items: stretch;
-
-        padding: 12px;
-
-        background: var(--surface);
-
-        border: 1px solid var(--border);
-        border-radius: 0 0 10px 10px;
-
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-      }
-
-      .nav-links.open {
-        display: flex;
-      }
-
-      .nav-link {
-        width: 100%;
-        padding: 12px;
-      }
-
-      .nav-links form {
-        width: 100%;
-      }
-
-      .logout-button {
-        width: 100%;
-        text-align: left;
-      }
-
-      /* Public navigation remains visible */
-      .public-nav {
-        display: flex;
-      }
-
-      .public-nav .nav-link {
-        width: auto;
-        padding: 8px 9px;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobFlow</title>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --background: #f9fafb;
+            --white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .navbar {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            min-height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand {
+            color: var(--primary);
+            font-size: 25px;
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            white-space: nowrap;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 44px;
+            height: 44px;
+            padding: 0 12px;
+            border-radius: 10px;
+            color: var(--muted);
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .nav-link.active {
+            color: var(--primary);
+            background: #dbeafe;
+        }
+
+        .nav-link svg {
+            width: 23px;
+            height: 23px;
+            flex-shrink: 0;
+            stroke: currentColor;
+        }
+
+        .nav-label {
+            display: none;
+        }
+
+        /* Notification unread badge */
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: #dc2626;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        /* Profile picture */
+        .profile-link {
+            padding: 4px;
+            border-radius: 50%;
+        }
+
+        .profile-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border);
+        }
+
+        .profile-placeholder {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #dbeafe;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-placeholder svg {
+            width: 21px;
+            height: 21px;
+        }
+
+        /* Main page content */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        /* Mobile menu button */
+        .menu-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .menu-toggle svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                min-height: 62px;
+                padding: 0 14px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .brand {
+                font-size: 22px;
+            }
+
+            .menu-toggle {
+                display: inline-flex;
+                margin-left: auto;
+            }
+
+            .nav-links {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 4px;
+                padding: 0 0 12px;
+            }
+
+            .nav-links.open {
+                display: flex;
+            }
+
+            .nav-link {
+                width: 100%;
+                justify-content: flex-start;
+                min-height: 46px;
+                padding: 0 14px;
+                border-radius: 8px;
+            }
+
+            .nav-label {
+                display: inline;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .notification-badge {
+                position: static;
+                margin-left: auto;
+            }
+
+            .profile-link {
+                border-radius: 8px;
+                padding: 5px 14px;
+            }
+
+            .profile-link .nav-label {
+                margin-left: 4px;
+            }
+
+            .container {
+                padding: 18px 14px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-  {{if showNavbar}}
-  <nav class="navbar">
-    <div class="navbar-inner">
+    {{if showNavbar}}
+    <nav class="navbar" aria-label="Main navigation">
+        <div class="nav-container">
 
-      {{if isAuthenticated}}
+            <a href="/home" class="brand" aria-label="JobFlow home">
+                JobFlow
+            </a>
 
-      <!-- Authenticated navigation -->
+            {{if isAuthenticated}}
+            <button
+                type="button"
+                class="menu-toggle"
+                id="menuToggle"
+                aria-label="Open navigation menu"
+                aria-expanded="false"
+                aria-controls="navLinks"
+            >
+                <svg
+                    id="menuIcon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                >
+                    <path d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
 
-      <a href="/dashboard" class="brand">
-        JobFlow
-      </a>
+            <div class="nav-links" id="navLinks">
 
-      <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false">
-        ☰
-      </button>
+                <!-- Home -->
+                <a
+                    href="/home"
+                    class="nav-link {{if isActive "/home"}}active{{end}}"
+                    title="Home"
+                    aria-label="Home"
+                >
+                    <svg viewBox="0 0 24 24" fill="none"
+                        stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <path d="m3 10 9-7 9 7"/>
+                        <path d="M5 9v12h14V9"/>
+                        <path d="M9 21v-7h6v7"/>
+                    </svg>
+                    <span class="nav-label">Home</span>
+                </a>
 
-      <div class="nav-links">
+                <!-- Dashboard -->
+                <a
+                    href="/dashboard"
+                    class="nav-link {{if isActive "/dashboard"}}active{{end}}"
+                    title="Dashboard"
+                    aria-label="Dashboard"
+                >
+                    <svg viewBox="0 0 24 24" fill="none"
+                        stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="3" width="8" height="8" rx="1"/>
+                        <rect x="13" y="3" width="8" height="5" rx="1"/>
+                        <rect x="13" y="10" width="8" height="11" rx="1"/>
+                        <rect x="3" y="13" width="8" height="8" rx="1"/>
+                    </svg>
+                    <span class="nav-label">Dashboard</span>
+                </a>
 
-        <a href="/home" class="nav-link {{if isActive " /home"}}active{{end}}">
-          Home
-        </a>
+                <!-- Jobs -->
+                <a
+                    href="/jobs"
+                    class="nav-link {{if isActive "/jobs"}}active{{end}}"
+                    title="Jobs"
+                    aria-label="Jobs"
+                >
+                    <svg viewBox="0 0 24 24" fill="none"
+                        stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="7" width="18" height="14" rx="2"/>
+                        <path d="M8 7V4h8v3"/>
+                        <path d="M3 12h18M10 12v2h4v-2"/>
+                    </svg>
+                    <span class="nav-label">Jobs</span>
+                </a>
 
-        <a href="/dashboard" class="nav-link {{if isActive " /dashboard"}}active{{end}}">Dashboard</a>
+                <!-- Applications -->
+                <a
+                    href="/applications"
+                    class="nav-link {{if isActive "/applications"}}active{{end}}"
+                    title="Applications"
+                    aria-label="Applications"
+                >
+                    <svg viewBox="0 0 24 24" fill="none"
+                        stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <path d="M14 2v6h6"/>
+                        <path d="M8 13h8M8 17h8"/>
+                    </svg>
+                    <span class="nav-label">Applications</span>
+                </a>
 
-        <a href="/jobs" class="nav-link {{if isActive " /jobs"}}active{{end}}">
-          Jobs
-        </a>
+                <!-- Notifications -->
+                <a
+                    href="/notifications"
+                    class="nav-link notification-nav-link {{if isActive "/notifications"}}active{{end}}"
+                    title="Notifications"
+                    aria-label="Notifications"
+                >
+                    <svg viewBox="0 0 24 24" fill="none"
+                        stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                        <path d="M10 21h4"/>
+                    </svg>
+                    <span class="nav-label">Notifications</span>
 
-        <a href="/applications" class="nav-link {{if isActive " /applications"}}active{{end}}">
-          Applications
-        </a>
+                    {{$unreadCount := unreadNotificationCount}}
+                    {{if gt $unreadCount 0}}
+                    <span class="notification-badge">
+                        {{$unreadCount}}
+                    </span>
+                    {{end}}
+                </a>
 
-        <form action="/logout" method="POST">
-          <button type="submit" class="nav-link logout-button">
-            Logout
-          </button>
-        </form>
-        <a href="/profile" class="nav-avatar-link" aria-label="View your profile">
+                <!-- Profile -->
+                <a
+                    href="/profile"
+                    class="nav-link profile-link {{if isActive "/profile"}}active{{end}}"
+                    title="Profile"
+                    aria-label="Profile"
+                >
+                    {{if currentUserAvatar}}
+                    <img
+                        src="{{currentUserAvatar}}"
+                        alt="Profile"
+                        class="profile-avatar"
+                    >
+                    {{else}}
+                    <span class="profile-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <circle cx="12" cy="8" r="4"/>
+                            <path d="M5 21v-2a7 7 0 0 1 14 0v2"/>
+                        </svg>
+                    </span>
+                    {{end}}
+                    <span class="nav-label">Profile</span>
+                </a>
 
-          {{if currentUserAvatar}}
+                <!-- Logout -->
+                <a
+                    href="/logout"
+                    class="nav-link"
+                    title="Logout"
+                    aria-label="Logout"
+                >
+                    <svg viewBox="0 0 24 24" fill="none"
+                        stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <path d="M10 17l5-5-5-5"/>
+                        <path d="M15 12H3"/>
+                        <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/>
+                    </svg>
+                    <span class="nav-label">Logout</span>
+                </a>
 
-          <img src="{{currentUserAvatar}}" alt="Your profile picture" class="nav-avatar">
+            </div>
+            {{end}}
+        </div>
+    </nav>
+    {{end}}
 
-          {{else}}
+    <main class="container">
+        {{template "content" .}}
+    </main>
 
-          <span class="nav-avatar-placeholder">
-            👤
-          </span>
+    <script>
+        const menuToggle = document.getElementById("menuToggle");
+        const navLinks = document.getElementById("navLinks");
 
-          {{end}}
+        if (menuToggle && navLinks) {
+            menuToggle.addEventListener("click", function () {
+                const isOpen = navLinks.classList.toggle("open");
 
-        </a>
-      </div>
-
-      {{else}}
-
-      <!-- Public navigation -->
-
-      <a href="/" class="brand">
-        JobFlow
-      </a>
-
-      <div class="public-nav">
-
-        <a href="/login" class="nav-link">
-          Login
-        </a>
-
-        <a href="/register" class="nav-link">
-          Register
-        </a>
-
-      </div>
-
-      {{end}}
-
-    </div>
-  </nav>
-  {{end}}
-
-  <main class="container">
-    {{template "content" .}}
-  </main>
-
-  <script>
-    const menuToggle = document.querySelector(".menu-toggle");
-    const navLinks = document.querySelector(".nav-links");
-
-    if (menuToggle && navLinks) {
-
-      menuToggle.addEventListener("click", function () {
-
-        const isOpen = navLinks.classList.toggle("open");
-
-        menuToggle.setAttribute(
-          "aria-expanded",
-          isOpen
-        );
-
-        menuToggle.textContent = isOpen ? "✕" : "☰";
-      });
-
-    }
-  </script>
+                menuToggle.setAttribute("aria-expanded", String(isOpen));
+                menuToggle.setAttribute(
+                    "aria-label",
+                    isOpen ? "Close navigation menu" : "Open navigation menu"
+                );
+            });
+        }
+    </script>
 
 </body>
-
 </html>
 {{end}}

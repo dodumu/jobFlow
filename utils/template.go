@@ -57,9 +57,23 @@ func RenderTemplate(
 				strings.HasPrefix(currentPath, path+"/")
 		},
 		"showNavbar": func() bool {
-    		return page != "forgot_password.html" &&
-        		page != "verify_reset.html" &&
-        		page != "reset_password.html"
+			return page != "forgot_password.html" &&
+				page != "verify_reset.html" &&
+				page != "reset_password.html"
+		},
+
+		"unreadNotificationCount": func() int {
+			if !isAuthenticated {
+				return 0
+			}
+
+			count, err := database.GetUnreadNotificationCount(int64(UserID))
+			if err != nil {
+				log.Printf("Unable to retrieve unread notification count: %v", err)
+				return 0
+			}
+
+			return count
 		},
 	}
 

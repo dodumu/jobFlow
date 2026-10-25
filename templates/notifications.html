@@ -1,0 +1,169 @@
+{{define "content"}}
+<style>
+    .notifications-page {
+        max-width: 850px;
+        margin: 32px auto;
+        padding: 0 20px;
+    }
+
+    .notifications-header {
+        margin-bottom: 24px;
+    }
+
+    .notifications-header h1 {
+        margin: 0 0 8px;
+        color: #1e293b;
+        font-size: 28px;
+    }
+
+    .notifications-header p {
+        margin: 0;
+        color: #64748b;
+    }
+
+    .notifications-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .notification-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 18px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+    }
+
+    .notification-item.unread {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+    }
+
+    .notification-indicator {
+        width: 10px;
+        flex-shrink: 0;
+        padding-top: 6px;
+    }
+
+    .unread-dot {
+        display: block;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #2563eb;
+    }
+
+    .notification-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .notification-message {
+        margin: 0 0 8px;
+        color: #1e293b;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .notification-time {
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .notification-link {
+        flex-shrink: 0;
+        color: #2563eb;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .notification-link:hover {
+        color: #1d4ed8;
+        text-decoration: underline;
+    }
+
+    .notifications-empty {
+        padding: 48px 20px;
+        text-align: center;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+    }
+
+    .empty-icon {
+        margin-bottom: 12px;
+        color: #2563eb;
+        font-size: 32px;
+    }
+
+    .notifications-empty h2 {
+        margin: 0 0 8px;
+        color: #1e293b;
+        font-size: 20px;
+    }
+
+    .notifications-empty p {
+        margin: 0;
+        color: #64748b;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+        .notifications-page {
+            margin-top: 20px;
+            padding: 0 12px;
+        }
+
+        .notification-item {
+            gap: 10px;
+            padding: 14px 12px;
+        }
+
+        .notifications-header h1 {
+            font-size: 24px;
+        }
+    }
+</style>
+<div class="notifications-page">
+    <div class="notifications-header">
+        <div>
+            <h1>Notifications</h1>
+            <p>Stay updated on what's happening with your JobFlow account.</p>
+        </div>
+    </div>
+
+    <div class="notifications-list">
+        {{if .Notification}}
+        {{range .Notification}}
+        <div class="notification-item {{if not .IsRead}}unread{{end}}">
+            <div class="notification-indicator">
+                {{if not .IsRead}}
+                <span class="unread-dot"></span>
+                {{end}}
+            </div>
+
+            <div class="notification-content">
+                <p class="notification-message">{{.Message}}</p>
+                <span class="notification-time">{{.CreatedAt}}</span>
+            </div>
+
+            {{if .Link.Valid}}
+            <a class="notification-link" href="{{.Link.String}}">
+                View
+            </a>
+            {{end}}
+        </div>
+        {{end}}
+        {{else}}
+        <div class="notifications-empty">
+            <div class="empty-icon">♧</div>
+            <h2>You're all caught up!</h2>
+            <p>When something happens on JobFlow, your notifications will appear here.</p>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

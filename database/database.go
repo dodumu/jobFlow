@@ -334,6 +334,28 @@ func CreateTables() error {
 
 		CHECK (follower_id != following_id)
 	);
+
+	CREATE TABLE IF NOT EXISTS notifications (
+    	id INTEGER PRIMARY KEY AUTOINCREMENT,
+    	user_id INTEGER NOT NULL,
+    	actor_id INTEGER,
+    	notification_type TEXT NOT NULL,
+    	message TEXT NOT NULL,
+    	link TEXT,
+    	is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    	FOREIGN KEY (user_id)
+        	REFERENCES users(id)
+        	ON DELETE CASCADE,
+
+    	FOREIGN KEY (actor_id)
+        	REFERENCES users(id)
+        	ON DELETE SET NULL
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_notifications_user_read_created
+	ON notifications (user_id, is_read, created_at);
 	`
 
 	_, err := DB.Exec(query)

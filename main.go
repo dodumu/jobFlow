@@ -187,6 +187,28 @@ func main() {
 			http.HandlerFunc(handlers.RejectApplicationHandler),
 		),
 	)
+
+	http.Handle(
+		"/notifications",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.NotificationsHandler),
+		),
+	)
+
+	http.Handle(
+		"/notifications/unread-count",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.UnreadNotificationCountHandler),
+		),
+	)
+
+	http.Handle(
+		"/notifications/read",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.MarkNotificationAsReadHandler),
+		),
+	)
+
 	http.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 	})
