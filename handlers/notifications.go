@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"jobFlow/database"
 	"jobFlow/models"
 	"jobFlow/utils"
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
@@ -111,4 +113,68 @@ func MarkNotificationAsReadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, "/notifications", http.StatusSeeOther)
+}
+
+func NotificationStreamHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := utils.GetUserID(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Straming unsupported", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accell-Buffering", "no")
+
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	var lastCount = -1
+
+	for {
+		count, err := database.GetUnreadNotificationCount(int64(userID))
+		if err != nil {
+			log.Printf("NotificationStreamerHandler: %v", err)
+			return
+		}
+
+		if count != lastCount {
+			data, err := json.Marshal(struct {
+				Count int `json:"count"`
+			}{
+				Count: count,
+			})
+
+			if err != nil {
+				log.Printf("Encoding notification count: %v", err)
+				return
+			}
+
+			if _, err := fmt.Fprintf(
+				w, "event: unread-count\ndata:%s\n\n",
+				data,
+			); err != nil {
+				return
+			}
+			flusher.Flush()
+			lastCount = count
+		}
+		select {
+		case <-r.Context().Done():
+			return
+		case <-ticker.C:
+		}
+	}
 }

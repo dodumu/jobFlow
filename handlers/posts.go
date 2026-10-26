@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"jobFlow/database"
 	"jobFlow/models"
 	"jobFlow/utils"
@@ -144,7 +145,19 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 		PostID: id,
 		UserID: userID,
 	}
+	post, err := database.GetPostByID(id)
+	if err != nil {
+		log.Printf("LikePostHandler GetPostByID error - postID=%d: %v", id, err)
 
+		RenderError(
+			w,
+			r,
+			http.StatusNotFound,
+			"Post Not Found",
+			"We couldn't find the post you want to like.",
+		)
+		return
+	}
 	if err := database.LikePost(like); err != nil {
 		log.Printf(
 			"LikePostHandler LikePost error - postID=%d userID=%d: %v",
@@ -162,7 +175,28 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
+	if post.UserID != nil && *post.UserID != userID {
+		_, err := database.CreateNotification(
+			int64(*post.UserID),
+			sql.NullInt64{
+				Int64: int64(userID),
+				Valid: true,
+			},
+			"like",
+			"Someone liked your post",
+			fmt.Sprintf("/posts/%d", id),
+		)
 
+		if err != nil {
+			log.Printf(
+				"LikePostHandler CreateNotification error - postID=%d actorID=%d recipientID=%d: %v",
+				id,
+				userID,
+				*post.UserID,
+				err,
+			)
+		}
+	}
 	utils.RedirectBack(w, r, "/home")
 }
 

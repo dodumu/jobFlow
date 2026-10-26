@@ -208,7 +208,12 @@ func main() {
 			http.HandlerFunc(handlers.MarkNotificationAsReadHandler),
 		),
 	)
-
+	http.Handle(
+		"/notifications/stream",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.NotificationStreamHandler),
+		),
+	)
 	http.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 	})
