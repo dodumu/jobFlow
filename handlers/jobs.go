@@ -820,7 +820,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 		Status:      "pending",
 	}
 
-	_, err = database.CreateApplication(application)
+	applicationID, err := database.CreateApplication(application)
 	if err != nil {
 		log.Printf("ApplyJobHandler CreateApplication error: %v", err)
 		RenderError(
@@ -836,10 +836,13 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("ApplyJObHandler GetCompanyByID error: %v", err)
 	} else {
-		_, err = database.CreateNotification(int64(company.UserID), sql.NullInt64{Int64: int64(userID), Valid: true}, "application", fmt.Sprintf("%s applied for %s", user.FirstName, job.Title), "/applications")
-		if err != nil {
-			log.Printf("ApplyJobHandler CreateNotification error: %v", err)
-		}
+		_, err = database.CreateNotification(
+			int64(company.UserID),
+			sql.NullInt64{Int64: int64(userID), Valid: true},
+			"application",
+			fmt.Sprintf("%s applied for %s", user.FirstName, job.Title),
+			fmt.Sprintf("/applications/%d", applicationID),
+		)
 	}
-	http.Redirect(w, r, "/applications", http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/applications/%d", applicationID), http.StatusSeeOther)
 }
