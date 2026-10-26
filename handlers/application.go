@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"jobFlow/constants"
 	"jobFlow/database"
@@ -403,6 +405,27 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 		return
 	}
 
+	_, err = database.CreateNotification(
+		int64(application.UserID),
+		sql.NullInt64{
+			Int64: int64(userID),
+			Valid: true,
+		},
+		"application_status",
+		fmt.Sprintf(
+			"Your application for %s has been %s",
+			job.Title,
+			status,
+		),
+		fmt.Sprintf("/my-applications/%d", application.ID),
+	)
+	if err != nil {
+		log.Printf(
+			"updateApplicationStatusHandler CreateNotification error: %v",
+			err,
+		)
+	}
+
 	http.Redirect(
 		w,
 		r,
@@ -417,4 +440,69 @@ func AcceptApplicationHandler(w http.ResponseWriter, r *http.Request) {
 
 func RejectApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	updateApplicationStatusHandler(w, r, "rejected")
+}
+
+func ViewMyApplicationHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RenderError(w, r, http.StatusMethodNotAllowed, "Method Not Allowed", "The requested method is not allowed on this page.")
+		return
+	}
+
+	userID, ok := utils.GetUserID(r)
+	if !ok {
+		RenderError(w, r, http.StatusUnauthorized, "Unauthorized", "You must be logged in to view you application.")
+		return
+	}
+	user, err := database.GetUserByID(userID)
+	if err != nil {
+		log.Printf("ViewMyApllicationHandler GetUserBYID err: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Something Went, Wrong", "We couldn't load you account information")
+		return
+	}
+
+	if user.Role != constants.RoleIndividual {
+		RenderError(w, r, http.StatusForbidden, "Access Denied", "Only individual account can view their own applications here.")
+		return
+	}
+	applicationID, err := utils.GetPathID(r, "id")
+	if err != nil || applicationID <= 0 {
+		RenderError(
+			w,
+			r,
+			http.StatusBadRequest,
+			"Invalid Application",
+			"The application ID provided is invalid.",
+		)
+		return
+	}
+	application, err := database.GetApplicationByID(applicationID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			RenderError(w, r, http.StatusNotFound, "Application Not Found", "The application you're looking for could not be found")
+			return
+		}
+		log.Printf("ViewMyApplicationHandler GetApplicationsByID error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load your application")
+		return
+	}
+
+	if application.UserID != userID {
+		RenderError(w, r, http.StatusForbidden, "Access Denied", "You don't have permission to view the application.")
+		return
+	}
+
+	job, err := database.GetJobByID(application.JobID)
+	if err != nil {
+		log.Printf("ViewMyApplicationHandler GetJobByID error : %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Something went wrong", "We couldn't load the job associated with your application.")
+		return
+	}
+	data := ApplicationDetailsData{
+		Application: application,
+		Job:         job,
+		Applicant:   user,
+	}
+	if err := utils.RenderTemplate(w, r, "application.html", data); err != nil {
+		log.Printf("ViewMyApplicationHandler RenderTemplate error: %v ", err)
+	}
 }

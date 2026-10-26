@@ -383,9 +383,68 @@ func CreateTables() error {
 			('Hybrid'),
 			('On-site')
 	`)
+
 	if err != nil {
 		return fmt.Errorf("seeding work arrangements: %w", err)
 	}
 
+	// Add job_id to existing notifications tables when needed.
+	var jobIDColumnExists bool
+
+	rows, err := DB.Query(`PRAGMA table_info(notifications)`)
+	if err != nil {
+		return fmt.Errorf("checking notifications schema: %w", err)
+	}
+
+	for rows.Next() {
+		var cid int
+		var name, columnType string
+		var notNull, primaryKey int
+		var defaultValue sql.NullString
+
+		if err := rows.Scan(
+			&cid,
+			&name,
+			&columnType,
+			&notNull,
+			&defaultValue,
+			&primaryKey,
+		); err != nil {
+			rows.Close()
+			return fmt.Errorf("reading notifications schema: %w", err)
+		}
+
+		if name == "job_id" {
+			jobIDColumnExists = true
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return fmt.Errorf("iterating notifications schema: %w", err)
+	}
+	rows.Close()
+
+	if !jobIDColumnExists {
+		_, err := DB.Exec(`
+        ALTER TABLE notifications
+        ADD COLUMN job_id INTEGER REFERENCES jobs(id) ON DELETE CASCADE
+    `)
+		if err != nil {
+			return fmt.Errorf("adding job_id to notifications: %w", err)
+		}
+	}
+
+	_, err = DB.Exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_job_notification
+    ON notifications (user_id, job_id)
+    WHERE notification_type = 'new_job'
+      AND job_id IS NOT NULL
+`)
+	if err != nil {
+		return fmt.Errorf("creating unique job notification index: %w", err)
+	}
+
 	return nil
+
 }

@@ -105,7 +105,7 @@
     border-radius: 20px;
     background: #ecfdf3;
     color: #15803d;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
   }
@@ -127,6 +127,7 @@
   }
 
   .job-meta-item {
+    text-transform: capitalize;
     display: inline-flex;
     align-items: center;
     padding: 7px 10px;
@@ -134,7 +135,7 @@
     border: 1px solid var(--border);
     border-radius: 7px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 12px;
   }
 
   /* =========================
@@ -219,12 +220,13 @@
     display: block;
     margin-bottom: 5px;
     color: var(--muted);
-    font-size: 10px;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 
   .summary-value {
+    text-transform: capitalize;
     display: block;
     color: var(--text);
     font-size: 13px;
@@ -500,7 +502,7 @@
           </span>
 
           <span class="summary-value">
-            {{.Deadline}}
+            {{formatDate .Deadline}}
           </span>
 
         </div>

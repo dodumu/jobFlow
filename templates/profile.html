@@ -338,7 +338,7 @@
             class="large-avatar profile-picture"
           />
           {{else}}
-          <div class="large-avatar">{{slice .User.FirstName 0 1}}</div>
+          <div class="large-avatar">{{printf "%.1s" .User.FirstName}}</div>
           {{end}}
 
           <div class="profile-identity">
@@ -576,7 +576,7 @@
         </ul>
       </section>
       {{if .Company}}
-      <section class="profile-card">
+      <section class="card">
         <h2>Company</h2>
 
         <div class="company-info">

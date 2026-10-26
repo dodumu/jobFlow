@@ -784,12 +784,8 @@
 
       <div class="post-header">
 
-        <div class="post-avatar">
-          {{if currentUserAvatar}}
-            <img src="{{currentUserAvatar}}" alt="Your profile picture" loading="lazy">
-          {{else}}
-            {{if .AuthorFirstName}}{{printf "%.1s" .AuthorFirstName}}{{else}}U{{end}}
-          {{end}}
+        <div class="post-avatar" aria-hidden="true">
+          {{if .AuthorFirstName}}{{printf "%.1s" .AuthorFirstName}}{{else}}U{{end}}
         </div>
 
         <div class="post-author">
@@ -842,7 +838,7 @@
         <div class="shared-post-header">
 
           <div class="post-avatar">
-            {{slice .OriginalAuthorFirstName 0 1}}
+            {{printf "%.1s" .OriginalAuthorFirstName}}
           </div>
 
           <div class="post-author">

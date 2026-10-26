@@ -109,7 +109,7 @@
 
     color: var(--muted);
 
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.5;
   }
 
@@ -190,7 +190,7 @@
 
     color: var(--muted);
 
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.4;
   }
 
@@ -431,32 +431,40 @@
             required
           >
 
+            {{/* Values match create-job.html (lowercase). Capitalised legacy values still select correctly. */}}
             <option
-              value="Full-time"
-              {{if eq .EmploymentType "Full-time"}}selected{{end}}
+              value="full-time"
+              {{if or (eq .EmploymentType "full-time") (eq .EmploymentType "Full-time")}}selected{{end}}
             >
               Full-time
             </option>
 
             <option
-              value="Part-time"
-              {{if eq .EmploymentType "Part-time"}}selected{{end}}
+              value="part-time"
+              {{if or (eq .EmploymentType "part-time") (eq .EmploymentType "Part-time")}}selected{{end}}
             >
               Part-time
             </option>
 
             <option
-              value="Contract"
-              {{if eq .EmploymentType "Contract"}}selected{{end}}
+              value="contract"
+              {{if or (eq .EmploymentType "contract") (eq .EmploymentType "Contract")}}selected{{end}}
             >
               Contract
             </option>
 
             <option
-              value="Internship"
-              {{if eq .EmploymentType "Internship"}}selected{{end}}
+              value="internship"
+              {{if or (eq .EmploymentType "internship") (eq .EmploymentType "Internship")}}selected{{end}}
             >
               Internship
+            </option>
+
+            <option
+              value="temporary"
+              {{if or (eq .EmploymentType "temporary") (eq .EmploymentType "Temporary")}}selected{{end}}
+            >
+              Temporary
             </option>
 
           </select>

@@ -170,6 +170,12 @@ func main() {
 		),
 	)
 	http.Handle(
+		"GET /my-applications/{id}",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.ViewMyApplicationHandler),
+		),
+	)
+	http.Handle(
 		"GET /applications/{id}",
 		middleware.AuthMiddleware(
 			http.HandlerFunc(handlers.ViewApplicationHandler),

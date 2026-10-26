@@ -123,6 +123,18 @@
         line-height: 1.6;
     }
 
+    .verify-reset-notice.verify-reset-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-left: 4px solid #dc2626;
+        color: #991b1b;
+    }
+
+    .verify-reset-submit {
+        border: none;
+        font-family: inherit;
+    }
+
     @media (max-width: 480px) {
         .verify-reset-card {
             padding: 28px 22px;
@@ -156,7 +168,7 @@
         {{end}}
 
         {{if .Error}}
-        <div class="verify-reset-notice" role="alert">
+        <div class="verify-reset-notice verify-reset-error" role="alert">
             {{.Error}}
         </div>
         {{end}}

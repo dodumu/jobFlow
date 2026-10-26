@@ -17,47 +17,97 @@
         text-align: center;
     }
 
+    .error-container {
+        padding: 2.5rem 2rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 12px 35px rgba(15, 23, 42, 0.07);
+    }
+
     .error-code {
         font-size: 5rem;
-        font-weight: 700;
+        font-weight: 800;
         margin: 0;
         line-height: 1;
+        letter-spacing: -2px;
+        color: var(--primary);
     }
 
     .error-container h1 {
-        margin: 1rem 0;
-        font-size: 2rem;
+        margin: 1rem 0 0.5rem;
+        font-size: 1.75rem;
+        color: var(--text);
     }
 
     .error-message {
+        max-width: 440px;
+        margin: 0 auto 2rem;
+        color: var(--muted);
         font-size: 1rem;
         line-height: 1.6;
-        margin-bottom: 2rem;
+    }
+
+    .error-actions {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .error-home-btn,
+    .error-back-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        font-family: inherit;
     }
 
     .error-home-btn {
-        display: inline-block;
-        padding: 0.75rem 1.5rem;
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: 600;
+        background: var(--primary);
+        color: #fff;
+        border: 1px solid var(--primary);
+    }
+
+    .error-home-btn:hover {
+        background: var(--primary-dark);
+    }
+
+    .error-back-btn {
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+    }
+
+    .error-back-btn:hover {
+        background: #f3f4f6;
     }
 </style>
 
 <section class="error-page">
     <div class="error-container">
 
-        <p class="error-code">{{.StatusCode}}</p>
+        <p class="error-code" aria-hidden="true">{{.StatusCode}}</p>
 
         <h1>{{.Title}}</h1>
 
-        <p class="error-message">
+        <p class="error-message" role="alert">
             {{.Message}}
         </p>
 
-        <a href="/home" class="error-home-btn">
-            Back to Home
-        </a>
+        <div class="error-actions">
+            <a href="/home" class="error-home-btn">
+                Back to Home
+            </a>
+
+            <button type="button" class="error-back-btn" onclick="history.back()">
+                Go Back
+            </button>
+        </div>
 
     </div>
 </section>
