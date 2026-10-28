@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"jobFlow/constants"
@@ -246,12 +247,14 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// GET: display the existing profile.
+	// GET: load the existing profile and skills.
 	if r.Method == http.MethodGet {
 		profile, err := database.GetUserProfileByUserID(userID)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			log.Printf("EditProfileHandler GetUserProfileByUserID error: %v", err)
-
+			log.Printf(
+				"EditProfileHandler GetUserProfileByUserID error: %v",
+				err,
+			)
 			RenderError(
 				w,
 				r,
@@ -262,59 +265,61 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		data := models.EditProfilePageData{
-			Profile: profile,
-		}
-
-		if err := utils.RenderTemplate(w, r, "edit-profile.html", data); err != nil {
+		skills, err := database.GetSkillsByUserID(userID)
+		if err != nil {
 			log.Printf(
-				"ProfileHandler RenderTemplate edit-profile.html error: %v",
+				"EditProfileHandler GetSkillsByUserID error: %v",
 				err,
-			)
-		}
-
-		return
-	}
-	existingProfile, err := database.GetUserProfileByUserID(userID)
-	if err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			log.Printf(
-				"EditProfileHandler GetUserProfileByUserID error: %v", err,
 			)
 			RenderError(
 				w,
 				r,
 				http.StatusInternalServerError,
 				"Something Went Wrong",
-				"We couldn't load your existing profile",
+				"We couldn't load your skills.",
 			)
 			return
 		}
+
+		data := models.EditProfilePageData{
+			Profile: profile,
+			Skills:  skills,
+		}
+
+		if err := utils.RenderTemplate(
+			w,
+			r,
+			"edit-profile.html",
+			data,
+		); err != nil {
+			log.Printf(
+				"EditProfileHandler render edit-profile.html error: %v",
+				err,
+			)
+		}
+		return
 	}
-	oldProfilePicture := existingProfile.ProfilePicture
 
-	const MaxProfilePictureSize = 6 << 20
+	// POST: limit and parse the submitted multipart form.
+	const maxRequestSize = 6 << 20 // 6 MiB
 
-	r.Body = http.MaxBytesReader(
-		w,
-		r.Body,
-		MaxProfilePictureSize,
-	)
-	if err := r.ParseMultipartForm(6 << 20); err != nil {
-		var MaxBytesErr *http.MaxBytesError
+	r.Body = http.MaxBytesReader(w, r.Body, maxRequestSize)
 
-		if errors.As(err, &MaxBytesErr) {
+	if err := r.ParseMultipartForm(maxRequestSize); err != nil {
+		var maxBytesErr *http.MaxBytesError
+
+		if errors.As(err, &maxBytesErr) {
 			RenderError(
 				w,
 				r,
 				http.StatusRequestEntityTooLarge,
 				"Upload Too Large",
-				"Your request exceeds the MB limit. Please uplaod a smaller image.",
+				"Your request is too large. Please use a smaller image.",
 			)
 			return
 		}
-		log.Printf("EditProfileHandler ParseMultipartForm error: %v", err)
 
+		log.Printf("EditProfileHandler ParseMultipartForm error: %v", err)
 		RenderError(
 			w,
 			r,
@@ -324,84 +329,200 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-	// POST: collect the submitted text fields first.
-	// This lets us preserve them if file validation fails.
-	profile := models.UserProfile{
-		UserID:   userID,
-		Headline: strings.TrimSpace(r.FormValue("headline")),
-		Bio:      strings.TrimSpace(r.FormValue("bio")),
-		Location: strings.TrimSpace(r.FormValue("location")),
+
+	// Load the current profile so we can preserve its picture if no new one is uploaded.
+	existingProfile, err := database.GetUserProfileByUserID(userID)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		log.Printf(
+			"EditProfileHandler GetUserProfileByUserID error: %v",
+			err,
+		)
+		RenderError(
+			w,
+			r,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load your existing profile.",
+		)
+		return
 	}
 
-	// Retrieve the optional uploaded profile picture.
-	file, fileHeader, err := r.FormFile("profile_picture")
+	oldProfilePicture := existingProfile.ProfilePicture
+
+	// Load skills for ownership validation and for redisplaying the form if needed.
+	existingSkills, err := database.GetSkillsByUserID(userID)
 	if err != nil {
-		var MaxBytesErr *http.MaxBytesError
+		log.Printf(
+			"EditProfileHandler GetSkillsByUserID error: %v",
+			err,
+		)
+		RenderError(
+			w,
+			r,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't verify your skills.",
+		)
+		return
+	}
 
-		if errors.As(err, &MaxBytesErr) {
-			w.WriteHeader(http.StatusRequestEntityTooLarge)
+	// Collect the submitted profile fields.
+	profile := models.UserProfile{
+		UserID:         userID,
+		ProfilePicture: oldProfilePicture,
+		Headline:       strings.TrimSpace(r.FormValue("headline")),
+		Bio:            strings.TrimSpace(r.FormValue("bio")),
+		Location:       strings.TrimSpace(r.FormValue("location")),
+	}
 
-			data := models.EditProfilePageData{
-				Profile: profile,
-				Error:   "Your upload is too large. Please select an image smaller than 5 MB.",
-			}
+	// Read new skills separated by commas.
+	newSkillsInput := strings.TrimSpace(r.FormValue("new_skills"))
+	var newSkills []string
 
-			if renderErr := utils.RenderTemplate(
-				w,
-				r,
-				"edit-profile.html",
-				data,
-			); renderErr != nil {
-				log.Printf(
-					"EditProfileHandler render upload error: %v",
-					renderErr,
-				)
-			}
-			return
+	seenNames := make(map[string]bool)
+
+	for _, name := range strings.Split(newSkillsInput, ",") {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
 		}
-		if !errors.Is(err, http.ErrMissingFile) {
-			log.Printf("EditProfileHandler FormFile error: %v", err)
 
+		// Avoid duplicate names within the same submission.
+		normalizedName := strings.ToLower(name)
+		if !seenNames[normalizedName] {
+			newSkills = append(newSkills, name)
+			seenNames[normalizedName] = true
+		}
+	}
+
+	// Read skill IDs selected for removal.
+	removeSkillValues := r.Form["remove_skill_ids"]
+	var removeSkillIDs []int
+	seenSkillIDs := make(map[int]bool)
+
+	for _, value := range removeSkillValues {
+		skillID, err := strconv.Atoi(value)
+		if err != nil || skillID <= 0 {
 			RenderError(
 				w,
 				r,
 				http.StatusBadRequest,
-				"Bad Request",
-				"Unable to process your upload.",
+				"Invalid Skill",
+				"One or more submitted skill IDs are invalid.",
+			)
+			return
+		}
+
+		if !seenSkillIDs[skillID] {
+			removeSkillIDs = append(removeSkillIDs, skillID)
+			seenSkillIDs[skillID] = true
+		}
+	}
+
+	// Only allow removal of skills assigned to the logged-in user.
+	ownedSkills := make(map[int]bool)
+
+	for _, skill := range existingSkills {
+		ownedSkills[skill.ID] = true
+	}
+
+	for _, skillID := range removeSkillIDs {
+		if !ownedSkills[skillID] {
+			RenderError(
+				w,
+				r,
+				http.StatusBadRequest,
+				"Invalid Skill",
+				"One or more selected skills do not belong to your profile.",
 			)
 			return
 		}
 	}
 
-	if file != nil {
-		defer file.Close()
-
-		// Reject profile pictures larger than 5 MB.
-		if fileHeader.Size > constants.MaxProfilePictureSize {
-			data := models.EditProfilePageData{
-				Profile: profile,
-				Error:   "Profile picture must be 5 MB or smaller.",
-			}
-
-			if err := utils.RenderTemplate(w, r, "edit-profile.html", data); err != nil {
-				log.Printf("EditProfileHandler template error: %v", err)
-			}
-
-			return
-		}
-
-		// Read the first 512 bytes to detect the actual file type.
-		buffer := make([]byte, 512)
-
-		_, err = file.Read(buffer)
-		if err != nil && !errors.Is(err, io.EOF) {
-			log.Printf("EditProfileHandler file read error: %v", err)
-
+	// Helper to redisplay the edit form with the current skills.
+	renderEditForm := func(status int, message string) {
+		skills, err := database.GetSkillsByUserID(userID)
+		if err != nil {
+			log.Printf(
+				"EditProfileHandler reload skills error: %v",
+				err,
+			)
 			RenderError(
 				w,
 				r,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't reload your skills.",
+			)
+			return
+		}
+
+		w.WriteHeader(status)
+
+		data := models.EditProfilePageData{
+			Profile: profile,
+			Skills:  skills,
+			Error:   message,
+		}
+
+		if err := utils.RenderTemplate(
+			w,
+			r,
+			"edit-profile.html",
+			data,
+		); err != nil {
+			log.Printf(
+				"EditProfileHandler render edit form error: %v",
+				err,
+			)
+		}
+	}
+
+	// Retrieve the optional profile picture.
+	file, fileHeader, err := r.FormFile("profile_picture")
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		var maxBytesErr *http.MaxBytesError
+
+		if errors.As(err, &maxBytesErr) {
+			renderEditForm(
+				http.StatusRequestEntityTooLarge,
+				"Your upload is too large. Please select a smaller image.",
+			)
+			return
+		}
+
+		log.Printf("EditProfileHandler FormFile error: %v", err)
+		RenderError(
+			w,
+			r,
+			http.StatusBadRequest,
+			"Bad Request",
+			"Unable to process your upload.",
+		)
+		return
+	}
+
+	var newProfilePicture string
+
+	if file != nil {
+		defer file.Close()
+
+		if fileHeader.Size > constants.MaxProfilePictureSize {
+			renderEditForm(
 				http.StatusBadRequest,
-				"Invalid File",
+				"Profile picture must be 5 MB or smaller.",
+			)
+			return
+		}
+
+		// Detect the actual file type from its contents.
+		buffer := make([]byte, 512)
+		_, err := file.Read(buffer)
+
+		if err != nil && !errors.Is(err, io.EOF) {
+			log.Printf("EditProfileHandler file read error: %v", err)
+			renderEditForm(
+				http.StatusBadRequest,
 				"We couldn't read the selected profile picture.",
 			)
 			return
@@ -416,66 +537,60 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !allowedTypes[contentType] {
-			data := models.EditProfilePageData{
-				Profile: profile,
-				Error:   "Profile picture must be a JPEG, PNG, or WebP image.",
-			}
-
-			if err := utils.RenderTemplate(w, r, "edit-profile.html", data); err != nil {
-				log.Printf("EditProfileHandler template error: %v", err)
-			}
-
+			renderEditForm(
+				http.StatusBadRequest,
+				"Profile picture must be a JPEG, PNG, or WebP image.",
+			)
 			return
 		}
 
 		// Rewind the file after MIME detection.
-		_, err = file.Seek(0, io.SeekStart)
-		if err != nil {
+		if _, err := file.Seek(0, io.SeekStart); err != nil {
 			log.Printf("EditProfileHandler file seek error: %v", err)
-
-			RenderError(
-				w,
-				r,
+			renderEditForm(
 				http.StatusInternalServerError,
-				"Something Went Wrong",
 				"We couldn't process your profile picture.",
 			)
 			return
 		}
 
-		// Save the validated image.
 		filename, err := utils.SaveProfilePicture(
 			file,
 			userID,
 			contentType,
 		)
 		if err != nil {
-			log.Printf("EditProfileHandler SaveProfilePicture error: %v", err)
-
-			RenderError(
-				w,
-				r,
+			log.Printf(
+				"EditProfileHandler SaveProfilePicture error: %v",
+				err,
+			)
+			renderEditForm(
 				http.StatusInternalServerError,
-				"Something Went Wrong",
 				"We couldn't save your profile picture.",
 			)
 			return
 		}
 
+		newProfilePicture = filename
 		profile.ProfilePicture = filename
 	}
 
+	// Update the profile fields and picture.
 	if err := database.UpdateUserProfile(profile); err != nil {
-		log.Printf("EditProfileHandler UpdateUserProfile error: %v", err)
+		log.Printf(
+			"EditProfileHandler UpdateUserProfile error: %v",
+			err,
+		)
 
-		if profile.ProfilePicture != "" {
-			if clearnupErr := utils.DeleteProfilePicture(profile.ProfilePicture); clearnupErr != nil {
+		if newProfilePicture != "" {
+			if cleanupErr := utils.DeleteProfilePicture(newProfilePicture); cleanupErr != nil {
 				log.Printf(
-					"EditProfileHandler new pciture cleanup error: %v",
-					clearnupErr,
+					"EditProfileHandler new picture cleanup error: %v",
+					cleanupErr,
 				)
 			}
 		}
+
 		RenderError(
 			w,
 			r,
@@ -485,15 +600,59 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-	if profile.ProfilePicture != "" &&
+
+	// Save skill additions and removals together.
+	if err := database.UpdateUserSkills(
+		userID,
+		newSkills,
+		removeSkillIDs,
+	); err != nil {
+		log.Printf(
+			"EditProfileHandler UpdateUserSkills error: %v",
+			err,
+		)
+
+		// Do not delete the new picture here: the profile may already reference it.
+		RenderError(
+			w,
+			r,
+			http.StatusInternalServerError,
+			"Profile Partially Updated",
+			"Your profile information was saved, but we couldn't save your skill changes. Please review your skills and try again.",
+		)
+		return
+	}
+
+	// Delete the old picture only after the profile and skills have been saved.
+	if newProfilePicture != "" &&
 		oldProfilePicture != "" &&
-		oldProfilePicture != profile.ProfilePicture {
+		oldProfilePicture != newProfilePicture {
 		if err := utils.DeleteProfilePicture(oldProfilePicture); err != nil {
 			log.Printf(
 				"EditProfileHandler old picture cleanup error: %v",
 				err,
 			)
 		}
+	}
+
+	http.Redirect(w, r, "/profile", http.StatusSeeOther)
+}
+func AddSkillHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	UserID, ok := utils.GetUserID(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	skillName := r.FormValue("skill_name")
+	err := database.AddSkillsByName(UserID, skillName)
+	if err != nil {
+		log.Printf("Adding skill failed: %v", err)
+		RenderError(w, r, http.StatusBadRequest, "Bad Request", "Could not add skill")
+		return
 	}
 	http.Redirect(w, r, "/profile", http.StatusSeeOther)
 }

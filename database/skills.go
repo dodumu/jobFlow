@@ -126,3 +126,63 @@ func AddSkillsByName(userID int, skillName string) error {
 	}
 	return nil
 }
+
+func UpdateUserSkills(userID int, newSkills []string, removeSkillIDs []int) error {
+	tx, err := DB.Begin()
+	if err != nil {
+		return fmt.Errorf("starting skill update transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// 1. Remove selected skills from this user only.
+	for _, skillID := range removeSkillIDs {
+		_, err := tx.Exec(`
+            DELETE FROM user_skills
+            WHERE user_id = ? AND skill_id = ?
+        `, userID, skillID)
+		if err != nil {
+			return fmt.Errorf("removing skill %d: %w", skillID, err)
+		}
+	}
+
+	// 2. Add each new skill, reusing existing skill records.
+	for _, name := range newSkills {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
+		}
+
+		_, err := tx.Exec(`
+            INSERT INTO skills (name)
+            VALUES (?)
+            ON CONFLICT(name) DO NOTHING
+        `, name)
+		if err != nil {
+			return fmt.Errorf("creating skill %q: %w", name, err)
+		}
+
+		var skillID int
+		err = tx.QueryRow(`
+            SELECT id FROM skills WHERE name = ?
+        `, name).Scan(&skillID)
+		if err != nil {
+			return fmt.Errorf("getting skill ID for %q: %w", name, err)
+		}
+
+		_, err = tx.Exec(`
+            INSERT INTO user_skills (user_id, skill_id)
+            VALUES (?, ?)
+            ON CONFLICT(user_id, skill_id) DO NOTHING
+        `, userID, skillID)
+		if err != nil {
+			return fmt.Errorf("assigning skill %q: %w", name, err)
+		}
+	}
+
+	// 3. Commit all skill changes together.
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("saving skill changes: %w", err)
+	}
+
+	return nil
+}

@@ -19,6 +19,7 @@ type ProfilePageData struct {
 
 type EditProfilePageData struct {
 	Profile    UserProfile
+	Skills     []Skill
 	Error      string
 	HideNavbar bool
 }
