@@ -14,12 +14,15 @@ type FeedPost struct {
 
 	// Author identity.
 	AuthorType string
+	AuthorID   int
+	CompanyID  int
 
 	// Individual author.
 	AuthorFirstName      string
 	AuthorLastName       string
 	AuthorUsername       string
 	AuthorProfilePicture string
+	AuthorCompanyID      int
 
 	// Company author.
 	CompanyName string
@@ -36,6 +39,8 @@ type FeedPost struct {
 
 	// Original post information.
 	OriginalAuthorType      string
+	OriginalAuthorID        int
+	OriginalCompanyID       int
 	OriginalAuthorFirstName string
 	OriginalAuthorLastName  string
 	OriginalAuthorUsername  string

@@ -114,6 +114,12 @@ func main() {
 		http.HandlerFunc(handlers.DeletePostHandler),
 	))
 	http.Handle(
+		"GET /users/{id}",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.PublicProfileHandler),
+		),
+	)
+	http.Handle(
 		"/jobs",
 		middleware.AuthMiddleware(
 			http.HandlerFunc(handlers.JobsHandler),

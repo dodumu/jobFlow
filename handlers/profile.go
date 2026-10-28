@@ -656,3 +656,114 @@ func AddSkillHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/profile", http.StatusSeeOther)
 }
+
+func PublicProfileHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RenderError(w, r,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+			"The requested method is not allowed on this page.")
+		return
+	}
+	targetID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || targetID <= 0 {
+		RenderError(w, r, http.StatusBadRequest, "Invalid Profile", "The requested profile ID is invalid.")
+		return
+	}
+	viewerID, ok := utils.GetUserID(r)
+	if !ok {
+		RenderError(w, r, http.StatusUnauthorized, "Unauthorized", "You must be logged in to view this profile")
+		return
+	}
+
+	user, err := database.GetUserByID(targetID)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		RenderError(w, r, http.StatusNotFound, "Profile Not Found", "The requested profile could not be found.")
+		return
+	}
+	if err != nil {
+		log.Printf("PublicProfileHandler GetUserBYID error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "SOmething Went Wrong", "We couldn't load this profile")
+		return
+	}
+	profile, err := database.GetUserProfileByUserID(targetID)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		log.Printf("PublicProfileHandler GetUserProfileByUserID error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this profile's information.")
+		return
+	}
+	skills, err := database.GetSkillsByUserID(targetID)
+	if err != nil {
+		log.Printf("PublicProfilehandler GetSkillsBYUserID error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's skills.")
+		return
+	}
+	experiences, err := database.GetExperiencesByUserID(targetID)
+	if err != nil {
+		log.Printf("PublicProfileHandler GetExperiencesByUserID error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's experience.")
+		return
+	}
+	education, err := database.GetEducationByUserID(targetID)
+	if err != nil {
+		log.Printf("PublicProfileHandler GetEducationByUserID error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's education.")
+		return
+	}
+	posts, err := database.GetPostsByUserID(targetID)
+	if err != nil {
+		log.Printf("PublicProfileHandler GetPostByUserID error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's post.")
+		return
+	}
+	followerCount, err := database.GetFollowerCount(targetID)
+	if err != nil {
+		log.Printf("PublicProfileHandler GetFollowerCount error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's follower information.")
+		return
+	}
+	followingCount, err := database.GetFollowingCount(targetID)
+	if err != nil {
+		log.Printf("PublicProfileHandler GetFollowingCount error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's following information.")
+		return
+	}
+
+	var company *models.Company
+
+	companyData, err := database.GetCompanyByUserID(targetID)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			log.Printf("PublicProfileHandler GetCompanyByUserID error: %v", err)
+			RenderError(
+				w,
+				r,
+				http.StatusInternalServerError,
+				"Something Went Wrong",
+				"We couldn't load company information.",
+			)
+			return
+		}
+		// No company record is normal for an individual user.
+	} else {
+		company = &companyData
+	}
+
+	data := models.ProfilePageData{
+		User:           user,
+		Profile:        profile,
+		Company:        company,
+		Skills:         skills,
+		Experiences:    experiences,
+		Education:      education,
+		Posts:          posts,
+		FollowerCount:  followerCount,
+		FollowingCount: followingCount,
+		IsOwner:        viewerID == targetID,
+	}
+
+	if err := utils.RenderTemplate(w, r, "profile.html", data); err != nil {
+		log.Printf("PublicProfileHandler RenderTemplate error: %v", err)
+	}
+}

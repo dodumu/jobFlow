@@ -70,6 +70,7 @@ func GetPostByID(id int) (models.Post, error) {
 
 	return post, nil
 }
+
 func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 	rows, err := DB.Query(`
 		SELECT
@@ -82,54 +83,45 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 			p.created_at,
 			p.updated_at,
 
-			-- Current post author
 			COALESCE(u.first_name, '') AS author_first_name,
 			COALESCE(u.last_name, '') AS author_last_name,
 			COALESCE(u.username, '') AS author_username,
 
-			-- Engagement
-			(
-				SELECT COUNT(*)
-				FROM post_likes pl
-				WHERE pl.post_id = p.id
-			) AS like_count,
+			(SELECT COUNT(*)
+			 FROM post_likes pl
+			 WHERE pl.post_id = p.id) AS like_count,
 
-			(
-				SELECT COUNT(*)
-				FROM comments c
-				WHERE c.post_id = p.id
-			) AS comment_count,
+			(SELECT COUNT(*)
+			 FROM comments c
+			 WHERE c.post_id = p.id) AS comment_count,
 
-			(
-				SELECT COUNT(*)
-				FROM post_shares ps
-				WHERE ps.post_id = p.id
-			) AS share_count,
+			(SELECT COUNT(*)
+			 FROM post_shares ps
+			 WHERE ps.post_id = p.id) AS share_count,
 
 			EXISTS (
 				SELECT 1
 				FROM post_likes ul
 				WHERE ul.post_id = p.id
-				AND ul.user_id = ?
+				  AND ul.user_id = ?
 			) AS has_liked,
 
-			-- Original post author type
 			CASE
 				WHEN original_post.company_id IS NOT NULL THEN 'company'
 				WHEN original_post.user_id IS NOT NULL THEN 'user'
 				ELSE ''
 			END AS original_author_type,
 
-			-- Original individual author
+			original_post.user_id AS original_author_id,
+			original_post.company_id AS original_company_id,
+
 			COALESCE(original_user.first_name, '') AS original_first_name,
 			COALESCE(original_user.last_name, '') AS original_last_name,
 			COALESCE(original_user.username, '') AS original_username,
 
-			-- Original company author
 			COALESCE(original_company.company_name, '') AS original_company_name,
 			COALESCE(original_company.logo, '') AS original_company_logo,
 
-			-- Original post
 			COALESCE(original_post.content, '') AS original_content,
 			COALESCE(original_post.type, '') AS original_type
 
@@ -153,10 +145,7 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 	`, userID, userID)
 
 	if err != nil {
-		return nil, fmt.Errorf(
-			"getting posts by user ID: %w",
-			err,
-		)
+		return nil, fmt.Errorf("getting posts by user ID: %w", err)
 	}
 	defer rows.Close()
 
@@ -164,12 +153,16 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 
 	for rows.Next() {
 		var post models.FeedPost
+
 		var sharedPostID sql.NullInt64
+		var postCompanyID sql.NullInt64
+		var originalAuthorID sql.NullInt64
+		var originalCompanyID sql.NullInt64
 
 		err := rows.Scan(
 			&post.ID,
 			&post.UserID,
-			&post.CompanyID,
+			&postCompanyID,
 			&post.Content,
 			&post.Type,
 			&sharedPostID,
@@ -186,6 +179,8 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 			&post.HasLiked,
 
 			&post.OriginalAuthorType,
+			&originalAuthorID,
+			&originalCompanyID,
 
 			&post.OriginalAuthorFirstName,
 			&post.OriginalAuthorLastName,
@@ -197,12 +192,8 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 			&post.OriginalContent,
 			&post.OriginalType,
 		)
-
 		if err != nil {
-			return nil, fmt.Errorf(
-				"scanning user post: %w",
-				err,
-			)
+			return nil, fmt.Errorf("scanning user post: %w", err)
 		}
 
 		if sharedPostID.Valid {
@@ -210,21 +201,32 @@ func GetPostsByUserID(userID int) ([]models.FeedPost, error) {
 			post.SharedPostID = &id
 		}
 
+		if postCompanyID.Valid {
+			post.CompanyID = int(postCompanyID.Int64)
+		}
+
+		if originalAuthorID.Valid {
+			post.OriginalAuthorID = int(originalAuthorID.Int64)
+		}
+
+		if originalCompanyID.Valid {
+			post.OriginalCompanyID = int(originalCompanyID.Int64)
+		}
+
 		post.AuthorType = "user"
+		post.AuthorID = *post.UserID
 		post.CanDelete = true
 
 		posts = append(posts, post)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf(
-			"iterating user posts: %w",
-			err,
-		)
+		return nil, fmt.Errorf("iterating user posts: %w", err)
 	}
 
 	return posts, nil
 }
+
 func GetPosts() ([]models.Post, error) {
 	rows, err := DB.Query(`
 		SELECT

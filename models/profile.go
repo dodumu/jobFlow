@@ -15,8 +15,8 @@ type ProfilePageData struct {
 	FollowerCount  int
 	FollowingCount int
 	HideNavbar     bool
+	IsOwner        bool
 }
-
 type EditProfilePageData struct {
 	Profile    UserProfile
 	Skills     []Skill
