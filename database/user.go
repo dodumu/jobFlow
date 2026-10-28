@@ -1,6 +1,8 @@
 package database
 
 import (
+	"fmt"
+	"jobFlow/constants"
 	"jobFlow/models"
 )
 
@@ -97,4 +99,41 @@ func GetUserByUsername(username string) (models.User, error) {
 		return models.User{}, err
 	}
 	return user, nil
+}
+
+func GetAllIndividualUsers() ([]models.User, error) {
+	query := `SELECT id, username, password_hash, first_name, last_name, email, date_of_birth, role, created_at FROM users WHERE role = ?`
+
+	var allUsers []models.User
+
+	res, err := DB.Query(query, constants.RoleIndividual)
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+	for res.Next() {
+		var user models.User
+
+		err := res.Scan(&user.ID,
+			&user.Username,
+			&user.PasswordHash,
+			&user.FirstName,
+			&user.LastName,
+			&user.Email,
+			&user.DOB,
+			&user.Role,
+			&user.CreatedAt)
+
+		if err != nil {
+			return nil, err
+		}
+
+		allUsers = append(allUsers, user)
+
+	}
+	if err := res.Err(); err != nil {
+		return nil, fmt.Errorf("iterating users: %w", err)
+	}
+	return allUsers, nil
 }

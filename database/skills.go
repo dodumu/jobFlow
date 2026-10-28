@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"jobFlow/models"
+	"strings"
 )
 
 func CreateSkill(skill models.Skill) (int, error) {
@@ -93,4 +94,35 @@ func GetSkills() ([]models.Skill, error) {
 	}
 
 	return skills, nil
+}
+
+func AddSkillsByName(userID int, skillName string) error {
+	skillName = strings.TrimSpace(skillName)
+	if skillName == "" {
+		return fmt.Errorf("Skill cannot be empty")
+	}
+	query := `INSERT INTO skills (name)
+			  VALUES (?)
+			  ON CONFLICT(name) DO NOTHING
+	`
+
+	_, err := DB.Exec(query, skillName)
+	if err != nil {
+		return fmt.Errorf("creating skill: %w", err)
+	}
+	var skillID int
+
+	err = DB.QueryRow(`SELECT id FROM skills
+		WHERE name = ?
+		`, skillName).Scan(&skillID)
+
+	if err != nil {
+		return fmt.Errorf("getting skill ID: %w", err)
+	}
+
+	err = AddSkillToUser(userID, skillID)
+	if err != nil {
+		return fmt.Errorf("assinging skill to user: %w", err)
+	}
+	return nil
 }
