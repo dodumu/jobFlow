@@ -808,16 +808,28 @@
         <!-- SHARED POST -->
         <div class="shared-post">
 
+
           <div class="shared-post-author">
             {{if eq .OriginalAuthorType "company"}}
-            <strong>{{.OriginalCompanyName}}</strong>
-            {{else}}
             <strong>
-              {{.OriginalAuthorFirstName}} {{.OriginalAuthorLastName}}
+              <a href="/users/{{.OriginalCompanyID}}" class="post-profile-link">
+                {{.OriginalCompanyName}}
+              </a>
             </strong>
-            <span>@{{.OriginalAuthorUsername}}</span>
+            {{else if eq .OriginalAuthorType "user"}}
+            <strong>
+              <a href="/users/{{.OriginalAuthorID}}" class="post-profile-link">
+                {{.OriginalAuthorFirstName}} {{.OriginalAuthorLastName}}
+              </a>
+            </strong>
+            <span>
+              <a href="/users/{{.OriginalAuthorID}}" class="post-profile-link">
+                @{{.OriginalAuthorUsername}}
+              </a>
+            </span>
             {{end}}
           </div>
+
 
           {{if .OriginalType}}
           <small>{{.OriginalType}}</small>
@@ -1027,12 +1039,19 @@
     const author =
       document.createElement("div");
 
-    author.className =
+    const authorLink =
+      document.createElement("a");
+
+    authorLink.className =
       "comment-author";
 
-    author.textContent =
+    authorLink.href =
+      `/users/${comment.user_id}`;
+
+    authorLink.textContent =
       `@${comment.username}`;
 
+    author.appendChild(authorLink);
 
     const content =
       document.createElement("div");
