@@ -105,6 +105,19 @@ func main() {
 		),
 	)
 	http.Handle(
+		"POST /users/{id}/follow",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.FollowHandler),
+		),
+	)
+
+	http.Handle(
+		"POST /users/{id}/unfollow",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.UnfollowHandler),
+		),
+	)
+	http.Handle(
 		"/posts/comments/delete",
 		middleware.AuthMiddleware(
 			http.HandlerFunc(handlers.DeleteCommentHandler),

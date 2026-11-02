@@ -21,7 +21,7 @@ type PasswordResetAuthorization struct {
 	CreatedAt time.Time
 }
 
-func hashResetAuthorizationToken(token string) string {
+func HashResetAuthorizationToken(token string) string {
 	hash := sha256.Sum256([]byte(token))
 	return hex.EncodeToString(hash[:])
 }
@@ -94,7 +94,7 @@ func ValidatePasswordResetAuthorization(token string) error {
 		return errors.New("invalid reset authorization")
 	}
 
-	tokenHash := hashResetAuthorizationToken(token)
+	tokenHash := HashResetAuthorizationToken(token)
 
 	var authorization PasswordResetAuthorization
 
@@ -132,7 +132,7 @@ func ConsumePasswordResetAuthorization(token string) error {
 		return errors.New("invalid reset authorization")
 	}
 
-	tokenHash := hashResetAuthorizationToken(token)
+	tokenHash := HashResetAuthorizationToken(token)
 
 	result, err := DB.Exec(`
 		UPDATE password_reset_authorizations

@@ -251,6 +251,40 @@
     white-space: pre-wrap;
   }
 
+  .profile-actions form {
+    margin: 0;
+  }
+
+  .follow-btn,
+  .unfollow-btn {
+    padding: 9px 22px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .follow-btn {
+    background: var(--primary);
+    color: white;
+    border: 1px solid var(--primary);
+  }
+
+  .follow-btn:hover {
+    background: var(--primary-dark);
+  }
+
+  .unfollow-btn {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .unfollow-btn:hover {
+    background: var(--background);
+  }
+
   @media (max-width: 800px) {
     .profile-grid {
       grid-template-columns: 1fr;
@@ -355,11 +389,29 @@
           </div>
         </div>
 
+
         {{if .IsOwner}}
         <div class="profile-actions">
           <a href="/profile/edit" class="btn-primary">Edit Profile</a>
         </div>
+        {{else}}
+        <div class="profile-actions">
+          {{if .IsFollowing}}
+          <form action="/users/{{.User.ID}}/unfollow" method="POST">
+            <button type="submit" class="unfollow-btn">
+              Unfollow
+            </button>
+          </form>
+          {{else}}
+          <form action="/users/{{.User.ID}}/follow" method="POST">
+            <button type="submit" class="follow-btn">
+              Follow
+            </button>
+          </form>
+          {{end}}
+        </div>
         {{end}}
+
       </div>
 
       <div class="stats">

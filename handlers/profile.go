@@ -675,7 +675,16 @@ func PublicProfileHandler(w http.ResponseWriter, r *http.Request) {
 		RenderError(w, r, http.StatusUnauthorized, "Unauthorized", "You must be logged in to view this profile")
 		return
 	}
-
+	isFollowing, err := database.IsFollowing(viewerID, targetID)
+	if err != nil {
+		log.Printf("PublicProfileHandler IsFollowing error: %v", err)
+		RenderError(w, r,
+			http.StatusInternalServerError,
+			"Something Went Wrong",
+			"We couldn't load the follow information.",
+		)
+		return
+	}
 	user, err := database.GetUserByID(targetID)
 
 	if errors.Is(err, sql.ErrNoRows) {
@@ -758,6 +767,7 @@ func PublicProfileHandler(w http.ResponseWriter, r *http.Request) {
 		Experiences:    experiences,
 		Education:      education,
 		Posts:          posts,
+		IsFollowing:    isFollowing,
 		FollowerCount:  followerCount,
 		FollowingCount: followingCount,
 		IsOwner:        viewerID == targetID,

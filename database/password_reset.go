@@ -16,7 +16,7 @@ func ResetPassword(token, newPasswordHash string) error {
 		return errors.New("password hash cannot be empty")
 	}
 
-	tokenHash := hashResetAuthorizationToken(token)
+	tokenHash := HashResetAuthorizationToken(token)
 
 	tx, err := DB.Begin()
 	if err != nil {

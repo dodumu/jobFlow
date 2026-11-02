@@ -1,41 +1,47 @@
-package database
+package database_test
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"jobFlow/utils"
+	"jobFlow/database"
 )
 
-func TestSavePasswordResetAuthorization(t *testing.T) {
-	// Create a temporary database file for this test.
+func setupTestDB(t *testing.T) {
+	t.Helper()
+
 	dbPath := filepath.Join(t.TempDir(), "test.db")
 
-	// Initialize the database.
-	if err := InitDB(dbPath); err != nil {
+	if err := database.InitDB(dbPath); err != nil {
 		t.Fatalf("failed to initialize test database: %v", err)
 	}
 
-	// Close the database connection when the test finishes.
 	t.Cleanup(func() {
-		if DB != nil {
-			DB.Close()
-			DB = nil
+		if database.DB != nil {
+			database.DB.Close()
+			database.DB = nil
 		}
 	})
-	_, err := DB.Exec(`
-    INSERT INTO users (
-        first_name,
-        last_name,
-        username,
-        password_hash,
-        email,
-        date_of_birth,
-        role
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-`,
+}
+
+func setupTestUser(t *testing.T) int {
+	t.Helper()
+
+	result, err := database.DB.Exec(`
+		INSERT INTO users (
+			first_name,
+			last_name,
+			username,
+			password_hash,
+			email,
+			date_of_birth,
+			role
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+	`,
 		"Test",
 		"User",
 		"testuser",
@@ -48,17 +54,41 @@ func TestSavePasswordResetAuthorization(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create test user: %v", err)
 	}
-	var userID int
 
-	err = DB.QueryRow(`
-    SELECT id FROM users WHERE username = ?
-`, "testuser").Scan(&userID)
-
+	id, err := result.LastInsertId()
 	if err != nil {
-		t.Fatalf("failed to get test user ID: %v", err)
+		t.Fatalf("failed to retrieve test user ID: %v", err)
 	}
-	// Try saving an authorization.
-	err = SavePasswordResetAuthorization(1, "test-token-hash")
+
+	return int(id)
+}
+
+func createTestAuthorization(t *testing.T, userID int) string {
+	t.Helper()
+
+	// Generate a random token locally without importing utils.
+	tokenBytes := make([]byte, 32)
+
+	if _, err := rand.Read(tokenBytes); err != nil {
+		t.Fatalf("generating reset token: %v", err)
+	}
+
+	token := hex.EncodeToString(tokenBytes)
+	tokenHash := database.HashResetAuthorizationToken(token)
+
+	err := database.SavePasswordResetAuthorization(userID, tokenHash)
+	if err != nil {
+		t.Fatalf("saving reset authorization: %v", err)
+	}
+
+	return token
+}
+
+func TestSavePasswordResetAuthorization(t *testing.T) {
+	setupTestDB(t)
+	userID := setupTestUser(t)
+
+	err := database.SavePasswordResetAuthorization(userID, "test-token-hash")
 	if err != nil {
 		t.Fatalf("failed to save authorization: %v", err)
 	}
@@ -66,7 +96,7 @@ func TestSavePasswordResetAuthorization(t *testing.T) {
 	var savedHash string
 	var expiresAt time.Time
 
-	err = DB.QueryRow(`
+	err = database.DB.QueryRow(`
 		SELECT token_hash, expires_at
 		FROM password_reset_authorizations
 		WHERE user_id = ?
@@ -82,20 +112,19 @@ func TestSavePasswordResetAuthorization(t *testing.T) {
 
 	expectedExpiry := time.Now().UTC().Add(10 * time.Minute)
 
-	if expiresAt.Before(expectedExpiry.Add(-1*time.Minute)) ||
-		expiresAt.After(expectedExpiry.Add(1*time.Minute)) {
+	if expiresAt.Before(expectedExpiry.Add(-time.Minute)) ||
+		expiresAt.After(expectedExpiry.Add(time.Minute)) {
 		t.Errorf("expiration time is not approximately 10 minutes from now: %v", expiresAt)
 	}
 
-	// Save a second authorization for the same user.
-	err = SavePasswordResetAuthorization(userID, "second-token-hash")
+	err = database.SavePasswordResetAuthorization(userID, "second-token-hash")
 	if err != nil {
 		t.Fatalf("failed to save second authorization: %v", err)
 	}
 
-	// Confirm only one authorization remains for this user.
 	var count int
-	err = DB.QueryRow(`
+
+	err = database.DB.QueryRow(`
 		SELECT COUNT(*)
 		FROM password_reset_authorizations
 		WHERE user_id = ?
@@ -109,9 +138,9 @@ func TestSavePasswordResetAuthorization(t *testing.T) {
 		t.Fatalf("expected 1 authorization, got %d", count)
 	}
 
-	// Confirm the remaining authorization is the new one.
 	var currentHash string
-	err = DB.QueryRow(`
+
+	err = database.DB.QueryRow(`
 		SELECT token_hash
 		FROM password_reset_authorizations
 		WHERE user_id = ?
@@ -124,75 +153,61 @@ func TestSavePasswordResetAuthorization(t *testing.T) {
 	if currentHash != "second-token-hash" {
 		t.Errorf("expected new authorization hash, got %q", currentHash)
 	}
-
-}
-
-func createTestAuthorization(t *testing.T, userID int) string {
-	t.Helper()
-
-	token, err := utils.GenerateResetAuthorizationToken()
-	if err != nil {
-		t.Fatalf("generating reset token: %v", err)
-	}
-
-	tokenHash := hashResetAuthorizationToken(token)
-
-	err = SavePasswordResetAuthorization(userID, tokenHash)
-	if err != nil {
-		t.Fatalf("saving reset authorization: %v", err)
-	}
-
-	return token
 }
 
 func TestValidatePasswordResetAuthorization_Valid(t *testing.T) {
-	userID := setupTestUser(t) // Reuse your existing test-user setup.
+	setupTestDB(t)
+	userID := setupTestUser(t)
 
 	token := createTestAuthorization(t, userID)
 
-	err := ValidatePasswordResetAuthorization(token)
+	err := database.ValidatePasswordResetAuthorization(token)
 	if err != nil {
 		t.Fatalf("expected valid authorization, got error: %v", err)
 	}
 }
 
 func TestValidatePasswordResetAuthorization_Expired(t *testing.T) {
+	setupTestDB(t)
 	userID := setupTestUser(t)
 
 	token := createTestAuthorization(t, userID)
-	tokenHash := hashResetAuthorizationToken(token)
+	tokenHash := database.HashResetAuthorizationToken(token)
 
-	_, err := DB.Exec(`
+	_, err := database.DB.Exec(`
 		UPDATE password_reset_authorizations
 		SET expires_at = ?
 		WHERE token_hash = ?
-	`, time.Now().UTC().Add(-1*time.Minute), tokenHash)
+	`, time.Now().UTC().Add(-time.Minute), tokenHash)
+
 	if err != nil {
 		t.Fatalf("making authorization expire: %v", err)
 	}
 
-	err = ValidatePasswordResetAuthorization(token)
+	err = database.ValidatePasswordResetAuthorization(token)
 	if err == nil {
 		t.Fatal("expected expired authorization to fail")
 	}
 }
 
 func TestValidatePasswordResetAuthorization_Used(t *testing.T) {
+	setupTestDB(t)
 	userID := setupTestUser(t)
 
 	token := createTestAuthorization(t, userID)
-	tokenHash := hashResetAuthorizationToken(token)
+	tokenHash := database.HashResetAuthorizationToken(token)
 
-	_, err := DB.Exec(`
+	_, err := database.DB.Exec(`
 		UPDATE password_reset_authorizations
 		SET used_at = ?
 		WHERE token_hash = ?
 	`, time.Now().UTC(), tokenHash)
+
 	if err != nil {
 		t.Fatalf("marking authorization as used: %v", err)
 	}
 
-	err = ValidatePasswordResetAuthorization(token)
+	err = database.ValidatePasswordResetAuthorization(token)
 	if err == nil {
 		t.Fatal("expected used authorization to fail")
 	}

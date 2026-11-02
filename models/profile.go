@@ -12,6 +12,7 @@ type ProfilePageData struct {
 	WorkArrangements []string
 	Posts            []FeedPost
 
+	IsFollowing    bool
 	FollowerCount  int
 	FollowingCount int
 	HideNavbar     bool
