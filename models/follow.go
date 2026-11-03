@@ -7,3 +7,9 @@ type Follow struct {
 	FollowingID int       `json:"following_id"`
 	CreatedAt   time.Time `json:"created_at"`
 }
+
+type FollowListPageData struct {
+	ProfileUser User
+	Users       []User
+	Title       string
+}

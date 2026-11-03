@@ -1,0 +1,127 @@
+
+{{define "content"}}
+<style>
+    .follow-page {
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    .follow-header {
+        margin-bottom: 24px;
+    }
+
+    .follow-header h1 {
+        margin-bottom: 6px;
+        font-size: 25px;
+    }
+
+    .follow-header p {
+        color: var(--muted);
+        font-size: 14px;
+    }
+
+    .follow-list {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .follow-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        transition: background 0.2s;
+    }
+
+    .follow-item:last-child {
+        border-bottom: none;
+    }
+
+    .follow-item:hover {
+        background: var(--background);
+    }
+
+    .follow-avatar {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #dbeafe;
+        color: var(--primary);
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .follow-info h3 {
+        margin: 0 0 5px;
+        font-size: 15px;
+    }
+
+    .follow-info p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .follow-empty {
+        padding: 40px 20px;
+        text-align: center;
+        color: var(--muted);
+    }
+
+    .follow-back {
+        display: inline-block;
+        margin-top: 20px;
+        color: var(--primary);
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    @media (max-width: 500px) {
+        .follow-header h1 {
+            font-size: 22px;
+        }
+    }
+</style>
+
+<div class="follow-page">
+    <div class="follow-header">
+        <h1>Followers</h1>
+        <p>People following
+            <strong>{{.ProfileUser.FirstName}} {{.ProfileUser.LastName}}</strong>
+        </p>
+    </div>
+
+    <div class="follow-list">
+        {{if .Users}}
+            {{range .Users}}
+            <a href="/users/{{.ID}}" class="follow-item">
+                <div class="follow-avatar">
+                    {{printf "%.1s" .FirstName}}
+                </div>
+
+                <div class="follow-info">
+                    <h3>{{.FirstName}} {{.LastName}}</h3>
+                    <p>@{{.Username}}</p>
+                </div>
+            </a>
+            {{end}}
+        {{else}}
+            <div class="follow-empty">
+                <h3>No followers yet</h3>
+                <p>When people follow this user, they'll appear here.</p>
+            </div>
+        {{end}}
+    </div>
+
+    <a href="/users/{{.ProfileUser.ID}}" class="follow-back">
+        ← Back to profile
+    </a>
+</div>
+{{end}}

@@ -212,15 +212,15 @@ func FollowingHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Printf("FollowersHandler GetUserByID error: %v", err)
+		log.Printf("FollowingHandler GetUserByID error: %v", err)
 		RenderError(w, r, http.StatusInternalServerError, "Internal Server Error", "Could not retrieve user")
 		return
 	}
 
 	following, err := database.GetFollowing(userID)
 	if err != nil {
-		log.Printf("FollowersHandler GetFollowering error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Internal Server Error", "Could not retrieve following relationship")
+		log.Printf("FollowingHandler GetFollowing error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Internal Server Error", "Could not retrieve following list")
 		return
 	}
 
@@ -232,7 +232,7 @@ func FollowingHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = utils.RenderTemplate(w, r, "following.html", followingData)
 	if err != nil {
-		RenderError(w, r, http.StatusInternalServerError, "Internal Server Error", "Problem rendering page")
+		RenderError(w, r, http.StatusInternalServerError, "Internal Server Error", "Could not render following page")
 		return
 	}
 }

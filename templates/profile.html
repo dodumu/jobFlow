@@ -416,13 +416,17 @@
 
       <div class="stats">
         <div class="stat">
-          <strong>{{.FollowerCount}}</strong>
-          <span>Followers</span>
+          <a href="/users/{{.User.ID}}/followers" class="profile-stat">
+            <strong>{{.FollowerCount}}</strong>
+            <span>Followers</span>
+          </a>
         </div>
 
         <div class="stat">
-          <strong>{{.FollowingCount}}</strong>
-          <span>Following</span>
+          <a href="/users/{{.User.ID}}/following" class="profile-stat">
+            <strong>{{.FollowingCount}}</strong>
+            <span>Following</span>
+          </a>
         </div>
 
         <div class="stat">

@@ -117,6 +117,20 @@ func main() {
 			http.HandlerFunc(handlers.UnfollowHandler),
 		),
 	)
+
+	http.Handle(
+		"GET /users/{id}/followers",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.FollowersHandler),
+		),
+	)
+
+	http.Handle(
+		"GET /users/{id}/following",
+		middleware.AuthMiddleware(
+			http.HandlerFunc(handlers.FollowingHandler),
+		),
+	)
 	http.Handle(
 		"/posts/comments/delete",
 		middleware.AuthMiddleware(
