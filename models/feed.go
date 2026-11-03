@@ -56,3 +56,11 @@ type HomePageData struct {
 	Posts         []FeedPost
 	HideNavbar    bool
 }
+
+type PostDetailsPageData struct {
+	User          User
+	CurrentUserID int
+	Post          FeedPost
+	Comments      []Comment
+	Likes         []User
+}

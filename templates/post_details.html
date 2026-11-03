@@ -1,0 +1,322 @@
+
+{{define "content"}}
+
+<style>
+    .post-details-container {
+        max-width: 760px;
+        margin: 30px auto;
+        padding: 0 16px;
+    }
+
+    .details-card {
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px;
+        padding: 22px;
+        margin-bottom: 20px;
+    }
+
+    .details-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .details-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .details-author {
+        font-weight: 600;
+        color: var(--text, #111827);
+    }
+
+    .details-date {
+        color: var(--muted, #6b7280);
+        font-size: 13px;
+    }
+
+    .details-content {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        line-height: 1.6;
+        margin: 18px 0;
+    }
+
+    .engagement-stats {
+        display: flex;
+        gap: 18px;
+        padding: 14px 0;
+        border-top: 1px solid var(--border, #e5e7eb);
+        border-bottom: 1px solid var(--border, #e5e7eb);
+        color: var(--muted, #6b7280);
+        font-size: 14px;
+    }
+
+    .post-actions {
+        display: flex;
+        gap: 12px;
+        padding-top: 14px;
+    }
+
+    .post-actions button {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-weight: 600;
+        padding: 8px 12px;
+        border-radius: 6px;
+    }
+
+    .post-actions button:hover {
+        background: var(--background, #f3f6f9);
+    }
+
+    .section-heading {
+        font-size: 18px;
+        margin-bottom: 18px;
+    }
+
+    .comment-item,
+    .like-item {
+        padding: 14px 0;
+        border-bottom: 1px solid var(--border, #e5e7eb);
+    }
+
+    .comment-item:last-child,
+    .like-item:last-child {
+        border-bottom: none;
+    }
+
+    .comment-author {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .comment-content {
+        overflow-wrap: anywhere;
+        line-height: 1.5;
+    }
+
+    .comment-date {
+        color: var(--muted, #6b7280);
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .comment-form textarea {
+        width: 100%;
+        min-height: 90px;
+        resize: vertical;
+        padding: 12px;
+        border: 1px solid var(--border, #e5e7eb);
+        border-radius: 8px;
+        font: inherit;
+        margin-bottom: 10px;
+    }
+
+    .primary-button {
+        background: var(--primary, #2563eb);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 7px;
+        cursor: pointer;
+    }
+
+    .empty-message {
+        color: var(--muted, #6b7280);
+        padding: 12px 0;
+    }
+
+    .shared-post {
+        border: 1px solid var(--border, #e5e7eb);
+        border-radius: 9px;
+        padding: 16px;
+        margin-top: 16px;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: var(--primary, #2563eb);
+        text-decoration: none;
+    }
+</style>
+
+<div class="post-details-container">
+
+    <a href="/home" class="back-link">← Back to feed</a>
+
+    <!-- Main post -->
+    <article class="details-card" data-post-id="{{.Post.ID}}">
+
+        <div class="details-header">
+
+            {{if eq .Post.AuthorType "company"}}
+
+                {{if .Post.CompanyLogo}}
+                    <img
+                        src="/uploads/company-logos/{{.Post.CompanyLogo}}"
+                        class="details-avatar"
+                        alt="Company logo"
+                    >
+                {{else}}
+                    <div class="details-avatar"></div>
+                {{end}}
+
+                <div>
+                    <div class="details-author">
+                        {{.Post.CompanyName}}
+                    </div>
+                    <div class="details-date">
+                        {{.Post.CreatedAt.Format "Jan 02, 2006 at 3:04 PM"}}
+                    </div>
+                </div>
+
+            {{else}}
+
+                {{if .Post.AuthorProfilePicture}}
+                    <img
+                        src="/uploads/profile-pictures/{{.Post.AuthorProfilePicture}}"
+                        class="details-avatar"
+                        alt="Profile picture"
+                    >
+                {{else}}
+                    <div class="details-avatar"></div>
+                {{end}}
+
+                <div>
+                    <div class="details-author">
+                        {{.Post.AuthorFirstName}} {{.Post.AuthorLastName}}
+                    </div>
+                    <div class="details-date">
+                        @{{.Post.AuthorUsername}} ·
+                        {{.Post.CreatedAt.Format "Jan 02, 2006 at 3:04 PM"}}
+                    </div>
+                </div>
+
+            {{end}}
+
+        </div>
+
+        <div class="details-content">{{.Post.Content}}</div>
+
+        <!-- Original post, when this is a share -->
+        {{if .Post.SharedPostID}}
+            <div class="shared-post">
+
+                <strong>Original post</strong>
+
+                {{if eq .Post.OriginalAuthorType "company"}}
+                    <p>{{.Post.OriginalCompanyName}}</p>
+                {{else}}
+                    <p>
+                        {{.Post.OriginalAuthorFirstName}}
+                        {{.Post.OriginalAuthorLastName}}
+                        (@{{.Post.OriginalAuthorUsername}})
+                    </p>
+                {{end}}
+
+                <div class="details-content">
+                    {{.Post.OriginalContent}}
+                </div>
+
+            </div>
+        {{end}}
+
+        <!-- Engagement counts -->
+        <div class="engagement-stats">
+            <span>{{.Post.LikeCount}} likes</span>
+            <span>{{.Post.CommentCount}} comments</span>
+            <span>{{.Post.ShareCount}} shares</span>
+        </div>
+
+        <!-- Like / Unlike -->
+        <div class="post-actions">
+
+            {{if .Post.HasLiked}}
+                <form action="/posts/unlike" method="POST">
+                    <input
+                        type="hidden"
+                        name="post_id"
+                        value="{{.Post.ID}}"
+                    >
+                    <button type="submit">Unlike</button>
+                </form>
+            {{else}}
+                <form action="/posts/like" method="POST">
+                    <input
+                        type="hidden"
+                        name="post_id"
+                        value="{{.Post.ID}}"
+                    >
+                    <button type="submit">Like</button>
+                </form>
+            {{end}}
+
+        </div>
+
+    </article>
+
+    <!-- Comments -->
+    <section class="details-card">
+
+        <h2 class="section-heading">
+            Comments ({{len .Comments}})
+        </h2>
+
+        {{if .Comments}}
+
+            {{range .Comments}}
+                <div class="comment-item">
+
+                    <div class="comment-author">
+                        @{{.Username}}
+                    </div>
+
+                    <div class="comment-content">
+                        {{.Content}}
+                    </div>
+
+                    <div class="comment-date">
+                        {{.CreatedAt.Format "Jan 02, 2006 at 3:04 PM"}}
+                    </div>
+
+                </div>
+            {{end}}
+
+        {{else}}
+
+            <p class="empty-message">
+                No comments yet. Be the first to comment!
+            </p>
+
+        {{end}}
+
+        <!-- Comment form will be connected to your existing
+             comment creation functionality in the next step. -->
+
+        <form class="comment-form" id="post-comment-form">
+            <textarea
+                id="post-comment-content"
+                placeholder="Write a comment..."
+                required
+            ></textarea>
+
+            <button type="submit" class="primary-button">
+                Add comment
+            </button>
+        </form>
+
+    </section>
+
+    
+
+</div>
+
+{{end}}
