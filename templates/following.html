@@ -1,4 +1,3 @@
-
 {{define "content"}}
 <style>
     .follow-page {
@@ -101,23 +100,27 @@
 
     <div class="follow-list">
         {{if .Users}}
-            {{range .Users}}
-            <a href="/users/{{.ID}}" class="follow-item">
-                <div class="follow-avatar">
-                    {{printf "%.1s" .FirstName}}
-                </div>
-
-                <div class="follow-info">
-                    <h3>{{.FirstName}} {{.LastName}}</h3>
-                    <p>@{{.Username}}</p>
-                </div>
-            </a>
-            {{end}}
-        {{else}}
-            <div class="follow-empty">
-                <h3>Not following anyone yet</h3>
-                <p>People this user follows will appear here.</p>
+        {{range .Users}}
+        <a href="/users/{{.ID}}" class="follow-item">
+            <div class="follow-avatar">
+                {{if .ProfilePicture}}
+                <img src="/uploads/profile-pictures/{{.ProfilePicture}}" alt="{{.FirstName}}'s profile picture">
+                {{else}}
+                {{printf "%.1s" .FirstName}}{{printf "%.1s" .LastName}}
+                {{end}}
             </div>
+
+            <div class="follow-info">
+                <h3>{{.FirstName}} {{.LastName}}</h3>
+                <p>@{{.Username}}</p>
+            </div>
+        </a>
+        {{end}}
+        {{else}}
+        <div class="follow-empty">
+            <h3>Not following anyone yet</h3>
+            <p>People this user follows will appear here.</p>
+        </div>
         {{end}}
     </div>
 

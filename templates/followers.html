@@ -1,4 +1,3 @@
-
 {{define "content"}}
 <style>
     .follow-page {
@@ -58,6 +57,14 @@
         font-weight: 700;
     }
 
+    .follow-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
+    }
+
     .follow-info h3 {
         margin: 0 0 5px;
         font-size: 15px;
@@ -100,23 +107,26 @@
 
     <div class="follow-list">
         {{if .Users}}
-            {{range .Users}}
-            <a href="/users/{{.ID}}" class="follow-item">
-                <div class="follow-avatar">
-                    {{printf "%.1s" .FirstName}}
-                </div>
-
-                <div class="follow-info">
-                    <h3>{{.FirstName}} {{.LastName}}</h3>
-                    <p>@{{.Username}}</p>
-                </div>
-            </a>
-            {{end}}
-        {{else}}
-            <div class="follow-empty">
-                <h3>No followers yet</h3>
-                <p>When people follow this user, they'll appear here.</p>
+        {{range .Users}}
+        <a href="/users/{{.ID}}" class="follow-item">
+            <div class="follow-avatar">
+                {{if .ProfilePicture}}
+                <img src="/uploads/profile-pictures/{{.ProfilePicture}}" alt="{{.FirstName}}'s profile picture">
+                {{else}}
+                {{printf "%.1s" .FirstName}}{{printf "%.1s" .LastName}}
+                {{end}}
             </div>
+            <div class="follow-info">
+                <h3>{{.FirstName}} {{.LastName}}</h3>
+                <p>@{{.Username}}</p>
+            </div>
+        </a>
+        {{end}}
+        {{else}}
+        <div class="follow-empty">
+            <h3>No followers yet</h3>
+            <p>When people follow this user, they'll appear here.</p>
+        </div>
         {{end}}
     </div>
 

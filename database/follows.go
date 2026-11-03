@@ -75,10 +75,13 @@ func GetFollowers(userID int) ([]models.User, error) {
 			u.email,
 			u.date_of_birth,
 			u.role,
-			u.created_at
+			u.created_at,
+			COALESCE(p.profile_picture, '')
 		FROM users u
 		JOIN follows f
 			ON f.follower_id = u.id
+		LEFT JOIN user_profiles p
+			ON p.user_id = u.id
 		WHERE f.following_id = ?
 		ORDER BY f.created_at DESC
 	`, userID)
@@ -102,6 +105,7 @@ func GetFollowers(userID int) ([]models.User, error) {
 			&user.DOB,
 			&user.Role,
 			&user.CreatedAt,
+			&user.ProfilePicture,
 		); err != nil {
 			return nil, fmt.Errorf("scanning follower: %w", err)
 		}
@@ -115,7 +119,6 @@ func GetFollowers(userID int) ([]models.User, error) {
 
 	return users, nil
 }
-
 func GetFollowing(userID int) ([]models.User, error) {
 	rows, err := DB.Query(`
 		SELECT
@@ -126,10 +129,13 @@ func GetFollowing(userID int) ([]models.User, error) {
 			u.email,
 			u.date_of_birth,
 			u.role,
-			u.created_at
+			u.created_at,
+			COALESCE(p.profile_picture, '')
 		FROM users u
 		JOIN follows f
 			ON f.following_id = u.id
+		LEFT JOIN user_profiles p
+			ON p.user_id = u.id
 		WHERE f.follower_id = ?
 		ORDER BY f.created_at DESC
 	`, userID)
@@ -153,6 +159,7 @@ func GetFollowing(userID int) ([]models.User, error) {
 			&user.DOB,
 			&user.Role,
 			&user.CreatedAt,
+			&user.ProfilePicture,
 		); err != nil {
 			return nil, fmt.Errorf("scanning following user: %w", err)
 		}
@@ -166,7 +173,6 @@ func GetFollowing(userID int) ([]models.User, error) {
 
 	return users, nil
 }
-
 func GetFollowerCount(userID int) (int, error) {
 	var count int
 
