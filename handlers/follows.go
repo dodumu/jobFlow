@@ -147,3 +147,92 @@ func UnfollowHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/users/%d", targetID),
 		http.StatusSeeOther)
 }
+
+func FollowersHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RenderError(w, r, http.StatusMethodNotAllowed, "Method Not Allowed", "Action performed does not accept this method")
+		return
+	}
+
+	userID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || userID <= 0 {
+		RenderError(w, r, http.StatusBadRequest, "Bad Request", "Invalid user ID")
+		return
+	}
+
+	user, err := database.GetUserByID(userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			RenderError(w, r, http.StatusNotFound, "Not Found", "User could not be found")
+			return
+		}
+
+		log.Printf("FollowersHandler GetUserByID error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Internal Server Error", "Could not retrieve user")
+		return
+	}
+
+	followers, err := database.GetFollowers(userID)
+	if err != nil {
+		log.Printf("FollowersHandler GetFollowers error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Internal Server Error", "Could not retrieve followers")
+		return
+	}
+
+	followerData := models.FollowListPageData{
+		ProfileUser: user,
+		Users:       followers,
+		Title:       "Followers",
+	}
+
+	err = utils.RenderTemplate(w, r, "followers.html", followerData)
+
+	if err != nil {
+		RenderError(w, r, http.StatusInternalServerError, "Internal Server Error", "Could not render followers page")
+		return
+	}
+}
+
+func FollowingHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RenderError(w, r, http.StatusMethodNotAllowed, "Method Not Allowed", "Action performed does not accept this method")
+		return
+	}
+
+	userID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || userID <= 0 {
+		RenderError(w, r, http.StatusBadRequest, "Bad Request", "Invalid user ID")
+		return
+	}
+
+	user, err := database.GetUserByID(userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			RenderError(w, r, http.StatusNotFound, "Not Found", "User could not be found")
+			return
+		}
+
+		log.Printf("FollowersHandler GetUserByID error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Internal Server Error", "Could not retrieve user")
+		return
+	}
+
+	following, err := database.GetFollowing(userID)
+	if err != nil {
+		log.Printf("FollowersHandler GetFollowering error: %v", err)
+		RenderError(w, r, http.StatusInternalServerError, "Internal Server Error", "Could not retrieve following relationship")
+		return
+	}
+
+	followingData := models.FollowListPageData{
+		ProfileUser: user,
+		Users:       following,
+		Title:       "Following",
+	}
+
+	err = utils.RenderTemplate(w, r, "following.html", followingData)
+	if err != nil {
+		RenderError(w, r, http.StatusInternalServerError, "Internal Server Error", "Problem rendering page")
+		return
+	}
+}
