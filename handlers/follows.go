@@ -61,9 +61,25 @@ func FollowHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := database.CreateFollow(follow); err != nil {
-			log.Printf("FollowerHandler CreateFollow error: %v", err)
+			log.Printf("FollowHandler CreateFollow error: %v", err)
 			RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't follow this profile")
 			return
+		}
+
+		// Create a notification for the user being followed.
+		_, err := database.CreateNotification(
+			int64(targetID),
+			sql.NullInt64{
+				Int64: int64(viewerID),
+				Valid: true,
+			},
+			"follow",
+			"Someone started following you.",
+			fmt.Sprintf("/users/%d", viewerID),
+		)
+
+		if err != nil {
+			log.Printf("FollowHandler CreateNotification error: %v", err)
 		}
 	}
 
