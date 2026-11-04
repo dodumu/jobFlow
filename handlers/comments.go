@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"jobFlow/database"
 	"jobFlow/models"
 	"jobFlow/utils"
@@ -91,7 +92,28 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
+	// Get the owner of the post.
+	postOwnerID, err := database.GetPostOwnerUserID(id)
+	if err != nil {
+		log.Printf("CreateCommentHandler GetPostOwnerUserID error: %v", err)
+	} else if postOwnerID != userID {
 
+		// Create a notification for the post owner.
+		_, err := database.CreateNotification(
+			int64(postOwnerID),
+			sql.NullInt64{
+				Int64: int64(userID),
+				Valid: true,
+			},
+			"comment",
+			"commented on your post",
+			fmt.Sprintf("/posts/%d", id),
+		)
+
+		if err != nil {
+			log.Printf("CreateCommentHandler CreateNotification error: %v", err)
+		}
+	}
 	http.Redirect(w, r, "/home", http.StatusSeeOther)
 }
 

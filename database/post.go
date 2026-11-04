@@ -322,3 +322,25 @@ func DeletePost(id int) error {
 
 	return nil
 }
+
+func GetPostOwnerUserID(postID int) (int, error) {
+	var ownerID int
+
+	err := DB.QueryRow(`
+        SELECT
+            CASE
+                WHEN p.company_id IS NOT NULL THEN c.user_id
+                ELSE p.user_id
+            END
+        FROM posts p
+        LEFT JOIN companies c
+            ON c.id = p.company_id
+        WHERE p.id = ?
+    `, postID).Scan(&ownerID)
+
+	if err != nil {
+		return 0, fmt.Errorf("getting post owner user ID: %w", err)
+	}
+
+	return ownerID, nil
+}
