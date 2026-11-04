@@ -197,6 +197,25 @@
     background: #1d4ed8;
   }
 
+  .feed-post {
+    cursor: pointer;
+  }
+
+  .feed-post:focus-visible {
+    outline: 2px solid var(--primary, #2563eb);
+    outline-offset: 3px;
+  }
+
+  /* Keep interactive elements behaving normally */
+  .feed-post a,
+  .feed-post button,
+  .feed-post form,
+  .feed-post input,
+  .feed-post textarea,
+  .feed-post select {
+    cursor: auto;
+  }
+
   /* =========================
        FEED
        ========================= */
@@ -1277,6 +1296,44 @@
 
 
   loadComments();
+
+
+
+  document.querySelectorAll(".feed-post").forEach((post) => {
+    post.addEventListener("click", (event) => {
+
+      // Don't navigate when the user clicks an interactive element.
+      if (event.target.closest(
+        "a, button, form, input, textarea, select, label, summary, [contenteditable='true']"
+      )) {
+        return;
+      }
+
+      const postID = post.dataset.postId;
+
+      if (postID) {
+        window.location.href = `/posts/${postID}`;
+      }
+    });
+
+    // Allow keyboard users to open the post.
+    post.setAttribute("tabindex", "0");
+
+    post.addEventListener("keydown", (event) => {
+      if (event.target !== post) return;
+
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+
+        const postID = post.dataset.postId;
+
+        if (postID) {
+          window.location.href = `/posts/${postID}`;
+        }
+      }
+    });
+  });
+
 </script>
 
 {{end}}
