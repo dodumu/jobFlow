@@ -122,3 +122,22 @@ func MarkNotificationAsRead(notificationID, userID int64) error {
 
 	return nil
 }
+
+func GetNotificationLink(notificationID, userID int64) (sql.NullString, error) {
+	var link sql.NullString
+
+	err := DB.QueryRow(`
+		SELECT link
+		FROM notifications
+		WHERE id = ?
+		AND user_id = ?
+	`, notificationID, userID).Scan(&link)
+
+	if err != nil {
+		return sql.NullString{}, fmt.Errorf(
+			"getting notification link: %w", err,
+		)
+	}
+
+	return link, nil
+}

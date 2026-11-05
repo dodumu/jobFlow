@@ -1,4 +1,4 @@
-{{define "content"}}
+ {{define "content"}}
 <style>
     .notifications-page {
         max-width: 850px;
@@ -27,19 +27,39 @@
         gap: 12px;
     }
 
+    .notification-form {
+        width: 100%;
+        margin: 0;
+    }
+
     .notification-item {
         display: flex;
         align-items: flex-start;
         gap: 14px;
+        width: 100%;
         padding: 18px;
         background: #fff;
         border: 1px solid #e2e8f0;
         border-radius: 12px;
+        font-family: inherit;
+        font-size: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 0.2s ease, background 0.2s ease;
     }
 
     .notification-item.unread {
         background: #eff6ff;
         border-color: #bfdbfe;
+    }
+
+    .notification-item:hover {
+        border-color: #93c5fd;
+    }
+
+    .notification-item:focus-visible {
+        outline: 2px solid #2563eb;
+        outline-offset: 3px;
     }
 
     .notification-indicator {
@@ -57,11 +77,13 @@
     }
 
     .notification-content {
+        display: block;
         flex: 1;
         min-width: 0;
     }
 
     .notification-message {
+        display: block;
         margin: 0 0 8px;
         color: #1e293b;
         line-height: 1.5;
@@ -69,6 +91,7 @@
     }
 
     .notification-time {
+        display: block;
         color: #64748b;
         font-size: 13px;
     }
@@ -80,7 +103,7 @@
         text-decoration: none;
     }
 
-    .notification-link:hover {
+    .notification-item:hover .notification-link {
         color: #1d4ed8;
         text-decoration: underline;
     }
@@ -127,43 +150,48 @@
         }
     }
 </style>
+
 <div class="notifications-page">
     <div class="notifications-header">
-        <div>
-            <h1>Notifications</h1>
-            <p>Stay updated on what's happening with your JobFlow account.</p>
-        </div>
+        <h1>Notifications</h1>
+        <p>Stay updated on what's happening with your JobFlow account.</p>
     </div>
 
+    {{if .Notification}}
     <div class="notifications-list">
-        {{if .Notification}}
         {{range .Notification}}
-        <div class="notification-item {{if not .IsRead}}unread{{end}}">
-            <div class="notification-indicator">
-                {{if not .IsRead}}
-                <span class="unread-dot"></span>
+        <form action="/notifications/read" method="POST" class="notification-form">
+            <input type="hidden" name="notification_id" value="{{.ID}}">
+
+            <button type="submit"
+                class="notification-item {{if not .IsRead}}unread{{end}}">
+
+                <span class="notification-indicator">
+                    {{if not .IsRead}}
+                    <span class="unread-dot"></span>
+                    {{end}}
+                </span>
+
+                <span class="notification-content">
+                    <span class="notification-message">{{.Message}}</span>
+                    <span class="notification-time">{{.CreatedAt}}</span>
+                </span>
+
+                {{if .Link.Valid}}
+                <span class="notification-link">View</span>
+                {{else}}
+                <span class="notification-link">View notifications</span>
                 {{end}}
-            </div>
-
-            <div class="notification-content">
-                <p class="notification-message">{{.Message}}</p>
-                <span class="notification-time">{{.CreatedAt}}</span>
-            </div>
-
-            {{if .Link.Valid}}
-            <a class="notification-link" href="{{.Link.String}}">
-                View
-            </a>
-            {{end}}
-        </div>
-        {{end}}
-        {{else}}
-        <div class="notifications-empty">
-            <div class="empty-icon">♧</div>
-            <h2>You're all caught up!</h2>
-            <p>When something happens on JobFlow, your notifications will appear here.</p>
-        </div>
+            </button>
+        </form>
         {{end}}
     </div>
+    {{else}}
+    <div class="notifications-empty">
+        <div class="empty-icon">♧</div>
+        <h2>You're all caught up!</h2>
+        <p>When something happens on JobFlow, your notifications will appear here.</p>
+    </div>
+    {{end}}
 </div>
 {{end}}

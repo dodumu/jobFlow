@@ -7,6 +7,7 @@ import (
 	"jobFlow/models"
 	"jobFlow/utils"
 	"log"
+	"strings"
 	"net/http"
 	"strconv"
 	"time"
@@ -81,13 +82,17 @@ func UnreadNotificationCountHandler(w http.ResponseWriter, r *http.Request) {
 
 func MarkNotificationAsReadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		RenderError(w, r, http.StatusMethodNotAllowed,
+		RenderError(
+			w,
+			r,
+			http.StatusMethodNotAllowed,
 			"Method Not Allowed",
-			"This page only accept POST requests.")
+			"This action only accepts POST requests.",
+		)
 		return
 	}
 
-	UserID, ok := utils.GetUserID(r)
+	userID, ok := utils.GetUserID(r)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -106,15 +111,39 @@ func MarkNotificationAsReadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = database.MarkNotificationAsRead(notificationID, int64(UserID))
+	// Get the destination belonging to this user.
+	link, err := database.GetNotificationLink(
+		notificationID,
+		int64(userID),
+	)
 	if err != nil {
-		log.Printf("MarkNotificationAsReadHandler: %v", err)
-		http.Error(w, "Unable to mark notification as read", http.StatusNotFound)
+		log.Printf("MarkNotificationAsReadHandler GetNotificationLink: %v", err)
+		http.Error(w, "Notification not found", http.StatusNotFound)
 		return
 	}
-	http.Redirect(w, r, "/notifications", http.StatusSeeOther)
-}
 
+	// Mark the notification as read.
+	if err := database.MarkNotificationAsRead(
+		notificationID,
+		int64(userID),
+	); err != nil {
+		log.Printf("MarkNotificationAsReadHandler MarkNotificationAsRead: %v", err)
+		http.Error(w, "Unable to mark notification as read", http.StatusInternalServerError)
+		return
+	}
+
+	// Only allow internal application paths.
+	destination := "/notifications"
+
+	if link.Valid &&
+		strings.HasPrefix(link.String, "/") &&
+		!strings.HasPrefix(link.String, "//") &&
+		!strings.ContainsAny(link.String, "\r\n") {
+		destination = link.String
+	}
+
+	http.Redirect(w, r, destination, http.StatusSeeOther)
+}
 func NotificationStreamHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
