@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"jobFlow/database"
+	"jobFlow/middleware"
 )
 
 var templateFuncs = template.FuncMap{
@@ -74,6 +75,19 @@ func RenderTemplate(
 			}
 
 			return count
+		},
+		"csrfToken": func() string {
+			return middleware.CSRFTokenFromRequest(r)
+		},
+		"csrfField": func() template.HTML {
+			token := middleware.CSRFTokenFromRequest(r)
+			if token == "" {
+				return template.HTML("")
+			}
+			return template.HTML(
+				`<input type="hidden" name="csrf_token" value="` + token + `">`,
+			)
+
 		},
 	}
 

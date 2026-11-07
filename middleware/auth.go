@@ -34,7 +34,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "session expired", http.StatusUnauthorized)
 			return
 		}
-
+		if !verifyCSRF(w, r, session.Token) {
+			return
+		}
 		newContext := context.WithValue(
 			r.Context(),
 			UserIDKey,
