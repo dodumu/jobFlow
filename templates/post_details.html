@@ -581,6 +581,7 @@
             {{if .Post.HasLiked}}
 
                 <form action="/posts/unlike/" method="POST">
+{{csrfField}}
                     <input type="hidden" name="post_id" value="{{.Post.ID}}">
 
                     <button type="submit" class="liked">
@@ -591,6 +592,7 @@
             {{else}}
 
                 <form action="/posts/like/" method="POST">
+{{csrfField}}
                     <input type="hidden" name="post_id" value="{{.Post.ID}}">
 
                     <button type="submit">
@@ -608,6 +610,7 @@
             </button>
 
             <form action="/posts/share" method="POST">
+{{csrfField}}
                 <input type="hidden" name="post_id" value="{{.Post.ID}}">
 
                 <button type="submit">
@@ -887,7 +890,8 @@
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
+                    "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
                 },
 
                 body: new URLSearchParams({
@@ -946,7 +950,8 @@
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
+                    "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
                 },
 
                 body: new URLSearchParams({

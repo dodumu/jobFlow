@@ -43,6 +43,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			session.UserID,
 		)
 
+		newContext = context.WithValue(newContext, sessionTokenKey, session.Token)
+
 		next.ServeHTTP(w, r.WithContext(newContext))
 	})
 }

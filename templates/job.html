@@ -543,6 +543,7 @@
         {{if eq .Status "open"}}
 
         <form action="/jobs/{{.ID}}/close" method="POST" class="close-job-form">
+{{csrfField}}
           <button type="submit" class="close-job-button">
             Close Job
           </button>

@@ -398,12 +398,14 @@
         <div class="profile-actions">
           {{if .IsFollowing}}
           <form action="/users/{{.User.ID}}/unfollow" method="POST">
+{{csrfField}}
             <button type="submit" class="unfollow-btn">
               Unfollow
             </button>
           </form>
           {{else}}
           <form action="/users/{{.User.ID}}/follow" method="POST">
+{{csrfField}}
             <button type="submit" class="follow-btn">
               Follow
             </button>
