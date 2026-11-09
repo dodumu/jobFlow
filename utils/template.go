@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,6 +17,45 @@ var templateFuncs = template.FuncMap{
 	"formatDate": func(t time.Time) string {
 		return t.Format("2006-01-02")
 	},
+}
+
+var stubFuncs = template.FuncMap{
+	"formatDate":        templateFuncs["formatDate"],
+	"isAuthenticated":   func() bool { return false },
+	"currentUserAvatar": func() string { return "" },
+	"isActive":          func(path string) bool { return false },
+	"showNavbar": func() bool {
+		return false
+	},
+	"unreadNotificationCount": func() int { return 0 },
+	"csrfToken":               func() string { return "" },
+	"csrfField":               func() template.HTML { return "" },
+}
+
+var templateCache = map[string]*template.Template{}
+
+func LoadTemplates() error {
+	pages, err := filepath.Glob("templates/*.html")
+	if err != nil {
+		return fmt.Errorf("listing timplates: %w", err)
+	}
+
+	for _, pagePath := range pages {
+		name := filepath.Base(pagePath)
+
+		if name == "base.html" {
+			continue
+		}
+
+		tmpl, err := template.New("base.html").
+			Funcs(stubFuncs).ParseFiles("templates/base.html", pagePath)
+		if err != nil {
+			return fmt.Errorf("parsing template %s: %w", name, err)
+		}
+
+		templateCache[name] = tmpl
+	}
+	return nil
 }
 
 func RenderTemplate(
@@ -44,6 +84,7 @@ func RenderTemplate(
 		"isAuthenticated": func() bool {
 			return isAuthenticated
 		},
+
 		"currentUserAvatar": func() string {
 			return avatarURL
 		},
@@ -91,16 +132,17 @@ func RenderTemplate(
 		},
 	}
 
-	tmpl, err := template.New("base.html").
-		Funcs(funcs).
-		ParseFiles(
-			"templates/base.html",
-			"templates/"+page,
-		)
-
-	if err != nil {
-		return fmt.Errorf("parsing template %s: %w", page, err)
+	cached, ok := templateCache[page]
+	if !ok {
+		return fmt.Errorf("template %s not found in cache", page)
 	}
+
+	tmpl, err := cached.Clone()
+	if err != nil {
+		return fmt.Errorf("cloning template %s: %w", page, err)
+	}
+
+	tmpl.Funcs(funcs)
 
 	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
 		return fmt.Errorf("executing template %s: %w", page, err)

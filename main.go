@@ -8,6 +8,7 @@ import (
 	"jobFlow/database"
 	"jobFlow/handlers"
 	"jobFlow/middleware"
+	"jobFlow/utils"
 )
 
 func main() {
@@ -22,6 +23,9 @@ func main() {
 		log.Fatalf("failed to initialize database: %v", err)
 	}
 
+	if err := utils.LoadTemplates(); err != nil {
+		log.Fatalf("loading tmeplates: %v", err)
+	}
 	// Configure uploads directory.
 	uploadPath := os.Getenv("UPLOAD_PATH")
 	if uploadPath == "" {
