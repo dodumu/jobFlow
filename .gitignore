@@ -10,3 +10,6 @@
 *.db-shm
 *.db-wal
 cookies.txt
+
+*.db-wal
+*.db-shm

@@ -14,8 +14,10 @@ type DBExecutor interface {
 var DB *sql.DB
 
 func InitDB(path string) error {
-	dsn := path + "?_pragma=foreign_keys(1)"
-
+	dsn := path +
+		"?_pragma=foreign_keys(1)" +
+		"&_pragma=journal_mode(WAL)" +
+		"&_pragma=busy_timeout(5000)"
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return fmt.Errorf("opening database: %w", err)
