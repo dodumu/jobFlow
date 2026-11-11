@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"jobFlow/database"
 	"jobFlow/handlers"
@@ -246,9 +251,57 @@ func main() {
 	}
 
 	address := ":" + port
-	log.Printf("server is running on %s", address)
 
-	if err := http.ListenAndServe(address, nil); err != nil {
-		log.Fatal("server failed: ", err)
+	server := &http.Server{
+		Addr:              address,
+		Handler:           nil,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       60 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go cleanupSessions(ctx)
+
+	go func() {
+		log.Printf("server is running on %s", address)
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("server failed: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+	log.Println("shutting down...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Printf("graceful shutdown did not finish: %v", err)
+	}
+
+	database.DB.Close()
+	log.Println("bye")
+
+}
+
+func cleanupSessions(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			deleted, err := database.DeleteExpiredSessions()
+			if err != nil {
+				log.Printf("session cleanup failed: %v", err)
+				continue
+			}
+			log.Printf("session cleanup: removed %d expired sessions", deleted)
+		case <-ctx.Done():
+			return
+		}
 	}
 }

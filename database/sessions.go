@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"jobFlow/models"
+	"time"
 )
 
 func CreateSession(session models.Session) error {
@@ -43,4 +44,12 @@ func DeleteSession(token string) error {
 		return fmt.Errorf("session with token %v not found", token)
 	}
 	return nil
+}
+
+func DeleteExpiredSessions() (int64, error) {
+	result, err := DB.Exec(`DELETE FROM sessions WHERE expires_at < ?`, time.Now().UTC())
+	if err != nil {
+		return 0, fmt.Errorf("deleting expired sessions: %w", err)
+	}
+	return result.RowsAffected()
 }
