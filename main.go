@@ -10,10 +10,12 @@ import (
 	"syscall"
 	"time"
 
+	"jobFlow/ai"
 	"jobFlow/database"
 	"jobFlow/handlers"
 	"jobFlow/middleware"
 	"jobFlow/utils"
+	"jobFlow/worker"
 )
 
 func main() {
@@ -265,6 +267,34 @@ func main() {
 
 	go cleanupSessions(ctx)
 
+	// Any AI job that was mid-run when the app last stopped goes back in the queue.
+	requeued, err := database.RequeueRunningAIJobs()
+	if err != nil {
+		log.Fatalf("requeueing ai jobs: %v", err)
+	}
+	if requeued > 0 {
+		log.Printf("requeued %d interrupted ai jobs", requeued)
+	}
+
+	aiWorker := worker.New()
+	aiWorker.Register("ping", worker.PingHandler)
+
+	aiClient, err := ai.NewFromEnv()
+	switch {
+	case errors.Is(err, ai.ErrNoAPIKey):
+		log.Println("AI_API_KEY is not set: AI features are disabled")
+	case err != nil:
+		log.Fatalf("setting up the AI client: %v", err)
+	default:
+		aiWorker.Register("ai_ping", worker.NewAIPingHandler(aiClient))
+	}
+
+	workerDone := make(chan struct{})
+	go func() {
+		aiWorker.Run(ctx)
+		close(workerDone)
+	}()
+
 	go func() {
 		log.Printf("server is running on %s", address)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -281,7 +311,12 @@ func main() {
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Printf("graceful shutdown did not finish: %v", err)
 	}
-
+	// Let a running AI job finish (up to 10 seconds) before closing the database.
+	select {
+	case <-workerDone:
+	case <-time.After(10 * time.Second):
+		log.Println("ai worker did not stop in time")
+	}
 	database.DB.Close()
 	log.Println("bye")
 

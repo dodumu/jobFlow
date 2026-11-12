@@ -13,7 +13,7 @@ const (
 const (
 	AIJobStatusQueued  = "queued"
 	AIJobStatusRunning = "running"
-	AiJobStatusDone    = "done"
+	AIJobStatusDone    = "done"
 	AIJobStatusFailed  = "failed"
 )
 

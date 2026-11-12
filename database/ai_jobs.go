@@ -77,6 +77,23 @@ func ClaimNextAIJob() (models.AIJob, error) {
 	return scanAIJob(DB.QueryRow(query, models.AIJobStatusRunning, models.AIJobStatusQueued))
 
 }
+func CompleteAIJob(id int, result, model, promptVersion string) error {
+	query := `
+		UPDATE ai_jobs
+		SET status = ?,
+		    result = ?,
+		    model = NULLIF(?, ''),
+		    prompt_version = NULLIF(?, ''),
+		    error = NULL,
+		    finished_at = CURRENT_TIMESTAMP
+		WHERE id = ?`
+
+	_, err := DB.Exec(query, models.AIJobStatusDone, result, model, promptVersion, id)
+	if err != nil {
+		return fmt.Errorf("completing ai job %d: %w", id, err)
+	}
+	return nil
+}
 
 func FailAIJob(id int, message string) error {
 	query := `
