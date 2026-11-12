@@ -6,8 +6,38 @@ import (
 	"jobFlow/models"
 )
 
-// CreateAIJob queues a new AI job for a user and returns its ID.
-// The worker will pick it up later; this function never calls the AI itself.
+const aiJobColumns = `id, user_id, type, status, input, result, error,
+	model, prompt_version, attempts, created_at, started_at, finished_at`
+
+type rowScanner interface {
+	Scan(dest ...any) error
+}
+
+func scanAIJob(row rowScanner) (models.AIJob, error) {
+	var job models.AIJob
+
+	err := row.Scan(
+		&job.ID,
+		&job.UserID,
+		&job.Type,
+		&job.Status,
+		&job.Input,
+		&job.Result,
+		&job.Error,
+		&job.Model,
+		&job.PromptVersion,
+		&job.Attempts,
+		&job.CreatedAt,
+		&job.StartedAt,
+		&job.FinishedAt,
+	)
+
+	if err != nil {
+		return models.AIJob{}, err
+	}
+
+	return job, nil
+}
 func CreateAIJob(userID int, jobType string, input string) (int, error) {
 	query := `INSERT INTO ai_jobs (user_id, type, input) VALUES (?, ?, ?)`
 
@@ -24,36 +54,51 @@ func CreateAIJob(userID int, jobType string, input string) (int, error) {
 	return int(id), nil
 }
 
-// GetAIJobForUser loads a job, but only if it belongs to that user.
-// For someone else's job it returns sql.ErrNoRows, exactly as if it did not exist.
 func GetAIJobForUser(id, userID int) (models.AIJob, error) {
+	query := `SELECT ` + aiJobColumns + ` FROM ai_jobs WHERE id  = ? AND user_id = ?`
+
+	return scanAIJob(DB.QueryRow(query, id, userID))
+}
+
+func ClaimNextAIJob() (models.AIJob, error) {
 	query := `
-		SELECT id, user_id, type, status, input, result, error,
-		       model, prompt_version, attempts,
-		       created_at, started_at, finished_at
-		FROM ai_jobs
-		WHERE id = ? AND user_id = ?`
+		UPDATE ai_jobs
+		SET status = ?,
+		    started_at = CURRENT_TIMESTAMP,
+		    attempts = attempts + 1
+		WHERE id = (
+			SELECT id FROM ai_jobs
+			WHERE status = ?
+			ORDER BY created_at, id
+			LIMIT 1
+		)
+		RETURNING ` + aiJobColumns
 
-	var job models.AIJob
+	return scanAIJob(DB.QueryRow(query, models.AIJobStatusRunning, models.AIJobStatusQueued))
 
-	err := DB.QueryRow(query, id, userID).Scan(
-		&job.ID,
-		&job.UserID,
-		&job.Type,
-		&job.Status,
-		&job.Input,
-		&job.Result,
-		&job.Error,
-		&job.Model,
-		&job.PromptVersion,
-		&job.Attempts,
-		&job.CreatedAt,
-		&job.StartedAt,
-		&job.FinishedAt,
-	)
+}
+
+func FailAIJob(id int, message string) error {
+	query := `
+		UPDATE ai_jobs
+		SET status = ?,
+		    error = ?,
+		    finished_at = CURRENT_TIMESTAMP
+		WHERE id = ?`
+
+	_, err := DB.Exec(query, models.AIJobStatusFailed, message, id)
 	if err != nil {
-		return models.AIJob{}, err
+		return fmt.Errorf("failing ai job %d: %w", id, err)
 	}
+	return nil
+}
 
-	return job, nil
+func RequeueRunningAIJobs() (int64, error) {
+	query := `UPDATE ai_jobs SET status = ?, started_at = NULL WHERE status = ?`
+
+	res, err := DB.Exec(query, models.AIJobStatusQueued, models.AIJobStatusRunning)
+	if err != nil {
+		return 0, fmt.Errorf("requeueing running ai jobs: %w", err)
+	}
+	return res.RowsAffected()
 }

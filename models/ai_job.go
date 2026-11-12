@@ -6,17 +6,17 @@ import (
 )
 
 const (
-	AIJobTypeCVDraft = "cv_draft"
+	AIJobTypeCVDraft  = "cv_draft"
 	AIJobTypeJobMatch = "job_match"
 )
 
-
 const (
-	AIJobStatusQueued = "queued"
-	AIjobStatusRunning = "running"
-	AiJobStatusDone = "done"
-	AIJobStatusFailed = "failed"
+	AIJobStatusQueued  = "queued"
+	AIJobStatusRunning = "running"
+	AiJobStatusDone    = "done"
+	AIJobStatusFailed  = "failed"
 )
+
 type AIJob struct {
 	ID            int
 	UserID        int
