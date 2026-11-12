@@ -14,25 +14,13 @@ import (
 
 func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed for this action.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
 	userID, ok := utils.GetUserID(r)
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to share a post.",
-		)
+		unauthorized(w, r, "You must be logged in to share a post.")
 		return
 	}
 
@@ -65,13 +53,7 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 	originalPost, err := database.GetPostByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			RenderError(
-				w,
-				r,
-				http.StatusNotFound,
-				"Post Not Found",
-				"The post you're trying to share could not be found.",
-			)
+			notFound(w, r, "Post Not Found", "The post you're trying to share could not be found.")
 			return
 		}
 
@@ -80,13 +62,7 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 			err,
 		)
 
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load this post right now.",
-		)
+		serverError(w, r, "We couldn't load this post right now.")
 		return
 	}
 
@@ -112,13 +88,7 @@ func SharePostHandler(w http.ResponseWriter, r *http.Request) {
 			err,
 		)
 
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't share this post right now.",
-		)
+		serverError(w, r, "We couldn't share this post right now.")
 		return
 	}
 

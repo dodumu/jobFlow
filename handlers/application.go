@@ -20,54 +20,23 @@ type ApplicationDetailsData struct {
 
 func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed for this page.",
-		)
+
+		methodNotAllowed(w, r)
 		return
 	}
 
-	userID, ok := utils.GetUserID(r)
+	user, ok := currentUser(w, r, "You must be logged in to view applications.")
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to view applications.",
-		)
-		return
-	}
-
-	user, err := database.GetUserByID(userID)
-	if err != nil {
-		log.Printf("ApplicationHandler GetUserByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your account information.",
-		)
 		return
 	}
 
 	switch user.Role {
 
 	case constants.RoleIndividual:
-		applications, err := database.GetApplicationsByUserID(userID)
+		applications, err := database.GetApplicationsByUserID(user.ID)
 		if err != nil {
 			log.Printf("ApplicationHandler GetApplicationsByUserID error: %v", err)
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't load your applications right now.",
-			)
+			serverError(w, r, "We couldn't load your applications right now.")
 			return
 		}
 		pageData := models.UserApplicationsPageData{
@@ -84,29 +53,17 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case constants.RoleCompany:
-		company, err := database.GetCompanyByUserID(userID)
+		company, err := database.GetCompanyByUserID(user.ID)
 		if err != nil {
 			log.Printf("ApplicationHandler GetCompanyByUserID error: %v", err)
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't load your company information.",
-			)
+			serverError(w, r, "We couldn't load your company information.")
 			return
 		}
 
 		applications, err := database.GetApplicationsByCompanyID(company.ID)
 		if err != nil {
 			log.Printf("ApplicationHandler GetApplicationsByCompanyID error: %v", err)
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't load your company's applications right now.",
-			)
+			serverError(w, r, "We couldn't load your company's applications right now.")
 			return
 		}
 		pageData := models.CompanyApplicationsPageData{
@@ -123,75 +80,31 @@ func ApplicationHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 	default:
-		RenderError(
-			w,
-			r,
-			http.StatusForbidden,
-			"Access Denied",
-			"You don't have permission to view this page.",
-		)
+		forbidden(w, r, "You don't have permission to view this page.")
 		return
 	}
 }
 
 func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed for this page.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
-	userID, ok := utils.GetUserID(r)
+	user, ok := currentUser(w, r, "You must be logged in to view this application.")
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to view this application.",
-		)
-		return
-	}
-
-	user, err := database.GetUserByID(userID)
-	if err != nil {
-		log.Printf("ViewApplicationHandler GetUserByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your account information.",
-		)
 		return
 	}
 
 	if user.Role != constants.RoleCompany {
-		RenderError(
-			w,
-			r,
-			http.StatusForbidden,
-			"Access Denied",
-			"Only company accounts can review applications.",
-		)
+		forbidden(w, r, "Only company accounts can review applications.")
 		return
 	}
 
-	company, err := database.GetCompanyByUserID(userID)
+	company, err := database.GetCompanyByUserID(user.ID)
 	if err != nil {
 		log.Printf("ViewApplicationHandler GetCompanyByUserID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your company information.",
-		)
+		serverError(w, r, "We couldn't load your company information.")
 		return
 	}
 
@@ -209,50 +122,26 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 
 	application, err := database.GetApplicationByID(applicationID)
 	if err != nil {
-		RenderError(
-			w,
-			r,
-			http.StatusNotFound,
-			"Application Not Found",
-			"The application you're looking for could not be found.",
-		)
+		notFound(w, r, "Application Not Found", "The application you're looking for could not be found.")
 		return
 	}
 
 	job, err := database.GetJobByID(application.JobID)
 	if err != nil {
 		log.Printf("ViewApplicationHandler GetJobByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusNotFound,
-			"Job Not Found",
-			"The job associated with this application could not be found.",
-		)
+		notFound(w, r, "Job Not Found", "The job associated with this application could not be found.")
 		return
 	}
 
 	if job.CompanyID != company.ID {
-		RenderError(
-			w,
-			r,
-			http.StatusForbidden,
-			"Access Denied",
-			"You don't have permission to view this application.",
-		)
+		forbidden(w, r, "You don't have permission to view this application.")
 		return
 	}
 
 	applicant, err := database.GetUserByID(application.UserID)
 	if err != nil {
 		log.Printf("ViewApplicationHandler applicant GetUserByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusNotFound,
-			"Applicant Not Found",
-			"The applicant associated with this application could not be found.",
-		)
+		notFound(w, r, "Applicant Not Found", "The applicant associated with this application could not be found.")
 		return
 	}
 
@@ -274,62 +163,24 @@ func ViewApplicationHandler(w http.ResponseWriter, r *http.Request) {
 
 func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, status string) {
 	if r.Method != http.MethodPost {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed for this action.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
-	userID, ok := utils.GetUserID(r)
+	user, ok := currentUser(w, r, "You must be logged in to review applications.")
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to review applications.",
-		)
-		return
-	}
-
-	user, err := database.GetUserByID(userID)
-	if err != nil {
-		log.Printf("updateApplicationStatusHandler GetUserByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your account information.",
-		)
 		return
 	}
 
 	if user.Role != constants.RoleCompany {
-		RenderError(
-			w,
-			r,
-			http.StatusForbidden,
-			"Access Denied",
-			"Only company accounts can review applications.",
-		)
+		forbidden(w, r, "Only company accounts can review applications.")
 		return
 	}
 
-	company, err := database.GetCompanyByUserID(userID)
+	company, err := database.GetCompanyByUserID(user.ID)
 	if err != nil {
 		log.Printf("updateApplicationStatusHandler GetCompanyByUserID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your company information.",
-		)
+		serverError(w, r, "We couldn't load your company information.")
 		return
 	}
 
@@ -347,37 +198,19 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 
 	application, err := database.GetApplicationByID(applicationID)
 	if err != nil {
-		RenderError(
-			w,
-			r,
-			http.StatusNotFound,
-			"Application Not Found",
-			"The application you're looking for could not be found.",
-		)
+		notFound(w, r, "Application Not Found", "The application you're looking for could not be found.")
 		return
 	}
 
 	job, err := database.GetJobByID(application.JobID)
 	if err != nil {
 		log.Printf("updateApplicationStatusHandler GetJobByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusNotFound,
-			"Job Not Found",
-			"The job associated with this application could not be found.",
-		)
+		notFound(w, r, "Job Not Found", "The job associated with this application could not be found.")
 		return
 	}
 
 	if company.ID != job.CompanyID {
-		RenderError(
-			w,
-			r,
-			http.StatusForbidden,
-			"Access Denied",
-			"You don't have permission to review this application.",
-		)
+		forbidden(w, r, "You don't have permission to review this application.")
 		return
 	}
 
@@ -395,20 +228,14 @@ func updateApplicationStatusHandler(w http.ResponseWriter, r *http.Request, stat
 	err = database.UpdateApplicationStatus(application.ID, status)
 	if err != nil {
 		log.Printf("updateApplicationStatusHandler UpdateApplicationStatus error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't update the application status.",
-		)
+		serverError(w, r, "We couldn't update the application status.")
 		return
 	}
 
 	_, err = database.CreateNotification(
 		int64(application.UserID),
 		sql.NullInt64{
-			Int64: int64(userID),
+			Int64: int64(user.ID),
 			Valid: true,
 		},
 		"application_status",
@@ -444,24 +271,17 @@ func RejectApplicationHandler(w http.ResponseWriter, r *http.Request) {
 
 func ViewMyApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(w, r, http.StatusMethodNotAllowed, "Method Not Allowed", "The requested method is not allowed on this page.")
+		methodNotAllowed(w, r)
 		return
 	}
 
-	userID, ok := utils.GetUserID(r)
+	user, ok := currentUser(w, r, "You must be logged in to view you application.")
 	if !ok {
-		RenderError(w, r, http.StatusUnauthorized, "Unauthorized", "You must be logged in to view you application.")
-		return
-	}
-	user, err := database.GetUserByID(userID)
-	if err != nil {
-		log.Printf("ViewMyApllicationHandler GetUserBYID err: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went, Wrong", "We couldn't load you account information")
 		return
 	}
 
 	if user.Role != constants.RoleIndividual {
-		RenderError(w, r, http.StatusForbidden, "Access Denied", "Only individual account can view their own applications here.")
+		forbidden(w, r, "Only individual account can view their own applications here.")
 		return
 	}
 	applicationID, err := utils.GetPathID(r, "id")
@@ -478,23 +298,23 @@ func ViewMyApplicationHandler(w http.ResponseWriter, r *http.Request) {
 	application, err := database.GetApplicationByID(applicationID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			RenderError(w, r, http.StatusNotFound, "Application Not Found", "The application you're looking for could not be found")
+			notFound(w, r, "Application Not Found", "The application you're looking for could not be found")
 			return
 		}
 		log.Printf("ViewMyApplicationHandler GetApplicationsByID error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load your application")
+		serverError(w, r, "We couldn't load your application")
 		return
 	}
 
-	if application.UserID != userID {
-		RenderError(w, r, http.StatusForbidden, "Access Denied", "You don't have permission to view the application.")
+	if application.UserID != user.ID {
+		forbidden(w, r, "You don't have permission to view the application.")
 		return
 	}
 
 	job, err := database.GetJobByID(application.JobID)
 	if err != nil {
 		log.Printf("ViewMyApplicationHandler GetJobByID error : %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something went wrong", "We couldn't load the job associated with your application.")
+		serverError(w, r, "We couldn't load the job associated with your application.")
 		return
 	}
 	data := ApplicationDetailsData{

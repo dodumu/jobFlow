@@ -13,13 +13,12 @@ import (
 
 func PostDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(w, r, http.StatusMethodNotAllowed, "Method Not Allowed", "The requested method is not allowed on this page.")
+		methodNotAllowed(w, r)
 		return
 	}
 
-	userID, ok := utils.GetUserID(r)
+	user, ok := currentUser(w, r, "You must be logged in to view this post")
 	if !ok {
-		RenderError(w, r, http.StatusUnauthorized, "Unauthorized", "You must be logged in to view this post")
 		return
 	}
 
@@ -29,43 +28,36 @@ func PostDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := database.GetUserByID(userID)
-	if err != nil {
-		log.Printf("PostDetailsHandler GetUserByID error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load your account information.")
-		return
-	}
-
-	post, err := database.GetFeedPostByID(PostID, userID)
+	post, err := database.GetFeedPostByID(PostID, user.ID)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			RenderError(w, r, http.StatusNotFound, "Post Not Found", "The post you're looking for doesn't exist.")
+			notFound(w, r, "Post Not Found", "The post you're looking for doesn't exist.")
 			return
 		}
 
 		log.Printf("PostDetailsHandler GetFeedPostByID error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this post right now.")
+		serverError(w, r, "We couldn't load this post right now.")
 		return
 	}
 
 	comments, err := database.GetCommentsByPostID(PostID)
 	if err != nil {
 		log.Printf("PostDetailsHandler GetCOmmentsByPostID error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load the comments.")
+		serverError(w, r, "We couldn't load the comments.")
 		return
 	}
 
 	likes, err := database.GetPostLikes(PostID)
 	if err != nil {
 		log.Printf("PostDetailsHandler GetPostLikes eerror: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load the likes")
+		serverError(w, r, "We couldn't load the likes")
 		return
 	}
 
 	data := models.PostDetailsPageData{
 		User:          user,
-		CurrentUserID: userID,
+		CurrentUserID: user.ID,
 		Post:          post,
 		Comments:      comments,
 		Likes:         likes,

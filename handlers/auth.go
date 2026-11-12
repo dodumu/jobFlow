@@ -7,6 +7,7 @@ import (
 	"jobFlow/utils"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -25,13 +26,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodPost {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed on this page.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
@@ -41,7 +36,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	confirmPassword := r.FormValue("confirm_password")
 	firstName := r.FormValue("first_name")
 	lastName := r.FormValue("last_name")
-	email := r.FormValue("email")
+	email := strings.TrimSpace(r.FormValue("email"))
 	dob := r.FormValue("date_of_birth")
 	role := r.FormValue("role")
 
@@ -88,6 +83,14 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("RegisterHandler template error: %v", err)
 		}
+		return
+	}
+	if err := utils.ValidateEmail(email); err != nil {
+		renderResgisterError(w, r, err.Error())
+		return
+	}
+	if err := utils.ValidatePassword(password); err != nil {
+		renderResgisterError(w, r, err.Error())
 		return
 	}
 	if !validRoles[role] {
@@ -147,13 +150,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("RegisterHandler HashPassword error: %v", err)
 
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't create your account right now.",
-		)
+		serverError(w, r, "We couldn't create your account right now.")
 		return
 	}
 
@@ -206,13 +203,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodPost {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed on this page.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
@@ -234,13 +225,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("LoginHandler GetLoginAttempt error: %v", err)
 
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't process your login right now.",
-		)
+		serverError(w, r, "We couldn't process your login right now.")
 		return
 	}
 	if attempt != nil && attempt.BlockedUntil.Valid {
@@ -260,13 +245,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("LoginHandler ResetLoginAttempts error: %v", err)
 
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't process your login right now.",
-			)
+			serverError(w, r, "We couldn't process your login right now.")
 			return
 		}
 
@@ -277,13 +256,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("LoginHandler ResetLoginAttempts error: %v", err)
 
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't process your login right now.",
-			)
+			serverError(w, r, "We couldn't process your login right now.")
 			return
 		}
 
@@ -302,25 +275,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("LoginHandler ResetLoginAttempts error: %v", err)
 
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't complete your login right now.",
-		)
+		serverError(w, r, "We couldn't complete your login right now.")
 		return
 	}
 	token, err := utils.GenerateToken()
 	if err != nil {
 		log.Printf("LoginHandler GenerateToken error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't log you in right now.",
-		)
+		serverError(w, r, "We couldn't log you in right now.")
 		return
 	}
 
@@ -335,13 +296,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err = database.CreateSession(session)
 	if err != nil {
 		log.Printf("LoginHandler CreateSession error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't create your login session.",
-		)
+		serverError(w, r, "We couldn't create your login session.")
 		return
 	}
 
@@ -369,13 +324,7 @@ func handleFailedLogin(
 	if err != nil {
 		log.Printf("handleFailedLogin RecordFailedLoginAttempt error: %v", err)
 
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't process your login right now.",
-		)
+		serverError(w, r, "We couldn't process your login right now.")
 		return
 	}
 
@@ -383,13 +332,7 @@ func handleFailedLogin(
 	if err != nil {
 		log.Printf("handleFailedLogin GetLoginAttempt error: %v", err)
 
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't process your login right now.",
-		)
+		serverError(w, r, "We couldn't process your login right now.")
 		return
 	}
 
@@ -406,13 +349,7 @@ func handleFailedLogin(
 		if err != nil {
 			log.Printf("handleFailedLogin BlockLoginAttempts error: %v", err)
 
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't process your login right now.",
-			)
+			serverError(w, r, "We couldn't process your login right now.")
 			return
 		}
 
@@ -425,5 +362,16 @@ func handleFailedLogin(
 
 	if err := utils.RenderTemplate(w, r, "login.html", data); err != nil {
 		log.Printf("handleFailedLogin template error: %v", err)
+	}
+}
+
+func renderResgisterError(w http.ResponseWriter, r *http.Request, message string) {
+	w.WriteHeader(http.StatusBadRequest)
+
+	err := utils.RenderTemplate(w, r, "register.html", map[string]interface{}{
+		"Error": message,
+	})
+	if err != nil {
+		log.Printf("RegisterHandler template error: %v", err)
 	}
 }

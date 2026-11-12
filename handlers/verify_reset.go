@@ -26,7 +26,7 @@ func VerifyResetHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err := utils.RenderTemplate(w, r, "verify_reset.html", data); err != nil {
 			log.Printf("Rendering verification page: %v", err)
-			RenderError(w, r, http.StatusInternalServerError, "Internal server error", "Something went wrong")
+			serverError(w, r, "Something went wrong")
 		}
 		return
 	}

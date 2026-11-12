@@ -72,11 +72,10 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(password) < 8 {
-		renderPage("Your password must contain at least 8 characters.", http.StatusBadRequest)
+	if err := utils.ValidatePassword(password); err != nil {
+		renderPage(err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	// Use JobFlow's existing bcrypt password-hashing function.
 	passwordHash, err := utils.HashPassword(password)
 	if err != nil {

@@ -7,32 +7,26 @@ import (
 	"jobFlow/models"
 	"jobFlow/utils"
 	"log"
-	"strings"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(w, r, http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"This page only accept GET requests.")
+		methodNotAllowed(w, r)
 		return
 	}
 	userID, ok := utils.GetUserID(r)
 	if !ok {
-		RenderError(w, r, http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to view notifications")
+		unauthorized(w, r, "You must be logged in to view notifications")
 		return
 	}
 	notifications, err := database.GetUserNotifications(int64(userID))
 	if err != nil {
 		log.Printf("NotificationsHandler: %v", err)
-		RenderError(w, r, http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your notifications.")
+		serverError(w, r, "We couldn't load your notifications.")
 		return
 	}
 	data := struct {
@@ -48,17 +42,13 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 func UnreadNotificationCountHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(w, r, http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"This page only accept GET requests.")
+		methodNotAllowed(w, r)
 		return
 	}
 
 	userID, ok := utils.GetUserID(r)
 	if !ok {
-		RenderError(w, r, http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to view notifications")
+		unauthorized(w, r, "You must be logged in to view notifications")
 		return
 	}
 
@@ -82,13 +72,7 @@ func UnreadNotificationCountHandler(w http.ResponseWriter, r *http.Request) {
 
 func MarkNotificationAsReadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"This action only accepts POST requests.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 

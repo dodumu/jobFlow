@@ -32,3 +32,8 @@ type JobDetailsData struct {
 	CanEdit  bool
 	UserRole string
 }
+
+func (j Job) DeadlinePassed(now time.Time) bool {
+	closesAt := j.Deadline.AddDate(0, 0, 1)
+	return !now.Before(closesAt)
+}

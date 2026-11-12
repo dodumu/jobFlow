@@ -16,24 +16,12 @@ import (
 
 func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed for this action.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 	userID, ok := utils.GetUserID(r)
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to create a comment.",
-		)
+		unauthorized(w, r, "You must be logged in to create a comment.")
 		return
 	}
 
@@ -83,13 +71,7 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = database.CreateComment(comment)
 	if err != nil {
 		log.Printf("CreateCommentHandler CreateComment error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't create your comment right now.",
-		)
+		serverError(w, r, "We couldn't create your comment right now.")
 		return
 	}
 	// Get the owner of the post.

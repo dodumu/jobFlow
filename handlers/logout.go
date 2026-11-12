@@ -8,13 +8,7 @@ import (
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed for this action.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
@@ -31,13 +25,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if err := database.DeleteSession(token); err != nil {
 		log.Printf("LogoutHandler DeleteSession error: %v", err)
 
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't log you out right now.",
-		)
+		serverError(w, r, "We couldn't log you out right now.")
 		return
 	}
 

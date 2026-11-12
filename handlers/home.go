@@ -11,57 +11,25 @@ import (
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed on this page.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
-	userID, ok := utils.GetUserID(r)
+	user, ok := currentUser(w, r, "You must be logged in to view your home feed.")
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to view your home feed.",
-		)
 		return
 	}
 
-	user, err := database.GetUserByID(userID)
-	if err != nil {
-		log.Printf("HomeHandler GetUserByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your account information.",
-		)
-		return
-	}
-
-	posts, err := database.GetFeedPosts(userID)
+	posts, err := database.GetFeedPosts(user.ID)
 	if err != nil {
 		log.Printf("HomeHandler GetFeedPosts error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your feed right now.",
-		)
+		serverError(w, r, "We couldn't load your feed right now.")
 		return
 	}
 
 	data := models.HomePageData{
 		User:          user,
-		CurrentUserID: userID,
+		CurrentUserID: user.ID,
 		Posts:         posts,
 	}
 

@@ -17,184 +17,92 @@ import (
 
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed on this page.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
-	userID, ok := utils.GetUserID(r)
+	user, ok := currentUser(w, r, "You must be logged in to view your profile.")
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to view your profile.",
-		)
 		return
 	}
 
-	user, err := database.GetUserByID(userID)
-	if err != nil {
-		log.Printf("ProfileHandler GetUserByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your account information.",
-		)
-		return
-	}
-
-	profile, err := database.GetUserProfileByUserID(userID)
+	profile, err := database.GetUserProfileByUserID(user.ID)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.Printf("ProfileHandler GetUserProfileByUserID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your profile information.",
-		)
+		serverError(w, r, "We couldn't load your profile information.")
 		return
 	}
 
-	experiences, err := database.GetExperiencesByUserID(userID)
+	experiences, err := database.GetExperiencesByUserID(user.ID)
 	if err != nil {
 		log.Printf("ProfileHandler GetExperiencesByUserID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your work experience.",
-		)
+		serverError(w, r, "We couldn't load your work experience.")
 		return
 	}
 
-	education, err := database.GetEducationByUserID(userID)
+	education, err := database.GetEducationByUserID(user.ID)
 	if err != nil {
 		log.Printf("ProfileHandler GetEducationByUserID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your education information.",
-		)
+		serverError(w, r, "We couldn't load your education information.")
 		return
 	}
 
-	skills, err := database.GetSkillsByUserID(userID)
+	skills, err := database.GetSkillsByUserID(user.ID)
 	if err != nil {
 		log.Printf("ProfileHandler GetSkillsByUserID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your skills.",
-		)
+		serverError(w, r, "We couldn't load your skills.")
 		return
 	}
 
-	preferences, err := database.GetUserPreferenceByUserID(userID)
+	preferences, err := database.GetUserPreferenceByUserID(user.ID)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.Printf("ProfileHandler GetUserPreferenceByUserID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your job preferences.",
-		)
+		serverError(w, r, "We couldn't load your job preferences.")
 		return
 	}
 
-	employmentTypes, err := database.GetEmploymentTypesByUserID(userID)
+	employmentTypes, err := database.GetEmploymentTypesByUserID(user.ID)
 	if err != nil {
 		log.Printf("ProfileHandler GetEmploymentTypesByUserID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your employment preferences.",
-		)
+		serverError(w, r, "We couldn't load your employment preferences.")
 		return
 	}
 
-	workArrangements, err := database.GetWorkArrangementsByUserID(userID)
+	workArrangements, err := database.GetWorkArrangementsByUserID(user.ID)
 	if err != nil {
 		log.Printf("ProfileHandler GetWorkArrangementsByUserID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your work preferences.",
-		)
+		serverError(w, r, "We couldn't load your work preferences.")
 		return
 	}
 
-	posts, err := database.GetPostsByUserID(userID)
+	posts, err := database.GetPostsByUserID(user.ID)
 	if err != nil {
 		log.Printf("ProfileHandler GetPostsByUserID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your posts.",
-		)
+		serverError(w, r, "We couldn't load your posts.")
 		return
 	}
 
-	followerCount, err := database.GetFollowerCount(userID)
+	followerCount, err := database.GetFollowerCount(user.ID)
 	if err != nil {
 		log.Printf("ProfileHandler GetFollowerCount error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your follower information.",
-		)
+		serverError(w, r, "We couldn't load your follower information.")
 		return
 	}
 
-	followingCount, err := database.GetFollowingCount(userID)
+	followingCount, err := database.GetFollowingCount(user.ID)
 	if err != nil {
 		log.Printf("ProfileHandler GetFollowingCount error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your following information.",
-		)
+		serverError(w, r, "We couldn't load your following information.")
 		return
 	}
 
 	var company *models.Company
 
-	companyData, err := database.GetCompanyByUserID(userID)
+	companyData, err := database.GetCompanyByUserID(user.ID)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			log.Printf("ProfileHandler GetCompanyByUserID error: %v", err)
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't load your company information.",
-			)
+			serverError(w, r, "We couldn't load your company information.")
 			return
 		}
 	} else {
@@ -225,25 +133,13 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 }
 func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed on this page.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
 	userID, ok := utils.GetUserID(r)
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to edit your profile.",
-		)
+		unauthorized(w, r, "You must be logged in to edit your profile.")
 		return
 	}
 
@@ -255,13 +151,7 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 				"EditProfileHandler GetUserProfileByUserID error: %v",
 				err,
 			)
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't load your profile information.",
-			)
+			serverError(w, r, "We couldn't load your profile information.")
 			return
 		}
 
@@ -271,13 +161,7 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 				"EditProfileHandler GetSkillsByUserID error: %v",
 				err,
 			)
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't load your skills.",
-			)
+			serverError(w, r, "We couldn't load your skills.")
 			return
 		}
 
@@ -337,13 +221,7 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 			"EditProfileHandler GetUserProfileByUserID error: %v",
 			err,
 		)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your existing profile.",
-		)
+		serverError(w, r, "We couldn't load your existing profile.")
 		return
 	}
 
@@ -356,13 +234,7 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 			"EditProfileHandler GetSkillsByUserID error: %v",
 			err,
 		)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't verify your skills.",
-		)
+		serverError(w, r, "We couldn't verify your skills.")
 		return
 	}
 
@@ -447,13 +319,7 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 				"EditProfileHandler reload skills error: %v",
 				err,
 			)
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't reload your skills.",
-			)
+			serverError(w, r, "We couldn't reload your skills.")
 			return
 		}
 
@@ -591,13 +457,7 @@ func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't update your profile right now.",
-		)
+		serverError(w, r, "We couldn't update your profile right now.")
 		return
 	}
 
@@ -659,10 +519,7 @@ func AddSkillHandler(w http.ResponseWriter, r *http.Request) {
 
 func PublicProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(w, r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed on this page.")
+		methodNotAllowed(w, r)
 		return
 	}
 	targetID, err := strconv.Atoi(r.PathValue("id"))
@@ -672,70 +529,66 @@ func PublicProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	viewerID, ok := utils.GetUserID(r)
 	if !ok {
-		RenderError(w, r, http.StatusUnauthorized, "Unauthorized", "You must be logged in to view this profile")
+		unauthorized(w, r, "You must be logged in to view this profile")
 		return
 	}
 	isFollowing, err := database.IsFollowing(viewerID, targetID)
 	if err != nil {
 		log.Printf("PublicProfileHandler IsFollowing error: %v", err)
-		RenderError(w, r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load the follow information.",
-		)
+		serverError(w, r, "We couldn't load the follow information.")
 		return
 	}
 	user, err := database.GetUserByID(targetID)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		RenderError(w, r, http.StatusNotFound, "Profile Not Found", "The requested profile could not be found.")
+		notFound(w, r, "Profile Not Found", "The requested profile could not be found.")
 		return
 	}
 	if err != nil {
 		log.Printf("PublicProfileHandler GetUserBYID error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "SOmething Went Wrong", "We couldn't load this profile")
+		serverError(w, r, "We couldn't load this profile")
 		return
 	}
 	profile, err := database.GetUserProfileByUserID(targetID)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.Printf("PublicProfileHandler GetUserProfileByUserID error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this profile's information.")
+		serverError(w, r, "We couldn't load this profile's information.")
 		return
 	}
 	skills, err := database.GetSkillsByUserID(targetID)
 	if err != nil {
 		log.Printf("PublicProfilehandler GetSkillsBYUserID error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's skills.")
+		serverError(w, r, "We couldn't load this user's skills.")
 		return
 	}
 	experiences, err := database.GetExperiencesByUserID(targetID)
 	if err != nil {
 		log.Printf("PublicProfileHandler GetExperiencesByUserID error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's experience.")
+		serverError(w, r, "We couldn't load this user's experience.")
 		return
 	}
 	education, err := database.GetEducationByUserID(targetID)
 	if err != nil {
 		log.Printf("PublicProfileHandler GetEducationByUserID error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's education.")
+		serverError(w, r, "We couldn't load this user's education.")
 		return
 	}
 	posts, err := database.GetPostsByUserID(targetID)
 	if err != nil {
 		log.Printf("PublicProfileHandler GetPostByUserID error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's post.")
+		serverError(w, r, "We couldn't load this user's post.")
 		return
 	}
 	followerCount, err := database.GetFollowerCount(targetID)
 	if err != nil {
 		log.Printf("PublicProfileHandler GetFollowerCount error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's follower information.")
+		serverError(w, r, "We couldn't load this user's follower information.")
 		return
 	}
 	followingCount, err := database.GetFollowingCount(targetID)
 	if err != nil {
 		log.Printf("PublicProfileHandler GetFollowingCount error: %v", err)
-		RenderError(w, r, http.StatusInternalServerError, "Something Went Wrong", "We couldn't load this user's following information.")
+		serverError(w, r, "We couldn't load this user's following information.")
 		return
 	}
 
@@ -745,13 +598,7 @@ func PublicProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			log.Printf("PublicProfileHandler GetCompanyByUserID error: %v", err)
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't load company information.",
-			)
+			serverError(w, r, "We couldn't load company information.")
 			return
 		}
 		// No company record is normal for an individual user.

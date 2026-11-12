@@ -17,50 +17,19 @@ import (
 
 func JobsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed on this page.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
-	userID, ok := utils.GetUserID(r)
+	user, ok := currentUser(w, r, "You must be logged in to view jobs.")
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to view jobs.",
-		)
-		return
-	}
-
-	user, err := database.GetUserByID(userID)
-	if err != nil {
-		log.Printf("JobsHandler GetUserByID error: %v", err)
-		RenderError(
-			w,
-			r, http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your account information.",
-		)
 		return
 	}
 
 	jobs, err := database.GetJobs()
 	if err != nil {
 		log.Printf("JobsHandler GetJobs error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load jobs right now.",
-		)
+		serverError(w, r, "We couldn't load jobs right now.")
 		return
 	}
 
@@ -77,13 +46,7 @@ func JobsHandler(w http.ResponseWriter, r *http.Request) {
 
 func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed on this page.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
@@ -115,49 +78,25 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	job, err := database.GetJobByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			RenderError(
-				w,
-				r,
-				http.StatusNotFound,
-				"Job Not Found",
-				"The job you're looking for could not be found.",
-			)
+			notFound(w, r, "Job Not Found", "The job you're looking for could not be found.")
 			return
 		}
 
 		log.Printf("JobDetailsHandler GetJobByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load this job right now.",
-		)
+		serverError(w, r, "We couldn't load this job right now.")
 		return
 	}
 
 	userID, ok := utils.GetUserID(r)
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to view this job.",
-		)
+		unauthorized(w, r, "You must be logged in to view this job.")
 		return
 	}
 
 	user, err := database.GetUserByID(userID)
 	if err != nil {
 		log.Printf("JobDetailsHandler GetUserByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your account information.",
-		)
+		serverError(w, r, "We couldn't load your account information.")
 		return
 	}
 
@@ -189,25 +128,13 @@ func JobDetailsHandler(w http.ResponseWriter, r *http.Request) {
 func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := utils.GetUserID(r)
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to create a job.",
-		)
+		unauthorized(w, r, "You must be logged in to create a job.")
 		return
 	}
 
 	company, err := database.GetCompanyByUserID(userID)
 	if err != nil {
-		RenderError(
-			w,
-			r,
-			http.StatusForbidden,
-			"Access Denied",
-			"Only company accounts can create jobs.",
-		)
+		forbidden(w, r, "Only company accounts can create jobs.")
 		return
 	}
 
@@ -324,13 +251,7 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 		newJob, err := database.CreateJob(job)
 		if err != nil {
 			log.Printf("CreateJobHandler CreateJob error: %v", err)
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't create the job right now.",
-			)
+			serverError(w, r, "We couldn't create the job right now.")
 			return
 		}
 
@@ -342,37 +263,19 @@ func CreateJobHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 	default:
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed on this page.",
-		)
+		methodNotAllowed(w, r)
 	}
 }
 func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
 
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed on this page.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
 	userID, ok := utils.GetUserID(r)
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to edit a job.",
-		)
+		unauthorized(w, r, "You must be logged in to edit a job.")
 		return
 	}
 
@@ -394,47 +297,23 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 	job, err := database.GetJobByID(jobIDInt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			RenderError(
-				w,
-				r,
-				http.StatusNotFound,
-				"Job Not Found",
-				"The job you're looking for could not be found.",
-			)
+			notFound(w, r, "Job Not Found", "The job you're looking for could not be found.")
 			return
 		}
 
 		log.Printf("EditJobHandler GetJobByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load this job right now.",
-		)
+		serverError(w, r, "We couldn't load this job right now.")
 		return
 	}
 
 	company, err := database.GetCompanyByUserID(userID)
 	if err != nil {
-		RenderError(
-			w,
-			r,
-			http.StatusForbidden,
-			"Access Denied",
-			"Only company accounts can edit jobs.",
-		)
+		forbidden(w, r, "Only company accounts can edit jobs.")
 		return
 	}
 
 	if job.CompanyID != company.ID {
-		RenderError(
-			w,
-			r,
-			http.StatusForbidden,
-			"Access Denied",
-			"You don't have permission to edit this job.",
-		)
+		forbidden(w, r, "You don't have permission to edit this job.")
 		return
 	}
 
@@ -538,13 +417,7 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err := database.UpdateJob(job.ID, job); err != nil {
 			log.Printf("EditJobHandler UpdateJob error: %v", err)
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Something Went Wrong",
-				"We couldn't update this job right now.",
-			)
+			serverError(w, r, "We couldn't update this job right now.")
 			return
 		}
 
@@ -558,24 +431,12 @@ func EditJobHandler(w http.ResponseWriter, r *http.Request) {
 }
 func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed for this action.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 	userID, ok := utils.GetUserID(r)
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to close a job.",
-		)
+		unauthorized(w, r, "You must be logged in to close a job.")
 		return
 	}
 
@@ -594,47 +455,23 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 	job, err := database.GetJobByID(jobID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			RenderError(
-				w,
-				r,
-				http.StatusNotFound,
-				"Job Not Found",
-				"The job you're looking for could not be found.",
-			)
+			notFound(w, r, "Job Not Found", "The job you're looking for could not be found.")
 			return
 		}
 
 		log.Printf("CloseJobHandler GetJobByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load this job right now.",
-		)
+		serverError(w, r, "We couldn't load this job right now.")
 		return
 	}
 
 	company, err := database.GetCompanyByUserID(userID)
 	if err != nil {
-		RenderError(
-			w,
-			r,
-			http.StatusForbidden,
-			"Access Denied",
-			"Only company accounts can close jobs.",
-		)
+		forbidden(w, r, "Only company accounts can close jobs.")
 		return
 	}
 
 	if job.CompanyID != company.ID {
-		RenderError(
-			w,
-			r,
-			http.StatusForbidden,
-			"Access Denied",
-			"You don't have permission to close this job.",
-		)
+		forbidden(w, r, "You don't have permission to close this job.")
 		return
 	}
 
@@ -650,13 +487,7 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := database.CloseJob(job.ID); err != nil {
 		log.Printf("CloseJobHandler CloseJob error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't close this job right now.",
-		)
+		serverError(w, r, "We couldn't close this job right now.")
 		return
 	}
 
@@ -669,25 +500,12 @@ func CloseJobHandler(w http.ResponseWriter, r *http.Request) {
 }
 func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
-		RenderError(
-			w,
-			r,
-			http.StatusMethodNotAllowed,
-			"Method Not Allowed",
-			"The requested method is not allowed on this page.",
-		)
+		methodNotAllowed(w, r)
 		return
 	}
 
-	userID, ok := utils.GetUserID(r)
+	user, ok := currentUser(w, r, "You must be logged in to apply for a job.")
 	if !ok {
-		RenderError(
-			w,
-			r,
-			http.StatusUnauthorized,
-			"Unauthorized",
-			"You must be logged in to apply for a job.",
-		)
 		return
 	}
 
@@ -709,24 +527,12 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	job, err := database.GetJobByID(jobIDInt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			RenderError(
-				w,
-				r,
-				http.StatusNotFound,
-				"Job Not Found",
-				"The job you're looking for could not be found.",
-			)
+			notFound(w, r, "Job Not Found", "The job you're looking for could not be found.")
 			return
 		}
 
 		log.Printf("ApplyJobHandler GetJobByID error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load this job right now.",
-		)
+		serverError(w, r, "We couldn't load this job right now.")
 		return
 	}
 
@@ -740,41 +546,26 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-
-	user, err := database.GetUserByID(userID)
-	if err != nil {
-		log.Printf("ApplyJobHandler GetUserByID error: %v", err)
+	if job.DeadlinePassed(time.Now().UTC()) {
 		RenderError(
 			w,
 			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't load your account information.",
+			http.StatusBadRequest,
+			"Application Closed",
+			"The deadline for this job has passed.",
 		)
 		return
 	}
 
 	if user.Role != constants.RoleIndividual {
-		RenderError(
-			w,
-			r,
-			http.StatusForbidden,
-			"Access Denied",
-			"Only individual accounts can apply for jobs.",
-		)
+		forbidden(w, r, "Only individual accounts can apply for jobs.")
 		return
 	}
 
-	hasApplied, err := database.HasUserApplied(jobIDInt, userID)
+	hasApplied, err := database.HasUserApplied(jobIDInt, user.ID)
 	if err != nil {
 		log.Printf("ApplyJobHandler HasUserApplied error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't check your application status.",
-		)
+		serverError(w, r, "We couldn't check your application status.")
 		return
 	}
 
@@ -815,7 +606,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 
 	application := models.Application{
 		JobID:       jobIDInt,
-		UserID:      userID,
+		UserID:      user.ID,
 		CoverLetter: coverLetter,
 		Status:      "pending",
 	}
@@ -823,13 +614,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	applicationID, err := database.CreateApplication(application)
 	if err != nil {
 		log.Printf("ApplyJobHandler CreateApplication error: %v", err)
-		RenderError(
-			w,
-			r,
-			http.StatusInternalServerError,
-			"Something Went Wrong",
-			"We couldn't submit your application right now.",
-		)
+		serverError(w, r, "We couldn't submit your application right now.")
 		return
 	}
 	company, err := database.GetCompanyByID(job.CompanyID)
@@ -838,7 +623,7 @@ func ApplyJobHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		_, err = database.CreateNotification(
 			int64(company.UserID),
-			sql.NullInt64{Int64: int64(userID), Valid: true},
+			sql.NullInt64{Int64: int64(user.ID), Valid: true},
 			"application",
 			fmt.Sprintf("%s applied for %s", user.FirstName, job.Title),
 			fmt.Sprintf("/applications/%d", applicationID),
