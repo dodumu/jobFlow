@@ -52,6 +52,27 @@ func CreateTables() error {
 			CHECK (role IN ('individual', 'company')),
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 	);
+		CREATE TABLE IF NOT EXISTS ai_jobs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		type TEXT NOT NULL,
+		status TEXT NOT NULL DEFAULT 'queued',
+		input TEXT NOT NULL DEFAULT '{}',
+		result TEXT,
+		error TEXT,
+		model TEXT,
+		prompt_version TEXT,
+		attempts INTEGER NOT NULL DEFAULT 0,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		started_at DATETIME,
+		finished_at DATETIME,
+
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_ai_jobs_status_created
+		ON ai_jobs (status, created_at);
+		
 	CREATE TABLE IF NOT EXISTS password_reset_codes (
     	id INTEGER PRIMARY KEY AUTOINCREMENT,
 
