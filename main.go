@@ -279,14 +279,26 @@ func main() {
 	aiWorker := worker.New()
 	aiWorker.Register("ping", worker.PingHandler)
 
-	aiClient, err := ai.NewFromEnv()
+	var completer ai.Completer
+
 	switch {
-	case errors.Is(err, ai.ErrNoAPIKey):
-		log.Println("AI_API_KEY is not set: AI features are disabled")
-	case err != nil:
-		log.Fatalf("setting up the AI client: %v", err)
+	case os.Getenv("AI_PROVIDER") == "fake":
+		log.Println("AI_PROVIDER=fake: using the fake AI (no network, no cost)")
+		completer = ai.Fake{}
 	default:
-		aiWorker.Register("ai_ping", worker.NewAIPingHandler(aiClient))
+		client, err := ai.NewFromEnv()
+		switch {
+		case errors.Is(err, ai.ErrNoAPIKey):
+			log.Println("AI_API_KEY is not set: AI features are disabled")
+		case err != nil:
+			log.Fatalf("setting up the AI client: %v", err)
+		default:
+			completer = client
+		}
+	}
+	//
+	if completer != nil {
+		aiWorker.Register("ai_ping", worker.NewAIPingHandler(completer))
 	}
 
 	workerDone := make(chan struct{})

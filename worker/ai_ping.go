@@ -8,7 +8,7 @@ import (
 	"jobFlow/models"
 )
 
-func NewAIPingHandler(client *ai.Client) Handler {
+func NewAIPingHandler(client ai.Completer) Handler {
 	return func(ctx context.Context, job models.AIJob) (Output, error) {
 		resp, err := client.Complete(ctx, ai.Request{
 			System:    "You are a connectivity check. Answer with only one work.",
