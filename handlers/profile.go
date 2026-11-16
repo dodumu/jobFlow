@@ -122,6 +122,7 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		Posts:            posts,
 		FollowerCount:    followerCount,
 		FollowingCount:   followingCount,
+		IsOwner:          true,
 	}
 
 	err = utils.RenderTemplate(w, r, "profile.html", data)
