@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 
 	"jobFlow/models"
@@ -12,6 +13,8 @@ const aiJobColumns = `id, user_id, type, status, input, result, error,
 type rowScanner interface {
 	Scan(dest ...any) error
 }
+
+var ErrDailyAILimit = errors.New("daily AI job limit reached")
 
 func scanAIJob(row rowScanner) (models.AIJob, error) {
 	var job models.AIJob
@@ -118,4 +121,25 @@ func RequeueRunningAIJobs() (int64, error) {
 		return 0, fmt.Errorf("requeueing running ai jobs: %w", err)
 	}
 	return res.RowsAffected()
+}
+
+
+func CountAIJobsToday(userID int) (int, error) {
+	var count int
+	err := DB.QueryRow(
+		`SELECT COUNT(*) FROM ai_jobs
+		 WHERE user_id = ? AND created_at >= datetime('now', 'start of day')`,
+		userID,
+	).Scan(&count)
+	return count, err
+}
+func CreateAIJobWithLimit(userID int, jobType, input string, dailyLimit int) (int, error) {
+	count, err := CountAIJobsToday(userID)
+	if err != nil {
+		return 0, err
+	}
+	if count >= dailyLimit {
+		return 0, ErrDailyAILimit
+	}
+	return CreateAIJob(userID, jobType, input)
 }
