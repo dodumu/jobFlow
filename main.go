@@ -69,7 +69,10 @@ func main() {
 		"GET /profile/edit",
 		middleware.AuthMiddleware(http.HandlerFunc(handlers.EditProfileHandler)),
 	)
-
+	http.Handle(
+		"POST /profile/edit",
+		middleware.AuthMiddleware(http.HandlerFunc(handlers.EditProfileHandler)),
+	)
 	// Post routes.
 	http.Handle(
 		"POST /posts/create",
@@ -289,7 +292,7 @@ func main() {
 		client, err := ai.NewFromEnv()
 		switch {
 		case errors.Is(err, ai.ErrNoAPIKey):
-			log.Println("AI_API_KEY is not set: AI features are disabled")
+			log.Println("AI_API_KEY is not set: AI features are disabled, the rest of the site works normally")
 		case err != nil:
 			log.Fatalf("setting up the AI client: %v", err)
 		default:
@@ -298,6 +301,7 @@ func main() {
 	}
 	//
 	if completer != nil {
+		ai.SetEnabled(true)
 		aiWorker.Register("ai_ping", worker.NewAIPingHandler(completer))
 	}
 

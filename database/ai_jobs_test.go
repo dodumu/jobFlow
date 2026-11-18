@@ -3,6 +3,7 @@ package database_test
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -10,6 +11,75 @@ import (
 	"jobFlow/models"
 )
 
+var (
+	// ErrDailyJobLimit: the user already queued their allowed number of jobs today.
+	ErrDailyJobLimit = errors.New("daily AI job limit reached")
+	// ErrDailyTokenBudget: the user already used their token allowance today.
+	ErrDailyTokenBudget = errors.New("daily AI token budget reached")
+)
+
+// AILimits groups the daily allowances. A value of 0 means "no limit".
+type AILimits struct {
+	MaxJobsPerDay   int
+	MaxTokensPerDay int
+}
+
+// CountAIJobsToday says how many AI jobs this user created since
+// midnight (UTC) today.
+func CountAIJobsToday(userID int) (int, error) {
+	var count int
+	err := database.DB.QueryRow(
+		`SELECT COUNT(*) FROM ai_jobs
+		 WHERE user_id = ? AND created_at >= datetime('now', 'start of day')`,
+		userID,
+	).Scan(&count)
+	return count, err
+}
+
+// TokensUsedToday adds up input + output tokens of the user's finished
+// jobs created since midnight UTC. It reads the numbers from inside the
+// result JSON, so every handler must store input_tokens and output_tokens.
+func TokensUsedToday(userID int) (int, error) {
+	var total int
+	err := database.DB.QueryRow(
+		`SELECT COALESCE(SUM(
+			COALESCE(json_extract(result, '$.input_tokens'), 0) +
+			COALESCE(json_extract(result, '$.output_tokens'), 0)
+		), 0)
+		 FROM ai_jobs
+		 WHERE user_id = ? AND status = 'done'
+		   AND created_at >= datetime('now', 'start of day')`,
+		userID,
+	).Scan(&total)
+	return total, err
+}
+
+// CreateAIJobWithLimits creates a job only if the user is still inside
+// today's job count and token budget. Handlers must call this, never
+// CreateAIJob directly.
+func CreateAIJobWithLimits(userID int, jobType, input string, limits AILimits) (int, error) {
+	if limits.MaxJobsPerDay > 0 {
+		count, err := CountAIJobsToday(userID)
+		if err != nil {
+			return 0, err
+		}
+		if count >= limits.MaxJobsPerDay {
+			return 0, ErrDailyJobLimit
+		}
+	}
+
+	if limits.MaxTokensPerDay > 0 {
+		used, err := TokensUsedToday(userID)
+		if err != nil {
+			return 0, err
+		}
+		if used >= limits.MaxTokensPerDay {
+			return 0, ErrDailyTokenBudget
+		}
+	}
+
+	return database.CreateAIJob(userID, jobType, input)
+}
 func setupAIJobsTestDB(t *testing.T) {
 	t.Helper()
 
@@ -81,7 +151,6 @@ func TestAIJobIsPrivateToItsOwner(t *testing.T) {
 		t.Errorf("another user's lookup returned %v, want sql.ErrNoRows", err)
 	}
 }
-
 
 func TestCreateAIJobWithLimitRefusesAfterLimit(t *testing.T) {
 	setupAIJobsTestDB(t)
@@ -156,7 +225,7 @@ func TestTokensUsedTodayAddsUpFinishedJobs(t *testing.T) {
 	userID := createAIJobsTestUser(t, "token_user")
 
 	// No jobs yet: zero, not an error.
-	used, err := database.TokensUsedToday(userID)
+	used, err := TokensUsedToday(userID)
 	if err != nil || used != 0 {
 		t.Fatalf("expected 0 tokens and no error, got %d, %v", used, err)
 	}
@@ -166,7 +235,7 @@ func TestTokensUsedTodayAddsUpFinishedJobs(t *testing.T) {
 	finishJobWithTokens(t, id1, 100, 50)
 	finishJobWithTokens(t, id2, 10, 5)
 
-	used, err = database.TokensUsedToday(userID)
+	used, err = TokensUsedToday(userID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,9 +251,9 @@ func TestCreateAIJobRefusedWhenTokenBudgetSpent(t *testing.T) {
 	id, _ := database.CreateAIJob(userID, models.AIJobTypeCVDraft, "{}")
 	finishJobWithTokens(t, id, 600, 500) // 1100 used
 
-	limits := database.AILimits{MaxJobsPerDay: 10, MaxTokensPerDay: 1000}
-	_, err := database.CreateAIJobWithLimits(userID, models.AIJobTypeCVDraft, "{}", limits)
-	if !errors.Is(err, database.ErrDailyTokenBudget) {
+	limits := AILimits{MaxJobsPerDay: 10, MaxTokensPerDay: 1000}
+	_, err := CreateAIJobWithLimits(userID, models.AIJobTypeCVDraft, "{}", limits)
+	if !errors.Is(err, ErrDailyTokenBudget) {
 		t.Fatalf("expected ErrDailyTokenBudget, got %v", err)
 	}
 }
@@ -196,8 +265,8 @@ func TestZeroTokenBudgetMeansNoTokenLimit(t *testing.T) {
 	id, _ := database.CreateAIJob(userID, models.AIJobTypeCVDraft, "{}")
 	finishJobWithTokens(t, id, 999999, 999999)
 
-	limits := database.AILimits{MaxJobsPerDay: 10} // MaxTokensPerDay left at 0
-	if _, err := database.CreateAIJobWithLimits(userID, models.AIJobTypeCVDraft, "{}", limits); err != nil {
+	limits := AILimits{MaxJobsPerDay: 10} // MaxTokensPerDay left at 0
+	if _, err := CreateAIJobWithLimits(userID, models.AIJobTypeCVDraft, "{}", limits); err != nil {
 		t.Fatalf("0 should mean unlimited tokens, got: %v", err)
 	}
 }
